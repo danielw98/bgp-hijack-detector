@@ -10,3 +10,4 @@ __pycache__/
 detector/mrt/build/
 referat/resources/
 referat/*.pdf
+docs/*.pdf
