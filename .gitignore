@@ -8,3 +8,5 @@ __pycache__/
 /hijack.png
 /hijack2.png
 detector/mrt/build/
+referat/resources/
+referat/*.pdf
