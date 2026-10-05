@@ -3,3 +3,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 .venv/
+.playwright-mcp/
+/baseline.png
+/hijack.png
+/hijack2.png

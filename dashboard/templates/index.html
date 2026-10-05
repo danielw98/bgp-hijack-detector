@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detector deturnări BGP</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --card: #ffffff;
+    --ink: #14181f;
+    --muted: #4a5568;
+    --line: #d4dae2;
+    --accent: #0b4f8a;
+    --ok: #15803d;
+    --origin: #b4151f;
+    --subprefix: #9a4a06;
+    --rpki: #6b21a8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 17px/1.5 system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 18px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+  }
+  header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+  .status { display: flex; gap: 18px; margin-left: auto; flex-wrap: wrap; font-size: 16px; }
+  .status span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #9aa; }
+  .dot.up { background: #34d058; }
+  .dot.down { background: #ff5b5b; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 22px;
+  }
+  .card h2 { margin: 0 0 14px; font-size: 20px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  button.action {
+    font-size: 19px;
+    font-weight: 700;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+  }
+  button.hijack { background: var(--origin); }
+  button.reset { background: var(--muted); }
+  button.action:active { transform: translateY(1px); }
+  button.action:disabled { opacity: .55; cursor: wait; }
+  .note { color: var(--muted); font-size: 15px; margin: 12px 0 0; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .tile .n { font-size: 38px; font-weight: 800; line-height: 1.1; }
+  .tile .l { font-size: 15px; color: var(--muted); margin-top: 4px; }
+  .tile.origin .n { color: var(--origin); }
+  .tile.subprefix .n { color: var(--subprefix); }
+  .tile.rpki .n { color: var(--rpki); }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
+  @media (min-width: 980px) { .grid { grid-template-columns: 1.3fr 1fr; } }
+  .scroll { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { position: sticky; top: 0; background: #f2f5f9; z-index: 1; }
+  td.wrap { word-break: break-word; max-width: 360px; }
+  tr:last-child td { border-bottom: none; }
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 999px; color: #fff; font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+  .chip.origin_hijack { background: var(--origin); }
+  .chip.subprefix_hijack { background: var(--subprefix); }
+  .chip.rpki_invalid { background: var(--rpki); }
+  .mono { font-family: "Cascadia Code", Consolas, monospace; }
+  .wd { color: var(--origin); font-weight: 700; }
+  .empty { padding: 24px; text-align: center; color: var(--muted); }
+  .mon { font-size: 16px; color: var(--muted); }
+  .mon b { color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Detector deturnări de rute BGP</h1>
+  <div class="status">
+    <span><span id="dot-lab" class="dot"></span> Laborator</span>
+    <span><span id="dot-data" class="dot"></span> Flux de rute</span>
+    <span id="updated">&nbsp;</span>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Simulare în mediu izolat</h2>
+    <div class="controls">
+      <button id="btn-hijack" class="action hijack">Simulează deturnarea</button>
+      <button id="btn-reset" class="action reset">Resetează</button>
+      <span id="action-msg" class="mon"></span>
+    </div>
+    <p class="note" id="monitored-note">Prefix monitorizat: se încarcă...</p>
+    <p class="note">Rețea închisă, fără uplink. ASN-uri private și prefix de documentație (RFC 5737); nimic nu părăsește gazda.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="n" id="t-alerts">0</div><div class="l">Alerte total</div></div>
+    <div class="tile origin"><div class="n" id="t-origin">0</div><div class="l">Origine falsă</div></div>
+    <div class="tile subprefix"><div class="n" id="t-subprefix">0</div><div class="l">Sub-prefix</div></div>
+    <div class="tile rpki"><div class="n" id="t-rpki">0</div><div class="l">RPKI-invalid</div></div>
+    <div class="tile"><div class="n" id="t-routes">0</div><div class="l">Rute observate</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Alerte</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Ora</th><th>Tip</th><th>Prefix</th><th>Origine</th><th>Așteptat</th><th>Vantage</th></tr></thead>
+          <tbody id="alerts-body"><tr><td colspan="6" class="empty">Nicio alertă.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric rute</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Ora</th><th>Vantage</th><th>Prefix</th><th>Origine</th><th>Cale AS</th></tr></thead>
+          <tbody id="routes-body"><tr><td colspan="5" class="empty">Nicio rută încă.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function fmtTime(iso) {
+  try { return new Date(iso).toLocaleTimeString("ro-RO"); } catch { return iso; }
+}
+function asPath(p) { return Array.isArray(p) && p.length ? p.join(" ") : "-"; }
+
+async function refresh() {
+  try {
+    const [stats, alerts, routes] = await Promise.all([
+      fetch("/api/stats").then(r => r.json()),
+      fetch("/api/alerts?limit=100").then(r => r.json()),
+      fetch("/api/routes?limit=100").then(r => r.json()),
+    ]);
+    renderStats(stats);
+    renderAlerts(alerts);
+    renderRoutes(routes);
+    $("dot-data").className = "dot up";
+    $("updated").textContent = "actualizat " + new Date().toLocaleTimeString("ro-RO");
+  } catch (e) {
+    $("dot-data").className = "dot down";
+  }
+}
+
+function renderStats(s) {
+  const bt = s.by_type || {};
+  $("t-alerts").textContent = s.alerts ?? 0;
+  $("t-origin").textContent = bt.origin_hijack ?? 0;
+  $("t-subprefix").textContent = bt.subprefix_hijack ?? 0;
+  $("t-rpki").textContent = bt.rpki_invalid ?? 0;
+  $("t-routes").textContent = s.routes ?? 0;
+}
+
+function renderAlerts(rows) {
+  const body = $("alerts-body");
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">Nicio alertă.</td></tr>'; return; }
+  body.innerHTML = rows.map(a => {
+    const exp = (a.expected_origins && a.expected_origins.length)
+      ? "AS" + a.expected_origins.join(", AS") : "-";
+    return `
+    <tr title="${(a.detail || "").replace(/"/g, "&quot;")}">
+      <td class="mono">${fmtTime(a.raised_at)}</td>
+      <td><span class="chip ${a.alert_type}">${labelOf(a.alert_type)}</span></td>
+      <td class="mono">${a.prefix}</td>
+      <td class="mono">AS${a.observed_origin ?? "?"}</td>
+      <td class="mono">${exp}</td>
+      <td class="mono">${a.peer}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderRoutes(rows) {
+  const body = $("routes-body");
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty">Nicio rută încă.</td></tr>'; return; }
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${fmtTime(r.seen_at)}</td>
+      <td class="mono">${r.peer}</td>
+      <td class="mono">${r.prefix}${r.withdrawn ? ' <span class="wd">(retras)</span>' : ''}</td>
+      <td class="mono">${r.origin_as != null ? "AS" + r.origin_as : "-"}</td>
+      <td class="mono">${asPath(r.as_path)}</td>
+    </tr>`).join("");
+}
+
+function labelOf(t) {
+  return { origin_hijack: "Origine falsă", subprefix_hijack: "Sub-prefix", rpki_invalid: "RPKI-invalid" }[t] || t;
+}
+
+async function loadMonitored() {
+  try {
+    const rows = await fetch("/api/monitored").then(r => r.json());
+    if (rows.length) {
+      const m = rows[0];
+      $("monitored-note").innerHTML = `Prefix monitorizat: <b class="mono">${m.prefix}</b>, origine legitimă <b class="mono">AS${(m.expected_origins||[]).join(", AS")}</b>.`;
+      $("dot-lab").className = "dot up";
+    }
+  } catch {}
+}
+
+async function labAction(kind) {
+  const btnH = $("btn-hijack"), btnR = $("btn-reset"), msg = $("action-msg");
+  btnH.disabled = btnR.disabled = true;
+  msg.textContent = kind === "trigger" ? "se injectează..." : "se resetează...";
+  try {
+    const res = await fetch("/api/lab/" + kind, { method: "POST" }).then(r => r.json());
+    msg.textContent = res.ok ? (kind === "trigger" ? "deturnare injectată" : "resetat la baseline")
+                             : ("eroare: " + (res.error || "necunoscută"));
+  } catch (e) {
+    msg.textContent = "eroare de rețea";
+  } finally {
+    btnH.disabled = btnR.disabled = false;
+    setTimeout(refresh, 1500);
+  }
+}
+
+$("btn-hijack").addEventListener("click", () => labAction("trigger"));
+$("btn-reset").addEventListener("click", () => labAction("reset"));
+
+loadMonitored();
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

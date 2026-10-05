@@ -51,3 +51,24 @@ services:
       labnet:
         ipv4_address: 10.10.0.100
       appnet:
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: app-dashboard
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
+      LAB_CONTROL: "1"
+      LAB_ATTACKER_CONTAINER: lab-attacker
+    ports:
+      - "8080:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./dashboard/app.py:/app/app.py:ro
+      - ./dashboard/templates:/app/templates:ro
+    networks:
+      - appnet
