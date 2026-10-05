@@ -24,7 +24,7 @@ class Announcement:
     """One prefix as seen in a BGP update from a collector peer."""
 
     prefix: IPNetwork
-    origin_as: int
+    origin_as: int | None
     as_path: tuple[int, ...] = ()
     peer: str = ""
     next_hop: str | None = None
