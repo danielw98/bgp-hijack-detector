@@ -39,6 +39,7 @@ docker compose down && docker compose -f lab/docker-compose.yml down
 3. **O alertă.** Apasă pe ea și primești explicația: cine a anunțat, ce era așteptat și pe unde a ajuns anunțul la colector.
 4. **„Resetează”.** Atacatorul își retrage anunțurile și tabelele revin la starea de bază. Alertele rămân în istoric.
 5. **„Redă incidentul”.** Detectorul primește actualizările BGP reale din 24 februarie 2008 (RIPE RIS, colectorul rrc00, 18:45-18:50 UTC), când AS17557 (Pakistan Telecom) a anunțat `208.65.153.0/24` din spațiul YouTube. Rezultă 3258 de actualizări și 27 de alerte de sub-prefix. Fiecare apăsare le adaugă din nou.
+6. **„Golește istoricul”.** După confirmare, șterge toate alertele și tot istoricul de rute. Ruterele își retrimit apoi tabelele către colector, așa că rutele curente reapar imediat.
 
 ## Unde citești mai mult
 

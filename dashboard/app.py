@@ -1,6 +1,7 @@
 """Dashboard for the BGP hijack detector: live alerts, route history, the lab view
 (sessions and BGP table of each router), and the demo controls (simulate / reset the
-lab hijack, replay a recorded incident) so a demo needs no typed commands.
+lab hijack, replay a recorded incident, clear the history) so a demo needs no typed
+commands.
 
 The lab view and the controls run commands in the lab routers and in the collector
 over the Docker socket; they are enabled only when LAB_CONTROL=1 and the socket is
@@ -34,6 +35,11 @@ REPLAY_COMMAND = [
     "bgpwatch.replay",
     f"{INCIDENT}/config.toml",
     f"{INCIDENT}/updates.20080224.1845.gz",
+]
+RESEND_COMMAND = [
+    "vtysh",
+    "-c",
+    f"clear bgp ipv4 unicast {labview.COLLECTOR['address']} soft out",
 ]
 CONTROL_DISABLED = {"ok": False, "error": "lab control disabled"}
 
@@ -145,6 +151,26 @@ def lab_replay() -> JSONResponse:
         error = stderr.decode(errors="replace")[-600:]
         return JSONResponse({"ok": False, "error": error}, status_code=502)
     return JSONResponse({"ok": True, **json.loads(stdout)})
+
+
+@app.post("/api/history/clear")
+def history_clear() -> JSONResponse:
+    if not LAB_CONTROL:
+        return JSONResponse(CONTROL_DISABLED, status_code=403)
+    with pool.connection() as conn:
+        alerts = conn.execute("DELETE FROM alerts").rowcount
+        routes = conn.execute("DELETE FROM route_updates").rowcount
+    _resend_lab_routes()
+    return JSONResponse({"ok": True, "alerts": alerts, "routes": routes})
+
+
+def _resend_lab_routes() -> None:
+    """Ask every lab router to announce its table to the collector again."""
+    for router in labview.ROUTERS:
+        try:
+            _exec_in(router.container, RESEND_COMMAND)
+        except Exception:  # a stopped router has nothing to resend
+            continue
 
 
 @lru_cache(maxsize=1)

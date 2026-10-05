@@ -61,6 +61,8 @@
   button.hijack { background: var(--origin); }
   button.reset { background: var(--muted); }
   button.replay { background: var(--accent); }
+  button.clear { background: #fff; color: var(--origin); border: 2px solid var(--origin); font-size: 17px; padding: 10px 18px; }
+  .history { margin: 16px 0 22px; justify-content: flex-end; }
   button.action:active { transform: translateY(1px); }
   button.action:disabled { opacity: .55; cursor: wait; }
   .note { color: var(--muted); font-size: 15px; margin: 12px 0 0; }
@@ -211,6 +213,11 @@
     <div class="tile subprefix"><div class="n" id="t-subprefix">0</div><div class="l">Sub-prefix</div></div>
     <div class="tile rpki"><div class="n" id="t-rpki">0</div><div class="l">RPKI-invalid</div></div>
     <div class="tile"><div class="n" id="t-routes">0</div><div class="l">Rute observate</div></div>
+  </div>
+
+  <div class="controls history">
+    <span id="clear-msg" class="mon"></span>
+    <button id="btn-clear" class="action clear">Golește istoricul</button>
   </div>
 
   <div class="grid">
@@ -484,6 +491,25 @@ async function replayIncident() {
   }
 }
 
+async function clearHistory() {
+  if (!confirm("Ștergi toate alertele și tot istoricul de rute? Laboratorul rămâne neschimbat.")) return;
+  const btn = $("btn-clear"), msg = $("clear-msg");
+  btn.disabled = true;
+  msg.textContent = "se golește...";
+  try {
+    const res = await fetch("/api/history/clear", { method: "POST" }).then(r => r.json());
+    msg.textContent = res.ok ? `șterse: ${res.alerts} alerte, ${res.routes} rute`
+                             : ("eroare: " + (res.error || "necunoscută"));
+    if (res.ok) openAlerts.clear();
+  } catch (e) {
+    msg.textContent = "eroare de rețea";
+  } finally {
+    btn.disabled = false;
+    setTimeout(refresh, 1500);
+  }
+}
+
+$("btn-clear").addEventListener("click", clearHistory);
 $("btn-replay").addEventListener("click", replayIncident);
 $("btn-hijack").addEventListener("click", () => labAction("trigger"));
 $("btn-reset").addEventListener("click", () => labAction("reset"));
