@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -22,6 +23,13 @@ VRPS = [Roa("203.0.113.0/24", max_length=24, origin_as=65001)]
 
 def _types(alerts) -> set[AlertType]:
     return {a.alert_type for a in alerts}
+
+
+def test_alert_carries_the_time_the_announcement_was_seen() -> None:
+    seen_at = datetime(2008, 2, 24, 18, 47, tzinfo=timezone.utc)
+    hijack = Announcement("203.0.113.0/24", 65003, (65003,), seen_at=seen_at)
+    (alert,) = HijackDetector(MONITORED).inspect(hijack)
+    assert alert.raised_at == seen_at
 
 
 def test_legitimate_announcement_is_silent() -> None:
@@ -72,14 +80,6 @@ def test_rpki_states() -> None:
 
 
 if __name__ == "__main__":
-    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
-    failed = 0
-    for t in tests:
-        try:
-            t()
-            print(f"PASS {t.__name__}")
-        except AssertionError as exc:
-            failed += 1
-            print(f"FAIL {t.__name__}: {exc}")
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
-    sys.exit(1 if failed else 0)
+    from _runner import run
+
+    run(globals())

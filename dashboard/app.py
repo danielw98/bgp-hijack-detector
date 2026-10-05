@@ -1,13 +1,15 @@
-"""Dashboard for the BGP hijack detector: live alerts, route history, and an isolated
-lab control (simulate / reset the hijack) so a demo needs no typed commands.
+"""Dashboard for the BGP hijack detector: live alerts, route history, and the demo
+controls (simulate / reset the lab hijack, replay a recorded incident) so a demo
+needs no typed commands.
 
-The lab control shells into the attacker router over the Docker socket; it is enabled
-only when LAB_CONTROL=1 and the socket is mounted. The vtysh command lists mirror
-lab/trigger-hijack.sh and lab/stop-hijack.sh.
+The controls run commands in the attacker router and in the collector over the Docker
+socket; they are enabled only when LAB_CONTROL=1 and the socket is mounted. The vtysh
+command lists mirror lab/trigger-hijack.sh and lab/stop-hijack.sh.
 """
 
 from __future__ import annotations
 
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,6 +23,16 @@ DB_URL = os.environ["BGPWATCH_DATABASE_URL"]
 LAB_CONTROL = os.environ.get("LAB_CONTROL", "0") == "1"
 ATTACKER = os.environ.get("LAB_ATTACKER_CONTAINER", "lab-attacker")
 HIJACK_PREFIXES = ["203.0.113.0/24", "203.0.113.0/25"]
+COLLECTOR = os.environ.get("COLLECTOR_CONTAINER", "app-collector")
+INCIDENT = "incidents/youtube-2008"
+REPLAY_COMMAND = [
+    "python3",
+    "-m",
+    "bgpwatch.replay",
+    f"{INCIDENT}/config.toml",
+    f"{INCIDENT}/updates.20080224.1845.gz",
+]
+CONTROL_DISABLED = {"ok": False, "error": "lab control disabled"}
 
 TEMPLATES = Path(__file__).parent / "templates"
 
@@ -108,6 +120,28 @@ def lab_reset() -> JSONResponse:
     return _lab_action("reset")
 
 
+@app.post("/api/lab/replay")
+def lab_replay() -> JSONResponse:
+    if not LAB_CONTROL:
+        return JSONResponse(CONTROL_DISABLED, status_code=403)
+    try:
+        result = _exec_in(COLLECTOR, REPLAY_COMMAND)
+    except Exception as exc:  # docker errors are reported to the operator, not raised
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=502)
+    stdout, stderr = (stream or b"" for stream in result.output)
+    if result.exit_code != 0:
+        error = stderr.decode(errors="replace")[-600:]
+        return JSONResponse({"ok": False, "error": error}, status_code=502)
+    return JSONResponse({"ok": True, **json.loads(stdout)})
+
+
+def _exec_in(container: str, command: list[str]):
+    """Run a command in a container, keeping its stdout and stderr apart."""
+    import docker
+
+    return docker.from_env().containers.get(container).exec_run(command, demux=True)
+
+
 def _vtysh_commands(action: str) -> list[str]:
     if action == "trigger":
         cmds = ["configure terminal"]
@@ -126,21 +160,18 @@ def _vtysh_commands(action: str) -> list[str]:
 
 def _lab_action(action: str) -> JSONResponse:
     if not LAB_CONTROL:
-        return JSONResponse({"ok": False, "error": "lab control disabled"}, status_code=403)
-    import docker
-
+        return JSONResponse(CONTROL_DISABLED, status_code=403)
     command = ["vtysh"]
     for c in _vtysh_commands(action):
         command += ["-c", c]
     try:
-        container = docker.from_env().containers.get(ATTACKER)
-        result = container.exec_run(command)
+        result = _exec_in(ATTACKER, command)
     except Exception as exc:  # docker errors are reported to the operator, not raised
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=502)
     # vtysh returns non-zero for benign cases (removing absent config, saving to the
     # read-only mounted frr.conf), so success is "the command ran": the live route and
     # alert tables are the ground truth. The exit code is still reported for inspection.
-    output = result.output.decode(errors="replace")
+    output = b"".join(stream or b"" for stream in result.output).decode(errors="replace")
     return JSONResponse(
         {"ok": True, "action": action, "exit_code": result.exit_code, "output": output[-600:]}
     )

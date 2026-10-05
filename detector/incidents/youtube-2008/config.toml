@@ -1,0 +1,12 @@
+# Ground truth for replaying the YouTube sub-prefix hijack of 24 February 2008:
+# AS17557 (Pakistan Telecom) announces 208.65.153.0/24, inside YouTube's 208.65.152.0/22.
+#
+# Timeline: RIPE NCC, "YouTube Hijacking: A RIPE NCC RIS case study", 17 March 2008,
+#   https://www.ripe.net/about-us/news/youtube-hijacking-a-ripe-ncc-ris-case-study/
+# Updates:  RIPE RIS collector rrc00, 18:45-18:50 UTC,
+#   https://data.ris.ripe.net/rrc00/2008.02/updates.20080224.1845.gz
+
+[[monitored]]
+prefix = "208.65.152.0/22"
+expected_origins = [36561]
+description = "YouTube, 2008 incident replay"

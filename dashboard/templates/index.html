@@ -39,7 +39,7 @@
   .dot { width: 12px; height: 12px; border-radius: 50%; background: #9aa; }
   .dot.up { background: #34d058; }
   .dot.down { background: #ff5b5b; }
-  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  main { max-width: 1760px; margin: 0 auto; padding: 24px 16px 48px; }
   .card {
     background: var(--card);
     border: 1px solid var(--line);
@@ -60,6 +60,7 @@
   }
   button.hijack { background: var(--origin); }
   button.reset { background: var(--muted); }
+  button.replay { background: var(--accent); }
   button.action:active { transform: translateY(1px); }
   button.action:disabled { opacity: .55; cursor: wait; }
   .note { color: var(--muted); font-size: 15px; margin: 12px 0 0; }
@@ -70,8 +71,8 @@
   .tile.origin .n { color: var(--origin); }
   .tile.subprefix .n { color: var(--subprefix); }
   .tile.rpki .n { color: var(--rpki); }
-  .grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
-  @media (min-width: 980px) { .grid { grid-template-columns: 1.3fr 1fr; } }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  @media (min-width: 1560px) { .grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
   .scroll { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
   th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -86,7 +87,8 @@
   .wd { color: var(--origin); font-weight: 700; }
   .empty { padding: 24px; text-align: center; color: var(--muted); }
   .mon { font-size: 16px; color: var(--muted); }
-  .mon b { color: var(--ink); }
+  .mon b, .note b { color: var(--ink); }
+  td.time { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -109,6 +111,16 @@
     </div>
     <p class="note" id="monitored-note">Prefix monitorizat: se încarcă...</p>
     <p class="note">Rețea închisă, fără uplink. ASN-uri private și prefix de documentație (RFC 5737); nimic nu părăsește gazda.</p>
+  </div>
+
+  <div class="card">
+    <h2>Incident real: YouTube, 24 februarie 2008</h2>
+    <div class="controls">
+      <button id="btn-replay" class="action replay">Redă incidentul</button>
+      <span id="replay-msg" class="mon"></span>
+    </div>
+    <p class="note">Actualizări BGP reale din arhiva RIPE RIS (colectorul rrc00, 18:45-18:50 UTC), citite de parserul MRT scris în C. Prefix monitorizat: <b class="mono">208.65.152.0/22</b>, origine legitimă <b class="mono">AS36561</b> (YouTube).</p>
+    <p class="note">La 18:47 UTC, <b class="mono">AS17557</b> (Pakistan Telecom) anunță sub-prefixul <b class="mono">208.65.153.0/24</b>.</p>
   </div>
 
   <div class="tiles">
@@ -146,7 +158,11 @@
 const $ = (id) => document.getElementById(id);
 
 function fmtTime(iso) {
-  try { return new Date(iso).toLocaleTimeString("ro-RO"); } catch { return iso; }
+  const t = new Date(iso);
+  if (isNaN(t)) return iso;
+  if (t.toDateString() === new Date().toDateString()) return t.toLocaleTimeString("ro-RO");
+  const [day, time] = t.toISOString().slice(0, 19).split("T");
+  return `${day}<br>${time} UTC`;
 }
 function asPath(p) { return Array.isArray(p) && p.length ? p.join(" ") : "-"; }
 
@@ -184,7 +200,7 @@ function renderAlerts(rows) {
       ? "AS" + a.expected_origins.join(", AS") : "-";
     return `
     <tr title="${(a.detail || "").replace(/"/g, "&quot;")}">
-      <td class="mono">${fmtTime(a.raised_at)}</td>
+      <td class="mono time">${fmtTime(a.raised_at)}</td>
       <td><span class="chip ${a.alert_type}">${labelOf(a.alert_type)}</span></td>
       <td class="mono">${a.prefix}</td>
       <td class="mono">AS${a.observed_origin ?? "?"}</td>
@@ -199,7 +215,7 @@ function renderRoutes(rows) {
   if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty">Nicio rută încă.</td></tr>'; return; }
   body.innerHTML = rows.map(r => `
     <tr>
-      <td class="mono">${fmtTime(r.seen_at)}</td>
+      <td class="mono time">${fmtTime(r.seen_at)}</td>
       <td class="mono">${r.peer}</td>
       <td class="mono">${r.prefix}${r.withdrawn ? ' <span class="wd">(retras)</span>' : ''}</td>
       <td class="mono">${r.origin_as != null ? "AS" + r.origin_as : "-"}</td>
@@ -238,6 +254,23 @@ async function labAction(kind) {
   }
 }
 
+async function replayIncident() {
+  const btn = $("btn-replay"), msg = $("replay-msg");
+  btn.disabled = true;
+  msg.textContent = "se redă...";
+  try {
+    const res = await fetch("/api/lab/replay", { method: "POST" }).then(r => r.json());
+    msg.textContent = res.ok ? `redat: ${res.updates} actualizări, ${res.alerts} alerte`
+                             : ("eroare: " + (res.error || "necunoscută"));
+  } catch (e) {
+    msg.textContent = "eroare de rețea";
+  } finally {
+    btn.disabled = false;
+    refresh();
+  }
+}
+
+$("btn-replay").addEventListener("click", replayIncident);
 $("btn-hijack").addEventListener("click", () => labAction("trigger"));
 $("btn-reset").addEventListener("click", () => labAction("reset"));
 

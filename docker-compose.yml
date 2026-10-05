@@ -1,7 +1,7 @@
 name: bgp-hijack-app
 
 # The detection stack: a route collector (exabgp + bgpwatch) peering with the FRR lab,
-# and Postgres for route history and alerts. The lab's internal network is joined as
+# Postgres for route history and alerts, and the dashboard. The lab's internal network is joined as
 # an external network (bring the lab up first: cd lab && docker compose up -d).
 
 networks:
@@ -46,6 +46,7 @@ services:
       - ./detector/exabgp.conf:/etc/exabgp/exabgp.conf:ro
       - ./detector/bgpwatch:/opt/bgpwatch/bgpwatch:ro
       - ./detector/config.toml:/opt/bgpwatch/config.toml:ro
+      - ./detector/incidents:/opt/bgpwatch/incidents:ro
       - ./detector/schema.sql:/opt/bgpwatch/schema.sql:ro
     networks:
       labnet:
@@ -64,6 +65,7 @@ services:
       BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
       LAB_CONTROL: "1"
       LAB_ATTACKER_CONTAINER: lab-attacker
+      COLLECTOR_CONTAINER: app-collector
     ports:
       - "8080:8000"
     volumes:

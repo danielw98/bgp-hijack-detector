@@ -76,6 +76,7 @@ class HijackDetector:
                         observed_origin=ann.origin_as,
                         peer=ann.peer,
                         as_path=ann.as_path,
+                        raised_at=ann.seen_at,
                         expected_origins=monitored.expected_origins,
                         detail=(
                             f"{ann.prefix} announced by AS{ann.origin_as}, "
@@ -95,6 +96,7 @@ class HijackDetector:
                         observed_origin=ann.origin_as,
                         peer=ann.peer,
                         as_path=ann.as_path,
+                        raised_at=ann.seen_at,
                         expected_origins=monitored.expected_origins,
                         covering_prefix=monitored.prefix,
                         detail=(
@@ -118,6 +120,7 @@ class HijackDetector:
                 observed_origin=ann.origin_as,
                 peer=ann.peer,
                 as_path=ann.as_path,
+                raised_at=ann.seen_at,
                 detail=(
                     f"{ann.prefix} from AS{ann.origin_as} is RPKI-invalid "
                     "(no VRP authorizes this origin or length)"
