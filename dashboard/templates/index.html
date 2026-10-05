@@ -89,6 +89,79 @@
   .mon { font-size: 16px; color: var(--muted); }
   .mon b, .note b { color: var(--ink); }
   td.time { white-space: nowrap; }
+  tr.alert-row { cursor: pointer; }
+  tr.alert-row:hover td, tr.alert-row:focus td, tr.alert-row.open td { background: #eef4fb; }
+  tr.explain td { padding: 0; background: #f7f9fc; }
+  .explain-box { position: sticky; left: 0; width: var(--visible-width); max-width: 100%; padding: 14px 16px; font-size: 16.5px; }
+  .explain-box p { margin: 0 0 8px; }
+  .explain-box p:last-child { margin-bottom: 0; }
+  .hint { margin: 0 0 12px; }
+  .topo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px minmax(0, 1fr) 170px minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .node { position: relative; border: 3px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .node h3 { margin: 0; font-size: 21px; }
+  .node p { margin: 6px 0 0; font-size: 16px; }
+  .node.victim { border-color: var(--ok); }
+  .node.transit { border-color: var(--accent); }
+  .node.attacker { border-color: var(--muted); }
+  .node.attacker.announcing { border-color: var(--origin); background: #fdf1f1; }
+  .node.off { border-style: dashed; border-color: var(--origin); }
+  .node::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 3px);
+    height: 26px;
+    border-left: 3px dashed var(--accent);
+  }
+  .pfx { display: inline-block; margin: 4px 6px 0 0; padding: 2px 9px; border-radius: 6px; background: #e6f4ea; color: #0f5c2c; font-weight: 700; white-space: nowrap; }
+  .pfx.bad { background: var(--origin); color: #fff; }
+  .link { align-self: center; text-align: center; font-size: 15px; font-weight: 700; color: var(--ok); padding: 0 8px; }
+  .link::before { content: ""; display: block; height: 6px; border-radius: 3px; background: var(--ok); margin-bottom: 6px; }
+  .link.down { color: var(--origin); }
+  .link.down::before { background: repeating-linear-gradient(90deg, var(--origin) 0 10px, transparent 10px 18px); }
+  .collector {
+    grid-column: 1 / -1;
+    margin-top: 26px;
+    border: 3px dashed var(--accent);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 24px;
+    font-size: 16px;
+  }
+  .collector h3 { margin: 0; font-size: 21px; }
+  .collector .tap { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .down-text { color: var(--origin); font-weight: 700; }
+  h3.sub { margin: 24px 0 12px; font-size: 19px; }
+  .ribs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .rib { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .rib h4 { margin: 0; padding: 10px 12px; font-size: 17px; background: #f2f5f9; border-bottom: 1px solid var(--line); }
+  .rib th, .rib td { padding: 8px 10px; }
+  .rib th { position: static; background: none; }
+  .rib .pfx-cell { width: 1%; white-space: nowrap; }
+  .pathline { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 4px 10px; }
+  .pathline .state { min-width: 104px; }
+  .rib tr.bad td { background: #fdf1f1; }
+  .rib b.bad { color: var(--origin); }
+  .rib .chip { font-size: 15px; }
+  .chip.best { background: var(--ok); }
+  .chip.spare { background: var(--muted); }
+  .why { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
+  @media (max-width: 1100px) {
+    .topo { grid-template-columns: minmax(0, 1fr); }
+    .node::after { display: none; }
+    .link { align-self: stretch; display: flex; align-items: center; gap: 12px; text-align: left; padding: 0 0 0 30px; }
+    .link::before { width: 6px; height: 40px; margin: 0; flex: none; }
+    .link.down::before { background: repeating-linear-gradient(180deg, var(--origin) 0 10px, transparent 10px 18px); }
+    .collector { margin-top: 16px; }
+    .ribs { grid-template-columns: minmax(0, 1fr); }
+  }
 </style>
 </head>
 <body>
@@ -114,6 +187,15 @@
   </div>
 
   <div class="card">
+    <h2>Laboratorul în direct</h2>
+    <div class="topo" id="topo"><div class="empty">Se încarcă...</div></div>
+    <h3 class="sub">Tabela BGP a fiecărui ruter</h3>
+    <div class="ribs" id="ribs"></div>
+    <p class="note"><b>Cum se citește:</b> ultimul AS din cale este originea, adică rețeaua care pretinde că deține prefixul. Cu roșu apar anunțurile pornite de la atacator. Ruta <b>aleasă</b> este cea pe care ruterul o folosește; ruta de <b>rezervă</b> a fost primită, dar nu este folosită.</p>
+    <p class="note"><b>Ce se vede la deturnare:</b> pentru prefixul exact, tranzitul primește două anunțuri cu aceeași lungime a căii și îl păstrează pe cel mai vechi, al victimei. Sub-prefixul mai specific nu are concurent, deci este ales pe toate cele trei rutere.</p>
+  </div>
+
+  <div class="card">
     <h2>Incident real: YouTube, 24 februarie 2008</h2>
     <div class="controls">
       <button id="btn-replay" class="action replay">Redă incidentul</button>
@@ -134,6 +216,7 @@
   <div class="grid">
     <div class="card">
       <h2>Alerte</h2>
+      <p class="note hint">Apasă pe o alertă ca să vezi ce înseamnă.</p>
       <div class="scroll">
         <table>
           <thead><tr><th>Ora</th><th>Tip</th><th>Prefix</th><th>Origine</th><th>Așteptat</th><th>Vantage</th></tr></thead>
@@ -192,22 +275,59 @@ function renderStats(s) {
   $("t-routes").textContent = s.routes ?? 0;
 }
 
+const openAlerts = new Set();
+let shownAlerts = [];
+let labPeers = {};
+
 function renderAlerts(rows) {
+  shownAlerts = rows;
   const body = $("alerts-body");
   if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="empty">Nicio alertă.</td></tr>'; return; }
   body.innerHTML = rows.map(a => {
     const exp = (a.expected_origins && a.expected_origins.length)
       ? "AS" + a.expected_origins.join(", AS") : "-";
+    const open = openAlerts.has(a.id);
     return `
-    <tr title="${(a.detail || "").replace(/"/g, "&quot;")}">
+    <tr class="alert-row${open ? " open" : ""}" data-id="${a.id}" tabindex="0" role="button" aria-expanded="${open}" title="${(a.detail || "").replace(/"/g, "&quot;")}">
       <td class="mono time">${fmtTime(a.raised_at)}</td>
       <td><span class="chip ${a.alert_type}">${labelOf(a.alert_type)}</span></td>
       <td class="mono">${a.prefix}</td>
       <td class="mono">AS${a.observed_origin ?? "?"}</td>
       <td class="mono">${exp}</td>
       <td class="mono">${a.peer}</td>
-    </tr>`;
+    </tr>` + (open ? `<tr class="explain"><td colspan="6"><div class="explain-box">${explain(a)}</div></td></tr>` : "");
   }).join("");
+  fitExplanations();
+}
+
+function fitExplanations() {
+  const scroller = $("alerts-body").closest(".scroll");
+  scroller.style.setProperty("--visible-width", scroller.clientWidth + "px");
+}
+
+function explain(a) {
+  const origin = `<b class="mono">AS${a.observed_origin}</b>`;
+  const prefix = `<b class="mono">${a.prefix}</b>`;
+  const expected = `<b class="mono">AS${(a.expected_origins || []).join(", AS")}</b>`;
+  const what = {
+    origin_hijack: `${origin} anunță prefixul ${prefix} ca și cum i-ar aparține, dar originea legitimă cunoscută este ${expected}. Ruterele care aleg acest anunț trimit traficul pentru ${a.prefix} către AS${a.observed_origin}, nu către proprietar.`,
+    subprefix_hijack: `${origin} anunță ${prefix}, o parte mai specifică din prefixul monitorizat <b class="mono">${a.covering_prefix}</b>, a cărui origine legitimă este ${expected}. Ruterele aleg mereu ruta cea mai specifică, așa că anunțul câștigă în fața rutei legitime oriunde ajunge.`,
+    rpki_invalid: `Anunțul ${prefix} cu originea ${origin} contrazice RPKI: nicio autorizație de origine (ROA) nu îi permite acestui AS să anunțe prefixul la această lungime. Un ruter care validează originea respinge, de regulă, o astfel de rută.`,
+  }[a.alert_type] || a.detail;
+  return `<p>${what}</p><p>${explainPath(a)}</p>`;
+}
+
+function explainPath(a) {
+  const seenBy = labPeers[a.peer] ? `ruterul ${labPeers[a.peer]}` : `vecinul <span class="mono">${a.peer}</span>`;
+  const hops = (a.as_path || []).slice(0, -1).reverse().map(n => "AS" + n);
+  const route = hops.length ? `a trecut prin ${hops.join(", apoi prin ")} până la colector` : "a ajuns direct la colector";
+  return `Colectorul a primit anunțul de la ${seenBy}, pe calea AS <b class="mono">${asPath(a.as_path)}</b>. Calea se citește de la dreapta la stânga: anunțul a pornit din AS${a.observed_origin} și ${route}.`;
+}
+
+function toggleAlert(row) {
+  const id = Number(row.dataset.id);
+  if (!openAlerts.delete(id)) openAlerts.add(id);
+  renderAlerts(shownAlerts);
 }
 
 function renderRoutes(rows) {
@@ -227,13 +347,106 @@ function labelOf(t) {
   return { origin_hijack: "Origine falsă", subprefix_hijack: "Sub-prefix", rpki_invalid: "RPKI-invalid" }[t] || t;
 }
 
+const ROLE_NAME = { victim: "Victimă", transit: "Tranzit", attacker: "Atacator" };
+const REASON = { "Older Path": "ruta mai veche", "Weight": "ruta proprie" };
+
+async function refreshLab() {
+  try {
+    const lab = await fetch("/api/lab").then(r => r.json());
+    if (!lab.ok) throw new Error(lab.error);
+    renderLab(lab);
+    $("dot-lab").className = "dot " + (lab.routers.every(r => r.reachable) ? "up" : "down");
+  } catch (e) {
+    $("dot-lab").className = "dot down";
+    $("topo").innerHTML = '<div class="empty">Vederea laboratorului nu este disponibilă.</div>';
+    $("ribs").innerHTML = "";
+  }
+}
+
+function renderLab(lab) {
+  const by = Object.fromEntries(lab.routers.map(r => [r.role, r]));
+  const attackerAs = by.attacker.asn;
+  labPeers = Object.fromEntries(lab.routers.map(r => [r.address, `${ROLE_NAME[r.role]} (AS${r.asn})`]));
+  $("topo").innerHTML =
+    nodeOf(by.victim, attackerAs) + linkOf(by.transit, by.victim) +
+    nodeOf(by.transit, attackerAs) + linkOf(by.transit, by.attacker) +
+    nodeOf(by.attacker, attackerAs) + collectorOf(lab);
+  $("ribs").innerHTML = lab.routers.map(r => ribOf(r, attackerAs)).join("");
+}
+
+function hasSession(router, peerAddress) {
+  return router.sessions.some(s => s.peer === peerAddress && s.established);
+}
+
+function nodeOf(r, attackerAs) {
+  const own = r.paths.filter(p => !p.as_path.length).map(p => p.prefix);
+  const bad = r.asn === attackerAs;
+  const announces = own.length
+    ? "Anunță: " + own.map(p => `<span class="pfx mono${bad ? " bad" : ""}">${p}</span>`).join(" ")
+    : "Nu anunță niciun prefix.";
+  const state = r.reachable ? announces : '<span class="down-text">Ruter oprit.</span>';
+  return `
+    <div class="node ${r.role}${own.length ? " announcing" : ""}${r.reachable ? "" : " off"}">
+      <h3>${ROLE_NAME[r.role]}</h3>
+      <p class="mono">AS${r.asn} · ${r.address}</p>
+      <p>${state}</p>
+    </div>`;
+}
+
+function linkOf(a, b) {
+  const up = hasSession(a, b.address) || hasSession(b, a.address);
+  return `<div class="link${up ? "" : " down"}">sesiune BGP ${up ? "activă" : "căzută"}</div>`;
+}
+
+function collectorOf(lab) {
+  const taps = lab.routers.map(r => {
+    const up = hasSession(r, lab.collector.address);
+    return `<span class="tap"><span class="dot ${up ? "up" : "down"}"></span>${ROLE_NAME[r.role]}: ${up ? "conectat" : '<span class="down-text">deconectat</span>'}</span>`;
+  }).join("");
+  return `
+    <div class="collector">
+      <h3>Colector</h3>
+      <span class="mono">AS${lab.collector.asn} · ${lab.collector.address}</span>
+      <span>Detectorul ascultă fiecare ruter:</span>
+      ${taps}
+    </div>`;
+}
+
+function ribOf(r, attackerAs) {
+  const pathsOf = {};
+  r.paths.forEach(p => { pathsOf[p.prefix] = (pathsOf[p.prefix] || 0) + 1; });
+  const rows = r.paths.map(p => {
+    const bad = p.origin_as === attackerAs;
+    const origin = `<b${bad ? ' class="bad"' : ""}>${p.origin_as}</b>`;
+    const path = p.as_path.length ? `${p.as_path.slice(0, -1).join(" ")} ${origin}` : `${origin} (local)`;
+    const why = p.best && pathsOf[p.prefix] > 1 && p.reason
+      ? `<div class="why">${REASON[p.reason] || p.reason}</div>` : "";
+    return `
+      <tr${bad ? ' class="bad"' : ""}>
+        <td class="mono pfx-cell">${p.prefix}</td>
+        <td><div class="pathline">
+          <span class="mono">${path}</span>
+          <div class="state"><span class="chip ${p.best ? "best" : "spare"}">${p.best ? "aleasă" : "rezervă"}</span>${why}</div>
+        </div></td>
+      </tr>`;
+  }).join("");
+  const empty = `<tr><td colspan="2" class="empty">${r.reachable ? "Nicio rută." : "Ruter oprit."}</td></tr>`;
+  return `
+    <div class="rib">
+      <h4>${ROLE_NAME[r.role]} <span class="mono">AS${r.asn}</span></h4>
+      <table>
+        <thead><tr><th class="pfx-cell">Prefix</th><th><div class="pathline"><span>Cale AS</span><div class="state">Stare</div></div></th></tr></thead>
+        <tbody>${rows || empty}</tbody>
+      </table>
+    </div>`;
+}
+
 async function loadMonitored() {
   try {
     const rows = await fetch("/api/monitored").then(r => r.json());
     if (rows.length) {
       const m = rows[0];
       $("monitored-note").innerHTML = `Prefix monitorizat: <b class="mono">${m.prefix}</b>, origine legitimă <b class="mono">AS${(m.expected_origins||[]).join(", AS")}</b>.`;
-      $("dot-lab").className = "dot up";
     }
   } catch {}
 }
@@ -251,6 +464,7 @@ async function labAction(kind) {
   } finally {
     btnH.disabled = btnR.disabled = false;
     setTimeout(refresh, 1500);
+    setTimeout(refreshLab, 1500);
   }
 }
 
@@ -273,10 +487,22 @@ async function replayIncident() {
 $("btn-replay").addEventListener("click", replayIncident);
 $("btn-hijack").addEventListener("click", () => labAction("trigger"));
 $("btn-reset").addEventListener("click", () => labAction("reset"));
+$("alerts-body").addEventListener("click", (e) => {
+  const row = e.target.closest("tr.alert-row");
+  if (row) toggleAlert(row);
+});
+$("alerts-body").addEventListener("keydown", (e) => {
+  const row = e.target.closest("tr.alert-row");
+  if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleAlert(row); }
+});
+
+window.addEventListener("resize", fitExplanations);
 
 loadMonitored();
 refresh();
+refreshLab();
 setInterval(refresh, 2000);
+setInterval(refreshLab, 2000);
 </script>
 </body>
 </html>

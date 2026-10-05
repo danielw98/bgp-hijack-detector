@@ -1,10 +1,10 @@
-"""Dashboard for the BGP hijack detector: live alerts, route history, and the demo
-controls (simulate / reset the lab hijack, replay a recorded incident) so a demo
-needs no typed commands.
+"""Dashboard for the BGP hijack detector: live alerts, route history, the lab view
+(sessions and BGP table of each router), and the demo controls (simulate / reset the
+lab hijack, replay a recorded incident) so a demo needs no typed commands.
 
-The controls run commands in the attacker router and in the collector over the Docker
-socket; they are enabled only when LAB_CONTROL=1 and the socket is mounted. The vtysh
-command lists mirror lab/trigger-hijack.sh and lab/stop-hijack.sh.
+The lab view and the controls run commands in the lab routers and in the collector
+over the Docker socket; they are enabled only when LAB_CONTROL=1 and the socket is
+mounted. The vtysh command lists mirror lab/trigger-hijack.sh and lab/stop-hijack.sh.
 """
 
 from __future__ import annotations
@@ -12,12 +12,15 @@ from __future__ import annotations
 import json
 import os
 from contextlib import asynccontextmanager
+from functools import lru_cache
 from pathlib import Path
 
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
+
+import labview
 
 DB_URL = os.environ["BGPWATCH_DATABASE_URL"]
 LAB_CONTROL = os.environ.get("LAB_CONTROL", "0") == "1"
@@ -110,6 +113,15 @@ def monitored() -> list[dict]:
         ).fetchall()
 
 
+@app.get("/api/lab")
+def lab() -> JSONResponse:
+    if not LAB_CONTROL:
+        return JSONResponse(CONTROL_DISABLED, status_code=403)
+    return JSONResponse(
+        {"ok": True, "collector": labview.COLLECTOR, "routers": labview.snapshot(_stdout_of)}
+    )
+
+
 @app.post("/api/lab/trigger")
 def lab_trigger() -> JSONResponse:
     return _lab_action("trigger")
@@ -135,11 +147,21 @@ def lab_replay() -> JSONResponse:
     return JSONResponse({"ok": True, **json.loads(stdout)})
 
 
-def _exec_in(container: str, command: list[str]):
-    """Run a command in a container, keeping its stdout and stderr apart."""
+@lru_cache(maxsize=1)
+def _docker():
     import docker
 
-    return docker.from_env().containers.get(container).exec_run(command, demux=True)
+    return docker.from_env()
+
+
+def _exec_in(container: str, command: list[str]):
+    """Run a command in a container, keeping its stdout and stderr apart."""
+    return _docker().containers.get(container).exec_run(command, demux=True)
+
+
+def _stdout_of(container: str, command: list[str]) -> str:
+    """Run a command in a container and return what it printed on stdout."""
+    return (_exec_in(container, command).output[0] or b"").decode(errors="replace")
 
 
 def _vtysh_commands(action: str) -> list[str]:
