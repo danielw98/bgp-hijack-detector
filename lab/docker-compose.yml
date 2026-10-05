@@ -1,0 +1,58 @@
+name: bgp-hijack-lab
+
+# A self-contained BGP "mini-internet" for demonstrating hijack detection.
+# The labnet is internal (no uplink): FRR has no session to anything real, uses
+# private ASNs (65000-65003) and an RFC 5737 documentation prefix only. Nothing
+# announced here leaves the host.
+
+networks:
+  labnet:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24
+
+x-frr: &frr
+  image: quay.io/frrouting/frr:10.4.5
+  restart: unless-stopped
+  cap_add:
+    - NET_ADMIN
+    - SYS_ADMIN
+    - NET_RAW
+  sysctls:
+    net.ipv4.ip_forward: 1
+
+services:
+  transit:
+    <<: *frr
+    container_name: lab-transit
+    hostname: transit
+    networks:
+      labnet:
+        ipv4_address: 10.10.0.10
+    volumes:
+      - ./frr/transit/frr.conf:/etc/frr/frr.conf:ro
+      - ./frr/daemons:/etc/frr/daemons:ro
+
+  victim:
+    <<: *frr
+    container_name: lab-victim
+    hostname: victim
+    networks:
+      labnet:
+        ipv4_address: 10.10.0.11
+    volumes:
+      - ./frr/victim/frr.conf:/etc/frr/frr.conf:ro
+      - ./frr/daemons:/etc/frr/daemons:ro
+
+  attacker:
+    <<: *frr
+    container_name: lab-attacker
+    hostname: attacker
+    networks:
+      labnet:
+        ipv4_address: 10.10.0.13
+    volumes:
+      - ./frr/attacker/frr.conf:/etc/frr/frr.conf:ro
+      - ./frr/daemons:/etc/frr/daemons:ro
