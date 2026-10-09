@@ -256,6 +256,35 @@ dl.glossary { margin: 0; }
 dl.glossary dt { font-weight: 700; margin-top: 14px; }
 dl.glossary dd { margin: 2px 0 0; }
 
+/* The 2008 incident: AS graph, lanes, scrubber. */
+.graphbox { overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
+svg.asgraph, svg.lanes { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--prose); }
+svg.asgraph .edges line { stroke: var(--line); stroke-width: 1.5; transition: stroke .15s; }
+svg.asgraph .edges line.green { stroke: var(--green); stroke-width: 3; }
+svg.asgraph .edges line.red { stroke: var(--red); stroke-width: 3.5; }
+svg.asgraph .asnode rect { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+svg.asgraph .asnode text { font-family: var(--mono); font-size: 13px; fill: var(--ink); }
+svg.asgraph .asnode .holder { font-family: var(--prose); font-size: 12px; fill: var(--muted); }
+svg.asgraph .asnode.green rect { stroke: var(--green); stroke-width: 2.5; fill: var(--green-tint); }
+svg.asgraph .asnode.red rect { stroke: var(--red); stroke-width: 2.5; fill: var(--red-tint); }
+svg.asgraph .asnode.hijacker rect { stroke: var(--red); stroke-width: 3; }
+svg.asgraph .asnode.owner rect { stroke: var(--green); stroke-width: 3; }
+svg.asgraph .asnode.hot rect { stroke-width: 5; }
+svg.asgraph .axislabel { font-size: 13px; fill: var(--muted); }
+svg.lanes .peer { font-family: var(--mono); font-size: 12.5px; fill: var(--ink); }
+svg.lanes .seg.green { fill: var(--green); }
+svg.lanes .seg.red { fill: var(--red); }
+svg.lanes .seg.grey { fill: var(--line); }
+svg.lanes .tick { stroke: var(--line); stroke-width: 1; }
+svg.lanes .ticklabel { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
+svg.lanes .event { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
+svg.lanes .eventlabel { font-size: 12px; font-weight: 700; fill: var(--ink); }
+svg.lanes .playhead line { stroke: var(--ink); stroke-width: 2; }
+svg.lanes .playhead polygon { fill: var(--ink); }
+label.scrub { flex: 1 1 320px; display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 15px; }
+label.scrub input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: var(--ink); }
+#scrub-time { font-size: 17px; font-weight: 700; }
+
 /* Timeline (filled in by timeline.js). */
 .events { margin: 0; padding: 0; list-style: none; }
 .events li { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 17px; }

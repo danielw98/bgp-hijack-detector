@@ -31,6 +31,11 @@ export function nameOf(asn) {
   return asNames.get(Number(asn)) || "";
 }
 
+// A holder name without its registry handle: "YOUTUBE - Google LLC" becomes "Google LLC".
+export function shortName(name) {
+  return (name || "").replace(/^[A-Z0-9-]+ - /, "").split(",")[0].trim();
+}
+
 // A vantage point by name: the lab router's role, or the RIS peer's address.
 export function peerName(address) {
   const role = labPeers.get(address);

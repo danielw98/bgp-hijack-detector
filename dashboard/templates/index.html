@@ -97,9 +97,17 @@
 
 <div class="figure" id="fig-2008">
   <div class="frame">
-    <div class="frame-head"><h3>Figura 3. Deturnarea YouTube, văzută de vecinii colectorului rrc00</h3><span class="note">18:45-21:05 UTC</span></div>
-    <div id="timeline"></div>
+    <div class="frame-head"><h3>Figura 3. Deturnarea YouTube, văzută de vecinii colectorului rrc00</h3><span class="note">18:45-21:05 UTC, derulează sau redă</span></div>
+    <div id="asgraph" class="graphbox"></div>
+    <div id="lanes" class="graphbox"></div>
+    <div class="controls">
+      <button id="btn-play" class="btn">Redă</button>
+      <label class="scrub">18:45 <input type="range" id="scrub" min="0" max="8400" step="10" value="240" aria-label="momentul din incident"> 21:05</label>
+      <span id="scrub-time" class="mono"></span>
+    </div>
     <div class="frame-body">
+      <p class="caption" id="scrub-caption">Se încarcă...</p>
+      <p class="caption">Harta: sistemele autonome din căile înregistrate, vecinii colectorului la stânga, originile la dreapta; roșu, calea către AS17557, verde, către AS36561. Benzile: pentru fiecare vecin, cui îi trimitea traficul pentru blocul deturnat; numerele marchează evenimentele de mai jos.</p>
       <ol class="events" id="events"></ol>
       <p class="caption" id="msg-2008">Se încarcă...</p>
     </div>
