@@ -1,8 +1,9 @@
 name: bgp-hijack-app
 
 # The detection stack: a route collector (exabgp + bgpwatch) peering with the FRR lab,
-# Postgres for route history and alerts, and the dashboard. The lab's internal network is joined as
-# an external network (bring the lab up first: cd lab && docker compose up -d).
+# Postgres for route history and alerts, the dashboard, and a one-shot loader that puts
+# the recorded 2008 incident into the database once. The lab's internal network is
+# joined as an external network (bring the lab up first: cd lab && docker compose up -d).
 
 networks:
   labnet:
@@ -36,6 +37,7 @@ services:
     build:
       context: .
       dockerfile: detector/Dockerfile
+    image: bgp-hijack-app-collector
     container_name: app-collector
     depends_on:
       db:
@@ -52,6 +54,25 @@ services:
       labnet:
         ipv4_address: 10.10.0.100
       appnet:
+
+  replay:
+    image: bgp-hijack-app-collector
+    container_name: app-replay
+    command: ["python3", "-m", "bgpwatch.replay", "incidents/youtube-2008/config.toml"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      collector:
+        condition: service_started
+    environment:
+      BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
+    volumes:
+      - ./detector/bgpwatch:/opt/bgpwatch/bgpwatch:ro
+      - ./detector/incidents:/opt/bgpwatch/incidents:ro
+      - ./detector/schema.sql:/opt/bgpwatch/schema.sql:ro
+    networks:
+      - appnet
 
   dashboard:
     build:
@@ -73,5 +94,6 @@ services:
       - ./dashboard/app.py:/app/app.py:ro
       - ./dashboard/labview.py:/app/labview.py:ro
       - ./dashboard/templates:/app/templates:ro
+      - ./detector/incidents:/app/incidents:ro
     networks:
       - appnet

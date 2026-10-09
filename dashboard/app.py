@@ -29,13 +29,7 @@ ATTACKER = os.environ.get("LAB_ATTACKER_CONTAINER", "lab-attacker")
 HIJACK_PREFIXES = ["203.0.113.0/24", "203.0.113.0/25"]
 COLLECTOR = os.environ.get("COLLECTOR_CONTAINER", "app-collector")
 INCIDENT = "incidents/youtube-2008"
-REPLAY_COMMAND = [
-    "python3",
-    "-m",
-    "bgpwatch.replay",
-    f"{INCIDENT}/config.toml",
-    f"{INCIDENT}/updates.20080224.1845.gz",
-]
+REPLAY_COMMAND = ["python3", "-m", "bgpwatch.replay", "--force", f"{INCIDENT}/config.toml"]
 RESEND_COMMAND = [
     "vtysh",
     "-c",

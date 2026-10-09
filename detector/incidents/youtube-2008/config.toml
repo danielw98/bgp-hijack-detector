@@ -3,10 +3,31 @@
 #
 # Timeline: RIPE NCC, "YouTube Hijacking: A RIPE NCC RIS case study", 17 March 2008,
 #   https://www.ripe.net/about-us/news/youtube-hijacking-a-ripe-ncc-ris-case-study/
-# Updates:  RIPE RIS collector rrc00, 18:45-18:50 UTC,
-#   https://data.ris.ripe.net/rrc00/2008.02/updates.20080224.1845.gz
+# Updates:  RIPE RIS collector rrc00, 18:45-21:05 UTC, one file per five minutes,
+#   https://data.ris.ripe.net/rrc00/2008.02/updates.20080224.HHMM.gz
 
 [[monitored]]
 prefix = "208.65.152.0/22"
 expected_origins = [36561]
 description = "YouTube, 2008 incident replay"
+
+# The documented timeline (UTC), from the RIPE NCC case study cited above.
+[[events]]
+at = 2008-02-24T18:47:00Z
+label = "AS17557 (Pakistan Telecom) anunță 208.65.153.0/24; AS3491 (PCCW Global) propagă anunțul în tot Internetul"
+
+[[events]]
+at = 2008-02-24T20:07:00Z
+label = "AS36561 (YouTube) anunță la rândul său 208.65.153.0/24; cu două anunțuri identice, ruterele aleg după politică și după lungimea căii"
+
+[[events]]
+at = 2008-02-24T20:18:00Z
+label = "AS36561 (YouTube) anunță 208.65.153.0/25 și 208.65.153.128/25; prefixele mai specifice aduc traficul înapoi"
+
+[[events]]
+at = 2008-02-24T20:51:00Z
+label = "Anunțurile AS17557 apar cu calea prelungită (17557 17557), deci mai multe rutere preferă ruta YouTube"
+
+[[events]]
+at = 2008-02-24T21:01:00Z
+label = "AS3491 (PCCW Global) retrage toate prefixele originate de AS17557; deturnarea se încheie"

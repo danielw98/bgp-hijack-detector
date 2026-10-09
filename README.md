@@ -38,14 +38,14 @@ docker compose down && docker compose -f lab/docker-compose.yml down
 2. **„Simulează deturnarea”.** Atacatorul (AS65003) anunță prefixul exact și sub-prefixul `203.0.113.0/25`. Sub-prefixul apare ca rută aleasă pe toate cele trei rutere. Anunțul fals pentru `/24` rămâne rută de rezervă pe tranzit, care păstrează ruta mai veche a victimei. În tabelul „Alerte” apar cele trei tipuri de alertă.
 3. **O alertă.** Apasă pe ea și primești explicația: cine a anunțat, ce era așteptat și pe unde a ajuns anunțul la colector.
 4. **„Resetează”.** Atacatorul își retrage anunțurile și tabelele revin la starea de bază. Alertele rămân în istoric.
-5. **„Redă incidentul”.** Detectorul primește actualizările BGP reale din 24 februarie 2008 (RIPE RIS, colectorul rrc00, 18:45-18:50 UTC), când AS17557 (Pakistan Telecom) a anunțat `208.65.153.0/24` din spațiul YouTube. Rezultă 3258 de actualizări și 27 de alerte de sub-prefix. Fiecare apăsare le adaugă din nou.
+5. **Incidentul din 2008.** La pornire, aplicația încarcă o singură dată actualizările BGP reale din 24 februarie 2008 (RIPE RIS, colectorul rrc00, 18:45-21:05 UTC, 136.344 de actualizări), când AS17557 (Pakistan Telecom) a anunțat `208.65.153.0/24` din spațiul YouTube. Detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Redă incidentul” le reîncarcă de la zero, fără dubluri.
 6. **„Golește istoricul”.** După confirmare, șterge toate alertele și tot istoricul de rute. Ruterele își retrimit apoi tabelele către colector, așa că rutele curente reapar imediat.
 
 ## Unde citești mai mult
 
 - `referat/referat.md`: referatul cursului, cu noțiunile BGP, patru incidente documentate, arhitectura detectorului, rezultate și limite.
 - `docs/lecturi-bgp.md`: listă de lecturi despre BGP, 25 de surse în 8 etape.
-- `detector/incidents/youtube-2008/config.toml`: sursa datelor redate și prefixul monitorizat.
+- `detector/incidents/youtube-2008/config.toml`: sursa datelor redate, prefixul monitorizat și cronologia documentată a incidentului.
 
 ## Structură
 
