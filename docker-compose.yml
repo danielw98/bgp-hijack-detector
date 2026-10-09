@@ -87,13 +87,12 @@ services:
       LAB_CONTROL: "1"
       LAB_ATTACKER_CONTAINER: lab-attacker
       COLLECTOR_CONTAINER: app-collector
+      INCIDENTS_DIR: /data/incidents
     ports:
       - "8080:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./dashboard/app.py:/app/app.py:ro
-      - ./dashboard/labview.py:/app/labview.py:ro
-      - ./dashboard/templates:/app/templates:ro
-      - ./detector/incidents:/app/incidents:ro
+      - ./dashboard:/app:ro
+      - ./detector/incidents:/data/incidents:ro
     networks:
       - appnet

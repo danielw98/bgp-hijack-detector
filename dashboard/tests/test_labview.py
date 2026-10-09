@@ -1,5 +1,5 @@
 """Lab-view tests against vtysh output captured from the FRR 10.4.5 lab during the
-hijack."""
+hijack (next-hop fields captured on 2026-10-09)."""
 
 from __future__ import annotations
 
@@ -25,14 +25,14 @@ TRANSIT_TABLE = """{
  "vrfId": 0,
  "routerId": "10.10.0.10",
  "localAS": 65000,
- "routes": { "203.0.113.0/24": [{"valid":true,"pathFrom":"external","peerId":"10.10.0.13","path":"65003","origin":"IGP"},{"valid":true,"bestpath":true,"selectionReason":"Older Path","pathFrom":"external","peerId":"10.10.0.11","path":"65001","origin":"IGP"}]
-,"203.0.113.0/25": [{"valid":true,"bestpath":true,"selectionReason":"First path received","pathFrom":"external","peerId":"10.10.0.13","path":"65003","origin":"IGP"}]
+ "routes": { "203.0.113.0/24": [{"valid":true,"pathFrom":"external","peerId":"10.10.0.13","path":"65003","origin":"IGP","nexthops":[{"ip":"10.10.0.13","hostname":"attacker","afi":"ipv4","used":true}]},{"valid":true,"bestpath":true,"selectionReason":"Older Path","pathFrom":"external","peerId":"10.10.0.11","path":"65001","origin":"IGP","nexthops":[{"ip":"10.10.0.11","hostname":"victim","afi":"ipv4","used":true}]}]
+,"203.0.113.0/25": [{"valid":true,"bestpath":true,"selectionReason":"First path received","pathFrom":"external","peerId":"10.10.0.13","path":"65003","origin":"IGP","nexthops":[{"ip":"10.10.0.13","hostname":"attacker","afi":"ipv4","used":true}]}]
  } , "totalRoutes": 2, "totalPaths": 3 } """
 
 VICTIM_TABLE = """{
  "localAS": 65001,
- "routes": { "203.0.113.0/24": [{"valid":true,"bestpath":true,"selectionReason":"First path received","weight":32768,"peerId":"(unspec)","path":"","origin":"IGP"}]
-,"203.0.113.0/25": [{"valid":true,"bestpath":true,"selectionReason":"First path received","peerId":"10.10.0.10","path":"65000 65003","origin":"IGP"}]
+ "routes": { "203.0.113.0/24": [{"valid":true,"bestpath":true,"selectionReason":"First path received","weight":32768,"peerId":"(unspec)","path":"","origin":"IGP","nexthops":[{"ip":"0.0.0.0","hostname":"victim","afi":"ipv4","used":true}]}]
+,"203.0.113.0/25": [{"valid":true,"bestpath":true,"selectionReason":"First path received","peerId":"10.10.0.10","path":"65000 65003","origin":"IGP","nexthops":[{"ip":"10.10.0.10","hostname":"transit","afi":"ipv4","used":true}]}]
  } , "totalRoutes": 2, "totalPaths": 2 } """
 
 
@@ -75,21 +75,24 @@ def test_paths_keep_the_losing_path_without_a_reason() -> None:
         "prefix": "203.0.113.0/24",
         "as_path": [65003],
         "origin_as": 65003,
+        "next_hop": "10.10.0.13",
         "best": False,
         "reason": "",
     }
 
 
-def test_local_path_has_an_empty_as_path_and_the_router_as_origin() -> None:
+def test_local_path_has_an_empty_as_path_the_router_as_origin_and_no_next_hop() -> None:
     local = labview.paths(_table(VICTIM_TABLE))[0]
     assert local["as_path"] == []
     assert local["origin_as"] == 65001
+    assert local["next_hop"] is None
 
 
-def test_learned_path_takes_its_origin_from_the_last_as() -> None:
+def test_learned_path_takes_its_origin_from_the_last_as_and_its_next_hop_from_the_neighbor() -> None:
     learned = labview.paths(_table(VICTIM_TABLE))[1]
     assert learned["as_path"] == [65000, 65003]
     assert learned["origin_as"] == 65003
+    assert learned["next_hop"] == "10.10.0.10"
 
 
 def test_table_without_routes_has_no_paths() -> None:
@@ -109,6 +112,15 @@ def test_snapshot_reads_every_router_with_the_show_command() -> None:
     assert asked == [(r.container, labview.SHOW_COMMAND) for r in labview.ROUTERS]
 
 
+def test_snapshot_names_the_addresses_a_router_answers_for() -> None:
+    def run(container: str, command: list[str]) -> str:
+        return SUMMARY + "\n" + VICTIM_TABLE
+
+    victim, transit, _ = labview.snapshot(run)
+    assert victim["hosts"] == ["203.0.113.1", "203.0.113.129"]
+    assert transit["hosts"] == []
+
+
 def test_snapshot_draws_a_failing_router_as_unreachable() -> None:
     def run(container: str, command: list[str]) -> str:
         raise RuntimeError("container is not running")
@@ -118,8 +130,8 @@ def test_snapshot_draws_a_failing_router_as_unreachable() -> None:
         "role": "victim",
         "address": "10.10.0.11",
         "asn": 65001,
+        "hosts": ["203.0.113.1", "203.0.113.129"],
         "reachable": False,
         "sessions": [],
         "paths": [],
     }
-

@@ -1,5 +1,5 @@
-# Dashboard image: FastAPI serving the alerts/routes UI and the lab control.
-# Build context is the repo root.
+# Dashboard image: FastAPI serving the page, its API and the lab control.
+# Build context is the repo root; .dockerignore keeps tests and caches out.
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -7,8 +7,7 @@ WORKDIR /app
 COPY dashboard/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY dashboard/app.py dashboard/labview.py ./
-COPY dashboard/templates ./templates
+COPY dashboard/ ./
 
 ENV PYTHONUNBUFFERED=1
 

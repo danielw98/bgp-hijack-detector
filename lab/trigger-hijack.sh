@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Inject the hijack live: AS 65003 (attacker) starts announcing the victim's exact
 # prefix (origin hijack) and a more-specific sub-prefix (sub-prefix hijack).
-# Idempotent and reversible with stop-hijack.sh.
+# Idempotent and reversible with stop-hijack.sh. The page runs the same commands as
+# three scenarios (exact prefix only, sub-prefix only, both); this script is "both".
 set -euo pipefail
 
 docker exec lab-attacker vtysh \
