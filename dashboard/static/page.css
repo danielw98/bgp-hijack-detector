@@ -155,6 +155,46 @@ table.data tr.good td { background: var(--green-tint); }
 .state.spare { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
 .why { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
 
+/* The lab graph: AS boxes, router nodes, sessions, collector taps, travelling tokens. */
+#graph { overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
+svg.graph { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--prose); }
+svg.graph .asbox { fill: var(--soft); stroke: var(--line); stroke-width: 1.5; }
+svg.graph .asbox.victim { fill: var(--green-tint); stroke: var(--green); }
+svg.graph .asbox.transit, svg.graph .asbox.collector { fill: var(--blue-tint); stroke: var(--blue); }
+svg.graph .asbox.attacker { fill: var(--red-tint); stroke: var(--red); }
+svg.graph .asbox.collector { stroke-dasharray: 6 5; }
+svg.graph .aslabel { font-size: 17px; font-weight: 700; fill: var(--ink); }
+svg.graph .aslabel .asn { font-family: var(--mono); font-weight: 400; fill: var(--muted); }
+svg.graph .aslabel.victim { fill: var(--green); }
+svg.graph .aslabel.transit, svg.graph .aslabel.collector { fill: var(--blue); }
+svg.graph .aslabel.attacker { fill: var(--red); }
+svg.graph .node rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2; transition: stroke-width .2s; }
+svg.graph .node.victim rect { stroke: var(--green); }
+svg.graph .node.transit rect, svg.graph .node.collector rect { stroke: var(--blue); }
+svg.graph .node.attacker rect { stroke: var(--red); }
+svg.graph .node.off rect { stroke-dasharray: 5 4; }
+svg.graph .node.hot rect { stroke-width: 5; }
+svg.graph .node .name { font-size: 18px; font-weight: 700; fill: var(--ink); }
+svg.graph .node .name .addr { font-family: var(--mono); font-weight: 400; font-size: 14px; fill: var(--muted); }
+svg.graph .node .detail { font-size: 14px; fill: var(--muted); }
+svg.graph .edge { stroke: var(--green); stroke-width: 5; stroke-linecap: round; }
+svg.graph .edge.down { stroke: var(--red); stroke-dasharray: 10 8; }
+svg.graph .edgelabel { font-size: 14px; fill: var(--muted); }
+svg.graph .edgelabel.down { fill: var(--red); font-weight: 700; }
+svg.graph .tap { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
+svg.graph .tap.down { stroke: var(--red); }
+svg.graph .track { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .7; }
+svg.graph .track.packet { stroke: var(--ink); stroke-width: 2; }
+svg.graph .token rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+svg.graph .token text { font-family: var(--mono); font-size: 14px; font-weight: 700; fill: var(--ink); }
+svg.graph .token.withdraw rect { stroke: var(--red); }
+svg.graph .token.withdraw text { fill: var(--red); }
+svg.graph .token.packet rect { fill: var(--ink); }
+svg.graph .token.packet text { fill: #fff; }
+.results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px 28px; }
+@media (min-width: 1000px) { .results { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.results .caption { margin-top: 0; }
+
 /* The three router tables under the lab figure. */
 .ribs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
 .rib { border-right: 1px solid var(--line); min-width: 0; overflow-x: auto; }
