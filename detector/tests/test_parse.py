@@ -66,6 +66,35 @@ def test_non_update_is_ignored() -> None:
     assert announcements_from(KEEPALIVE) == []
 
 
+def test_prefixes_are_read_from_the_dict_keyed_form_too() -> None:
+    message = {
+        "type": "update",
+        "neighbor": {
+            "address": {"local": "10.10.0.100", "peer": "10.10.0.13"},
+            "message": {
+                "update": {
+                    "attribute": {"as-path": [65003]},
+                    "announce": {"ipv4 unicast": {"10.10.0.13": {"203.0.113.0/24": {}}}},
+                }
+            },
+        },
+    }
+    assert [str(a.prefix) for a in announcements_from(message)] == ["203.0.113.0/24"]
+
+
+def test_prefixes_are_read_from_a_plain_string_list_too() -> None:
+    message = {
+        "type": "update",
+        "neighbor": {
+            "address": {"local": "10.10.0.100", "peer": "10.10.0.13"},
+            "message": {"update": {"withdraw": {"ipv4 unicast": ["203.0.113.0/25"]}}},
+        },
+    }
+    (ann,) = announcements_from(message)
+    assert str(ann.prefix) == "203.0.113.0/25"
+    assert ann.withdrawn
+
+
 if __name__ == "__main__":
     from _runner import run
 

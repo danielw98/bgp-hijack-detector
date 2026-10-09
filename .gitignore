@@ -1,5 +1,6 @@
 Thumbs.db
 .claude/settings.local.json
+PROGRESS.md
 __pycache__/
 *.pyc
 .venv/
