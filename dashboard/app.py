@@ -22,6 +22,7 @@ from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
@@ -60,6 +61,7 @@ ROUTE_COLUMNS = """
 """
 
 TEMPLATES = Path(__file__).parent / "templates"
+STATIC = Path(__file__).parent / "static"
 
 pool = ConnectionPool(
     DB_URL, min_size=1, max_size=4, open=False, kwargs={"row_factory": dict_row}
@@ -75,6 +77,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="BGP hijack detector", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)

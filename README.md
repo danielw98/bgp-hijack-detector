@@ -17,6 +17,8 @@ Componente: un laborator cu trei rutere FRR, un colector (exabgp) care ascultă 
 - Deturnarea din laborator este un test: ruterul „atacator” anunță prefixul doar în această rețea închisă.
 - Redarea incidentului din 2008 citește un fișier înregistrat. Nu contactează nicio rețea.
 - Pagina este publicată pe portul 8080 al calculatorului și comandă laboratorul prin socket-ul Docker. Folosește-o local.
+- Niciun pachet real nu traversează laboratorul: Docker aruncă pachetele adresate în afara subrețelei unei rețele interne. „Întreabă nucleele” citește decizia de rutare a fiecărui ruter în loc să trimită pachete.
+- Figura 5 întreabă RIPEstat (`stat.ripe.net`) despre un prefix real; este singura cerere către Internet și doar citește.
 
 ## Pornire și oprire
 
@@ -34,12 +36,14 @@ docker compose down && docker compose -f lab/docker-compose.yml down
 
 ## Ce să apeși
 
-1. **Starea de bază.** În „Laboratorul în direct” vezi cele trei rutere, sesiunile BGP dintre ele și colectorul. Victima (AS65001) anunță `203.0.113.0/24`, iar fiecare tabelă BGP are o singură rută.
-2. **„Simulează deturnarea”.** Atacatorul (AS65003) anunță prefixul exact și sub-prefixul `203.0.113.0/25`. Sub-prefixul apare ca rută aleasă pe toate cele trei rutere. Anunțul fals pentru `/24` rămâne rută de rezervă pe tranzit, care păstrează ruta mai veche a victimei. În tabelul „Alerte” apar cele trei tipuri de alertă.
-3. **O alertă.** Apasă pe ea și primești explicația: cine a anunțat, ce era așteptat și pe unde a ajuns anunțul la colector.
-4. **„Resetează”.** Atacatorul își retrage anunțurile și tabelele revin la starea de bază. Alertele rămân în istoric.
-5. **Incidentul din 2008.** La pornire, aplicația încarcă o singură dată actualizările BGP reale din 24 februarie 2008 (RIPE RIS, colectorul rrc00, 18:45-21:05 UTC, 136.344 de actualizări), când AS17557 (Pakistan Telecom) a anunțat `208.65.153.0/24` din spațiul YouTube. Detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Redă incidentul” le reîncarcă de la zero, fără dubluri.
-6. **„Golește istoricul”.** După confirmare, șterge alertele și istoricul de rute ale laboratorului; incidentul din 2008 rămâne. Ruterele își retrimit apoi tabelele către colector, așa că rutele curente reapar imediat.
+Pagina „Rute furate” este un text de citit de sus în jos, cu cinci figuri vii între paragrafe. Fiecare figură are la bază un sertar „Date brute” cu răspunsul exact al API-ului, iar termenii subliniați punctat deschid o definiție.
+
+1. **Figura 1, laboratorul.** Cele trei rutere și tabela BGP a fiecăruia, citite la fiecare două secunde. Alege scenariul (prefixul exact, sub-prefixul sau ambele) și apasă „Simulează deturnarea”: rândurile atacatorului apar cu roșu, sub-prefixul `203.0.113.0/25` este ales pe toate ruterele, iar prefixul exact rămâne rută de rezervă pe tranzit, care păstrează ruta mai veche a victimei. „Întreabă nucleele” arată, salt cu salt, unde ar ajunge un pachet către `203.0.113.1` (în sub-prefix) sau `203.0.113.129` (în afara lui), după tabelele de rutare ale nucleelor; niciun pachet nu este trimis. „Resetează” retrage anunțurile.
+2. **Figura 2, incidentele.** Alertele aceleiași deturnări, văzute din mai multe puncte de observație, formează un incident. Apasă pe el și primești explicația: cine a anunțat, ce era așteptat, de unde a venit anunțul.
+3. **Figura 3, YouTube 2008.** Cronologia documentată de RIPE NCC și prima observare a sub-prefixului deturnat la fiecare dintre cei 11 vecini ai colectorului rrc00. Actualizările BGP reale din 24 februarie 2008 (18:45-21:05 UTC, 136.344 de actualizări) sunt încărcate o singură dată la pornire; detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Reîncarcă incidentul din fișiere”, în sertar, le rescrie fără dubluri.
+4. **Figura 4, istoricul unui prefix.** Pentru prefixul ales: ruta curentă la fiecare punct de observație și fiecare schimbare, cu starea dinainte și cea de după.
+5. **Figura 5, un prefix real.** Caută un prefix sau o adresă, ori apasă „Adresa mea”: prefixul care o acoperă, originea, deținătorul și verdictul RPKI, de la RIPEstat. Este singura cerere a paginii către Internet și doar citește.
+6. **„Golește istoricul laboratorului”**, la finalul paginii. După confirmare, șterge alertele și istoricul de rute ale laboratorului; incidentul din 2008 rămâne. Ruterele își retrimit apoi tabelele către colector, așa că rutele curente reapar imediat.
 
 ## Unde citești mai mult
 

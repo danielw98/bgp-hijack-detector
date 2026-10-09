@@ -1,0 +1,4 @@
+The typefaces in this directory are Atkinson Hyperlegible Next and Atkinson
+Hyperlegible Mono by the Braille Institute of America, published under the SIL Open
+Font License, Version 1.1 (https://openfontlicense.org). The files were downloaded
+from Google Fonts by scripts/fetch_fonts.py; fonts.css lists the source of each.
