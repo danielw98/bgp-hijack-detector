@@ -82,7 +82,14 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
+    """The application: the live lab first, one view at a time."""
     return (TEMPLATES / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/ghid", response_class=HTMLResponse)
+def guide() -> str:
+    """The guide: the same figures, read from top to bottom with the explanations."""
+    return (TEMPLATES / "ghid.html").read_text(encoding="utf-8")
 
 
 @app.get("/api/stats")

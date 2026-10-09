@@ -3,169 +3,127 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rute furate, detector BGP</title>
+<title>Rute furate, laboratorul</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23c0182b'/%3E%3Cpath d='M7 22 L16 10 L25 22' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/static/fonts.css">
 <link rel="stylesheet" href="/static/page.css">
+<link rel="stylesheet" href="/static/app.css">
 </head>
-<body>
-<header class="col">
-  <h1>Rute furate</h1>
-  <p class="subtitle">Cum se deturnează o rută pe Internet și cum o prinde un detector.</p>
-  <p class="status"><span id="dot-lab" class="dot"></span>Laborator <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux de rute <span id="data-state">se verifică</span>. <span id="updated"></span></p>
+<body class="app">
+<header class="topbar">
+  <a class="brand" href="/">Rute furate</a>
+  <nav class="views" aria-label="vederile aplicației">
+    <a href="#lab" data-view="lab">Laborator</a>
+    <a href="#2008" data-view="2008">YouTube 2008</a>
+    <a href="#prefixe" data-view="prefixe">Prefixe</a>
+    <a href="#verifica" data-view="verifica">Verifică</a>
+    <a href="/ghid" class="guide">Ghid</a>
+  </nav>
+  <p class="status"><span id="dot-lab" class="dot"></span>Laborator <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux <span id="data-state">se verifică</span>. <span id="updated"></span></p>
 </header>
 
-<main>
-<section class="col">
-  <p>La 24 februarie 2008, un anunț BGP pentru un bloc de 256 de adrese a deviat traficul YouTube la scară globală și a fost retras abia după două ore și un sfert. Niciun ruter nu a încălcat protocolul: BGP nu are cum să verifice dacă o rețea are dreptul să anunțe un prefix.</p>
-  <p>Pagina aceasta pornește de la un laborator real, care rulează chiar acum: trei rutere, un atacator pe care îl declanșezi tu și un detector care ascultă totul. Urmează aceeași deturnare din 2008, redată din datele înregistrate atunci, istoricul fiecărui prefix urmărit și o verificare a oricărui prefix real de pe Internet.</p>
-  <ol class="contents">
-    <li><a href="#s1">1. Internetul își spune singur pe unde să trimită traficul</a></li>
-    <li><a href="#s2">2. Ce a văzut detectorul</a></li>
-    <li><a href="#s3">3. Un caz real: YouTube, 24 februarie 2008</a></li>
-    <li><a href="#s4">4. Istoricul unui prefix</a></li>
-    <li><a href="#s5">5. Verifică un prefix real</a></li>
-    <li><a href="#s6">6. Glosar și lecturi</a></li>
-  </ol>
-</section>
-
-<section class="col">
-  <h2 id="s1">1. Internetul își spune singur pe unde să trimită traficul</h2>
-  <p>Internetul este o sumă de rețele independente, <dfn class="term" data-term="as" tabindex="0" role="button">sisteme autonome</dfn>, fiecare cu un număr. Fiecare își <dfn class="term" data-term="announcement" tabindex="0" role="button">anunță</dfn> vecinilor, prin <dfn class="term" data-term="bgp" tabindex="0" role="button">BGP</dfn>, <dfn class="term" data-term="prefix" tabindex="0" role="button">prefixele</dfn> pe care le deține, iar vecinii transmit anunțul mai departe, adăugându-și numărul în <dfn class="term" data-term="as_path" tabindex="0" role="button">calea AS</dfn>. Ultimul număr din cale este <dfn class="term" data-term="origin" tabindex="0" role="button">originea</dfn>, rețeaua care pretinde că deține prefixul.</p>
-  <p>În laborator sunt trei astfel de rețele. <b class="victim">Victima</b> (AS65001) deține prefixul <code>203.0.113.0/24</code> și îl anunță. <b class="transit">Tranzitul</b> (AS65000) este furnizorul care transmite mai departe tot ce primește, exact ca un furnizor real. <b class="attacker">Atacatorul</b> (AS65003) are o sesiune cu tranzitul și, la început, nu anunță nimic. Un <dfn class="term" data-term="collector" tabindex="0" role="button">colector</dfn> ascultă toate cele trei rutere și îi dă detectorului fiecare mesaj.</p>
-</section>
-
-<div class="figure" id="fig-lab">
-  <div class="frame">
-    <div class="frame-head"><h3>Figura 1. Laboratorul, în direct</h3><span class="note">citit din ruterele FRR la fiecare două secunde</span></div>
-    <div id="graph"></div>
-    <div class="frame-body tight">
-      <div class="ribs" id="ribs"><div class="empty">Se citesc tabelele...</div></div>
+<main class="workspace">
+<section class="view" id="view-lab">
+  <div class="view-head"><h2>Laboratorul, în direct</h2><span class="note">trei rutere FRR într-o rețea închisă, citite la fiecare două secunde</span><a class="guide-link" href="/ghid#s1">Cum funcționează, în ghid</a></div>
+  <div class="hero">
+    <div class="panel map">
+      <div id="graph"></div>
+      <div class="controls">
+        <label>Scenariu
+          <select id="scenario">
+            <option value="both">prefixul exact și sub-prefixul</option>
+            <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
+            <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
+          </select>
+        </label>
+        <button id="btn-hijack" class="btn red">Simulează deturnarea</button>
+        <button id="btn-reset" class="btn outline">Resetează</button>
+        <span id="action-msg" class="msg"></span>
+      </div>
+      <div class="controls">
+        <span>Un pachet</span>
+        <label>de la <select id="walk-from"></select></label>
+        <label>către <select id="walk-to"></select></label>
+        <button id="btn-send" class="btn">Trimite pachetul</button>
+        <button id="btn-step" class="btn outline">Pas cu pas</button>
+        <button id="btn-walk" class="btn outline">Întreabă nucleele</button>
+      </div>
     </div>
-    <div class="controls">
-      <label>Scenariu
-        <select id="scenario">
-          <option value="both">prefixul exact și sub-prefixul</option>
-          <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
-          <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
-        </select>
-      </label>
-      <button id="btn-hijack" class="btn red">Simulează deturnarea</button>
-      <button id="btn-reset" class="btn outline">Resetează</button>
-      <span id="action-msg" class="msg"></span>
-    </div>
-    <div class="controls">
-      <span>Unde ar ajunge un pachet?</span>
-      <label>de la <select id="walk-from"></select></label>
-      <label>către <select id="walk-to"></select></label>
-      <button id="btn-send" class="btn">Trimite pachetul</button>
-      <button id="btn-step" class="btn outline">Pas cu pas</button>
-      <button id="btn-walk" class="btn outline">Întreabă nucleele</button>
-    </div>
-    <div class="frame-body results">
-      <div id="sim-result"><p class="caption">„Trimite pachetul” urmărește pachetul pe hartă, după tabelele BGP de mai sus, salt cu salt. „Pas cu pas” face câte un salt la fiecare apăsare.</p></div>
-      <div id="walk-result"><p class="caption">„Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare. Niciun pachet nu este trimis.</p></div>
-    </div>
-    <details class="raw"><summary>Date brute: starea ruterelor, așa cum o dă vtysh</summary><pre id="raw-lab"></pre></details>
+    <aside class="panel side">
+      <h3>Incidente <a class="guide-link" href="/ghid#s2">cele trei verificări, în ghid</a></h3>
+      <div id="incidents" class="feed"><div class="empty">Se încarcă...</div></div>
+    </aside>
   </div>
-</div>
-
-<section class="col">
-  <p>Fiecare ruter alege o singură rută pentru un prefix. Când primește două anunțuri pentru același prefix, preferă calea cu mai puține sisteme autonome, iar la egalitate o păstrează pe cea mai veche. Când două prefixe se suprapun, pachetele urmează prefixul mai specific, <dfn class="term" data-term="subprefix" tabindex="0" role="button">sub-prefixul</dfn>. Apasă „Simulează deturnarea” și urmărește tabelele: anunțul fals pentru <code>/24</code> rămâne rută de rezervă pe tranzit, dar <code>/25</code> nu are concurent și este ales peste tot.</p>
-  <p>Harta arată cele trei sisteme autonome, sesiunile BGP dintre rutere și colectorul. Când o tabelă se schimbă, mesajele UPDATE pornesc de la origine și trec din ruter în ruter, apoi fiecare ruter îi spune colectorului ce a ales. „Trimite pachetul” urmărește un pachet către adresa aleasă: la fiecare ruter câștigă ruta cu prefixul cel mai specific, iar <dfn class="term" data-term="next_hop" tabindex="0" role="button">următorul salt</dfn> al ei spune încotro merge pachetul. Adresa <code>203.0.113.1</code> este în sub-prefixul anunțat de atacator; <code>203.0.113.129</code> nu este. În timpul deturnării, prima ajunge la atacator și este aruncată pe o <dfn class="term" data-term="blackhole" tabindex="0" role="button">rută blackhole</dfn>, a doua ajunge în continuare la victimă.</p>
-  <p>Simularea citește tabelele BGP; „Întreabă nucleele” verifică: fiecare ruter răspunde cu decizia sa reală de rutare pentru aceeași adresă, salt cu salt. Pe segmentul partajat al laboratorului următorul salt al unei rute poate fi direct ruterul de origine, deci atacatorul trimite pachetele victimei fără să treacă prin tranzit, iar nucleele confirmă.</p>
-</section>
-
-<section class="col">
-  <h2 id="s2">2. Ce a văzut detectorul</h2>
-  <p>Detectorul știe dinainte cine are voie să anunțe fiecare prefix urmărit. Pentru fiecare anunț primit face trei verificări: prefixul exact anunțat de altă origine este o <b>origine falsă</b>; un prefix mai specific inclus într-unul urmărit, cu altă origine, este un <b>sub-prefix</b> deturnat; un anunț pe care nicio autorizație <dfn class="term" data-term="rpki" tabindex="0" role="button">RPKI</dfn> nu îl permite este <b>RPKI-invalid</b>. Alertele aceleiași deturnări, văzute din mai multe <dfn class="term" data-term="vantage" tabindex="0" role="button">puncte de observație</dfn>, formează un incident.</p>
-</section>
-
-<div class="figure" id="fig-incidents">
-  <div class="frame">
-    <div class="frame-head"><h3>Figura 2. Incidentele</h3><span class="note">apasă pe un incident ca să vezi ce înseamnă</span></div>
-    <div class="frame-body tight" id="incidents"><div class="empty">Se încarcă...</div></div>
-    <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre id="raw-incidents"></pre></details>
+  <div class="results">
+    <div id="sim-result"><p class="caption">„Trimite pachetul” urmărește pachetul pe hartă, după tabelele BGP de mai jos, salt cu salt. „Pas cu pas” face câte un salt la fiecare apăsare.</p></div>
+    <div id="walk-result"><p class="caption">„Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare. Niciun pachet nu este trimis.</p></div>
   </div>
-</div>
-
-<section class="col">
-  <h2 id="s3">3. Un caz real: YouTube, 24 februarie 2008</h2>
-  <p>AS17557 (Pakistan Telecom) a anunțat <code>208.65.153.0/24</code>, un sub-prefix al blocului <code>208.65.152.0/22</code> anunțat de YouTube (AS36561). Furnizorul său, PCCW Global (AS3491), a transmis anunțul mai departe și în două minute ruta ajunsese la toate colectoarele <dfn class="term" data-term="ris" tabindex="0" role="button">RIPE RIS</dfn>. Fiind mai specifică, atrăgea traficul oriunde era acceptată. YouTube a răspuns după circa 80 de minute cu propriul <code>/24</code>, apoi cu două prefixe <code>/25</code>, iar PCCW a retras rutele la 21:01 UTC.</p>
-  <p>Detectorul primește aici exact mesajele înregistrate atunci de colectorul rrc00, din fișierele <dfn class="term" data-term="mrt" tabindex="0" role="button">MRT</dfn> publice, cu <code>208.65.152.0/22</code> ca prefix urmărit și AS36561 ca origine legitimă. Alerta apare în secunda primului anunț al sub-prefixului, la 18:47:57 UTC.</p>
+  <div class="ribs" id="ribs"><div class="empty">Se citesc tabelele...</div></div>
+  <details class="raw"><summary>Date brute: starea ruterelor, așa cum o dă vtysh</summary><pre id="raw-lab"></pre></details>
+  <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre id="raw-incidents"></pre></details>
+  <p class="guide-row">Ce vezi aici, pe larg: <a href="/ghid#s1">cum își spun rețelele pe unde să trimită traficul</a>, <a href="/ghid#s2">ce verifică detectorul</a>, <a href="/ghid#s6">glosarul</a>.</p>
 </section>
 
-<div class="figure" id="fig-2008">
-  <div class="frame">
-    <div class="frame-head"><h3>Figura 3. Deturnarea YouTube, văzută de vecinii colectorului rrc00</h3><span class="note">18:45-21:05 UTC, derulează sau redă</span></div>
-    <div id="asgraph" class="graphbox"></div>
+<section class="view" id="view-2008" hidden>
+  <div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="/ghid#s3">Povestea, în ghid</a></div>
+  <div class="panel">
     <div id="lanes" class="graphbox"></div>
     <div class="controls">
       <button id="btn-play" class="btn">Redă</button>
       <label class="scrub">18:45 <input type="range" id="scrub" min="0" max="8400" step="10" value="240" aria-label="momentul din incident"> 21:05</label>
       <span id="scrub-time" class="mono"></span>
     </div>
-    <div class="frame-body">
-      <p class="caption" id="scrub-caption">Se încarcă...</p>
-      <p class="caption">Harta: sistemele autonome din căile înregistrate, vecinii colectorului la stânga, originile la dreapta; roșu, calea către AS17557, verde, către AS36561. Benzile: pentru fiecare vecin, cui îi trimitea traficul pentru blocul deturnat; numerele marchează evenimentele de mai jos.</p>
-      <ol class="events" id="events"></ol>
-      <p class="caption" id="msg-2008">Se încarcă...</p>
-    </div>
-    <div class="frame-body tight scroll-x" id="peers-2008"></div>
-    <details class="raw">
-      <summary>Date brute: cronologia, numele AS-urilor și actualizările prefixelor YouTube</summary>
-      <pre id="raw-2008"></pre>
-      <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; laboratorul nu este atins.</span></div>
-    </details>
+    <div class="body"><p class="caption" id="scrub-caption">Se încarcă...</p></div>
   </div>
-</div>
-
-<section class="col">
-  <h2 id="s4">4. Istoricul unui prefix</h2>
-  <p>Fiecare anunț și fiecare retragere primite de colector sunt păstrate în baza de date, cu prefixul într-un tip nativ care permite căutări de incluziune. Pentru un prefix urmărit, pagina arată ce rută are acum fiecare punct de observație și fiecare moment în care ruta s-a schimbat.</p>
+  <div class="panel">
+    <h3>Căile din înregistrare <span class="note">vecinii colectorului la stânga, originile la dreapta; roșu către AS17557, verde către AS36561</span></h3>
+    <div id="asgraph" class="graphbox"></div>
+  </div>
+  <div class="panel">
+    <h3>Evenimentele documentate de RIPE NCC</h3>
+    <ol class="events" id="events"></ol>
+    <div class="body"><p class="caption" id="msg-2008">Se încarcă...</p></div>
+  </div>
+  <div class="panel">
+    <h3>Prima observare a sub-prefixului deturnat, la fiecare vecin</h3>
+    <div class="scroll-x" id="peers-2008"></div>
+  </div>
+  <details class="raw">
+    <summary>Date brute: cronologia, numele AS-urilor și actualizările prefixelor YouTube</summary>
+    <pre id="raw-2008"></pre>
+    <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; laboratorul nu este atins.</span></div>
+  </details>
 </section>
 
-<div class="figure" id="fig-prefix">
-  <div class="frame">
-    <div class="frame-head"><h3>Figura 4. Istoricul unui prefix</h3><label>prefix urmărit <select id="prefix-select"></select></label></div>
-    <div class="frame-body lookup-result" id="prefix-head">Se încarcă...</div>
-    <div class="frame-body tight scroll-x" id="prefix-current"></div>
-    <div class="frame-head"><h3>Schimbările, cele mai noi primele</h3></div>
-    <div class="frame-body tight scroll-x" id="prefix-changes"></div>
-    <details class="raw"><summary>Date brute: starea curentă, schimbările și alertele prefixului</summary><pre id="raw-prefix"></pre></details>
-  </div>
-</div>
-
-<section class="col">
-  <h2 id="s5">5. Verifică un prefix real</h2>
-  <p><dfn class="term" data-term="rpki" tabindex="0" role="button">RPKI</dfn> este răspunsul Internetului la problema de mai sus: deținătorul unui bloc de adrese semnează o autorizație (ROA) care spune ce AS poate anunța prefixul și până la ce lungime. Un ruter care validează respinge, de regulă, un anunț invalid. În laborator, autorizația spune că doar AS65001 poate anunța <code>203.0.113.0/24</code>, cu lungimea maximă 24, de aceea și <code>/25</code>-ul atacatorului este invalid. Datele de mai jos vin la cerere de la RIPEstat, serviciul public de date al RIPE NCC.</p>
+<section class="view" id="view-prefixe" hidden>
+  <div class="view-head"><h2>Istoricul unui prefix</h2><label>prefix urmărit <select id="prefix-select"></select></label><a class="guide-link" href="/ghid#s4">Ce se păstrează, în ghid</a></div>
+  <div class="panel"><div class="body lookup-result" id="prefix-head">Se încarcă...</div></div>
+  <div class="panel"><h3>Ruta curentă la fiecare punct de observație</h3><div class="scroll-x" id="prefix-current"></div></div>
+  <div class="panel"><h3>Schimbările, cele mai noi primele</h3><div class="scroll-x" id="prefix-changes"></div></div>
+  <details class="raw"><summary>Date brute: starea curentă, schimbările și alertele prefixului</summary><pre id="raw-prefix"></pre></details>
 </section>
 
-<div class="figure" id="fig-lookup">
-  <div class="frame">
-    <div class="frame-head"><h3>Figura 5. Un prefix real, astăzi</h3></div>
+<section class="view" id="view-verifica" hidden>
+  <div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC</span><a class="guide-link" href="/ghid#s5">RPKI, în ghid</a></div>
+  <div class="panel">
     <form class="controls" id="lookup-form">
       <label>adresă sau prefix <input type="text" id="lookup-input" value="193.0.0.0/21" spellcheck="false" autocomplete="off"></label>
       <button type="submit" id="btn-lookup" class="btn">Caută</button>
       <button type="button" id="btn-self" class="btn outline">Adresa mea</button>
       <span id="lookup-msg" class="msg"></span>
     </form>
-    <div class="frame-body lookup-result" id="lookup-result"><p class="caption">Încearcă prefixul RIPE NCC de mai sus, sau apasă „Adresa mea”.</p></div>
-    <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
+    <div class="body lookup-result" id="lookup-result"><p class="caption">Încearcă prefixul RIPE NCC de mai sus, sau apasă „Adresa mea”.</p></div>
   </div>
-</div>
-
-<section class="col">
-  <h2 id="s6">6. Glosar și lecturi</h2>
-  <dl class="glossary" id="glossary"></dl>
-  <p style="margin-top: 24px">Mai departe: referatul proiectului, <code>referat/referat.md</code>, cu patru incidente documentate, mitigările și arhitectura detectorului; lista de lecturi <code>docs/lecturi-bgp.md</code>, 25 de surse în 8 etape; și studiul de caz RIPE NCC din 2008, sursa cronologiei din Figura 3.</p>
-  <p>Laboratorul este o rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul. Deturnarea este un test, redat la cerere. Verificarea din Figura 5 este singura cerere către Internet și doar citește.</p>
-  <p><button id="btn-clear" class="btn outline red small">Golește istoricul laboratorului</button> <span id="clear-msg" class="msg"></span></p>
+  <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
 </section>
 </main>
 
-<footer class="col">Proiect pentru cursul PTIRC, tema 9, masterul TCSI, Universitatea Națională de Știință și Tehnologie POLITEHNICA București, 2025-2026.</footer>
+<footer class="appfoot">
+  <p>Rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul. Verificarea unui prefix real este singura cerere către Internet și doar citește.</p>
+  <p><button id="btn-clear" class="btn outline red small">Golește istoricul laboratorului</button> <span id="clear-msg" class="msg"></span></p>
+</footer>
 
 <script type="module" src="/static/main.js"></script>
+<script type="module" src="/static/app.js"></script>
 </body>
 </html>

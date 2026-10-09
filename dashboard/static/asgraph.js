@@ -8,7 +8,7 @@ import { esc, nameOf, shortName } from "./format.js";
 const W = 1000;
 const CHIP = { w: 104, h: 26 };
 const COLUMN = 150;
-const ROW = 36;
+const ROW = 32;
 const TOP = 44;
 
 export function createAsGraph(container, paths, highlight) {
