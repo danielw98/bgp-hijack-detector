@@ -25,8 +25,8 @@ echo [1/3] Pornesc laboratorul: trei rutere FRR, izolate de internet...
 docker compose -f lab\docker-compose.yml up -d
 if errorlevel 1 goto failed
 
-echo [2/3] Pornesc detectorul: colector, Postgres, pagina web. Prima pornire poate dura 5 minute...
-docker compose up -d --build
+echo [2/3] Pornesc detectorul: statia BMP, Postgres, pagina web. Prima pornire poate dura 5 minute...
+docker compose up -d --build --remove-orphans
 if errorlevel 1 goto failed
 
 echo [3/3] Verific pagina...
@@ -61,6 +61,6 @@ exit /b 1
 :page_down
 echo.
 echo Pagina nu a pornit. Jurnalul ei:
-docker compose logs --tail 30 dashboard
+docker compose logs --tail 30 app
 pause
 exit /b 1

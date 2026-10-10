@@ -4,6 +4,8 @@ PROGRESS.md
 __pycache__/
 *.pyc
 .venv/
+bin/
+obj/
 .playwright-mcp/
 /baseline.png
 /hijack.png

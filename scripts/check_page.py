@@ -18,15 +18,18 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIC = ROOT / "dashboard" / "static"
+STATIC = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static"
 SHOTS = ROOT / ".playwright-mcp"
 WIDTHS = (390, 1366, 1920)
 SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, #graph"
 MIN_CONTRAST = 4.5
-TEXT_SUFFIXES = {".md", ".html", ".js", ".css", ".py", ".toml", ".sql", ".sh", ".conf", ".bat", ".txt", ".yml", ".json"}
-CODE_SUFFIXES = {".js", ".css", ".py"}
+TEXT_SUFFIXES = {
+    ".md", ".html", ".cshtml", ".js", ".css", ".py", ".cs", ".csproj", ".slnx", ".props", ".c", ".h",
+    ".tex", ".toml", ".sql", ".sh", ".conf", ".bat", ".txt", ".yml", ".json",
+}
+CODE_SUFFIXES = {".js", ".css", ".py", ".cs", ".c", ".h"}
 EMOJI = re.compile(
-    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F900-\U0001F9FF\U0001FA70-\U0001FAFF️⭐⭕]"
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F900-\U0001F9FF\U0001FA70-\U0001FAFF\uFE0F\u2B50\u2B55]"
 )
 COMMENT = re.compile(r"^\s*(//|#(?!!)|/\*|\*)")
 

@@ -1,7 +1,9 @@
 .git
 .playwright-mcp
-**/__pycache__
-**/tests
+**/bin
+**/obj
+tests
 *.png
 detector/mrt/build
-referat/resources
+referat
+docs

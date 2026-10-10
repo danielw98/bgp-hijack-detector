@@ -4,7 +4,7 @@ setlocal
 cd /d "%~dp0"
 
 echo [1/2] Opresc detectorul...
-docker compose down
+docker compose down --remove-orphans
 if errorlevel 1 goto failed
 
 echo [2/2] Opresc laboratorul...

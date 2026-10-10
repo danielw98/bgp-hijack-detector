@@ -1,6 +1,6 @@
 """Vendor the page's typefaces: download the latin and latin-ext woff2 files that
 Google Fonts serves for Atkinson Hyperlegible Next and Mono (400 and 700) into
-dashboard/static/fonts/, and write fonts.css with the matching @font-face rules.
+src/BGPWatch.Web/wwwroot/static/fonts/, and write fonts.css with the matching @font-face rules.
 Both families are published under the SIL Open Font License 1.1.
 
 Usage: python scripts/fetch_fonts.py
@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FONTS_DIR = ROOT / "dashboard" / "static" / "fonts"
+FONTS_DIR = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static" / "fonts"
 FAMILIES = ["Atkinson Hyperlegible Next", "Atkinson Hyperlegible Mono"]
 WEIGHTS = "400..700"
 SUBSETS = ("latin", "latin-ext")

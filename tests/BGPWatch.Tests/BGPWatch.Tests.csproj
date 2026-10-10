@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BGPWatch.Core\BGPWatch.Core.csproj" />
+    <ProjectReference Include="..\..\src\BGPWatch.Web\BGPWatch.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\detector\mrt\build\*.dll;..\..\detector\mrt\build\*.so" Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="..\..\detector\incidents\youtube-2008\config.toml" Link="Fixtures\youtube-2008.toml"
+          CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="..\..\detector\incidents\youtube-2008\updates.20080224.1845.gz" Link="Fixtures\updates.20080224.1845.gz"
+          CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="..\..\detector\config.toml" Link="Fixtures\lab.toml" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

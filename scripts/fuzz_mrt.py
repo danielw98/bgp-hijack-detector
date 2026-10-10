@@ -1,5 +1,5 @@
 """Run the MRT parser's sanitizer fuzz (detector/mrt/fuzz.sh) in a container that has
-gcc: the build stage of the collector image, with no network. Exits with the
+gcc: the parser's build stage of the app image (Dockerfile, stage mrt), with no network. Exits with the
 harness's exit code.
 
 Usage: python scripts/fuzz_mrt.py [iterations]
@@ -19,7 +19,7 @@ SEED = "incidents/youtube-2008/updates.20080224.1845.gz"
 def main(argv: list[str]) -> int:
     iterations = argv[1] if len(argv) > 1 else "20000"
     subprocess.run(
-        ["docker", "build", "--quiet", "--target", "mrt", "-t", IMAGE, "-f", "detector/Dockerfile", "."],
+        ["docker", "build", "--quiet", "--target", "mrt", "-t", IMAGE, "."],
         cwd=ROOT,
         check=True,
     )

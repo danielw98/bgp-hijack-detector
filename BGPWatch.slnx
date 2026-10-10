@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BGPWatch.Core/BGPWatch.Core.csproj" />
+    <Project Path="src/BGPWatch.Web/BGPWatch.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BGPWatch.Tests/BGPWatch.Tests.csproj" />
+  </Folder>
+</Solution>

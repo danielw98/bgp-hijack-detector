@@ -1,9 +1,10 @@
 name: bgp-hijack-app
 
-# The detection stack: a route collector (exabgp + bgpwatch) peering with the FRR lab,
-# Postgres for route history and alerts, the dashboard, and a one-shot loader that puts
-# the recorded 2008 incident into the database once. The lab's internal network is
-# joined as an external network (bring the lab up first: cd lab && docker compose up -d).
+# The detection stack: Postgres for route history and alerts, and the app (BGPWatch):
+# the BMP station the FRR lab routers report to, the detector, the loader that puts
+# the recorded 2008 incident into the database once, and the dashboard. The lab's
+# internal network is joined as an external network (bring the lab up first:
+# cd lab && docker compose up -d).
 
 networks:
   labnet:
@@ -33,66 +34,27 @@ services:
       timeout: 3s
       retries: 20
 
-  collector:
+  app:
     build:
       context: .
-      dockerfile: detector/Dockerfile
-    image: bgp-hijack-app-collector
-    container_name: app-collector
+    image: bgp-hijack-app
+    container_name: app-bgpwatch
     depends_on:
       db:
         condition: service_healthy
     environment:
-      BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
+      ConnectionStrings__BGPWatch: Host=db;Username=bgp;Password=bgp;Database=bgp
+      LAB_CONTROL: "1"
+      LAB_ATTACKER_CONTAINER: lab-attacker
+    ports:
+      - "8080:8080"
     volumes:
-      - ./detector/exabgp.conf:/etc/exabgp/exabgp.conf:ro
-      - ./detector/bgpwatch:/opt/bgpwatch/bgpwatch:ro
-      - ./detector/config.toml:/opt/bgpwatch/config.toml:ro
-      - ./detector/incidents:/opt/bgpwatch/incidents:ro
-      - ./detector/schema.sql:/opt/bgpwatch/schema.sql:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./src/BGPWatch.Web/wwwroot:/app/wwwroot:ro
+      - ./detector/config.toml:/data/config.toml:ro
+      - ./detector/incidents:/data/incidents:ro
+      - ./detector/schema.sql:/data/schema.sql:ro
     networks:
       labnet:
         ipv4_address: 10.10.0.100
       appnet:
-
-  replay:
-    image: bgp-hijack-app-collector
-    container_name: app-replay
-    command: ["python3", "-m", "bgpwatch.replay", "incidents/youtube-2008/config.toml"]
-    restart: "no"
-    depends_on:
-      db:
-        condition: service_healthy
-      collector:
-        condition: service_started
-    environment:
-      BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
-    volumes:
-      - ./detector/bgpwatch:/opt/bgpwatch/bgpwatch:ro
-      - ./detector/incidents:/opt/bgpwatch/incidents:ro
-      - ./detector/schema.sql:/opt/bgpwatch/schema.sql:ro
-    networks:
-      - appnet
-
-  dashboard:
-    build:
-      context: .
-      dockerfile: dashboard/Dockerfile
-    container_name: app-dashboard
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      BGPWATCH_DATABASE_URL: postgresql://bgp:bgp@db:5432/bgp
-      LAB_CONTROL: "1"
-      LAB_ATTACKER_CONTAINER: lab-attacker
-      COLLECTOR_CONTAINER: app-collector
-      INCIDENTS_DIR: /data/incidents
-    ports:
-      - "8080:8000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./dashboard:/app:ro
-      - ./detector/incidents:/data/incidents:ro
-    networks:
-      - appnet

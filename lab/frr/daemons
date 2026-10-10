@@ -1,5 +1,5 @@
 # Which FRR daemons the lab routers run. Only zebra + bgpd + staticd are needed
-# for a control-plane BGP lab.
+# for a control-plane BGP lab; bgpd loads the BMP module to report to the station.
 bgpd=yes
 zebra=yes
 staticd=yes
@@ -23,5 +23,5 @@ pathd=no
 
 vtysh_enable=yes
 zebra_options="  -A 127.0.0.1 -s 90000000"
-bgpd_options="   -A 127.0.0.1"
+bgpd_options="   -A 127.0.0.1 -M bmp"
 staticd_options="-A 127.0.0.1"

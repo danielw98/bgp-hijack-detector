@@ -2,7 +2,8 @@
 yield the same routes (timestamp, peer, prefix, withdrawn, AS path, next hop).
 Prints one JSON line per file and exits 1 on a difference.
 
-Needs `pip install mrtparse` and the built parser (sh detector/mrt/build.sh).
+Needs `pip install mrtparse` and the app image (docker compose build), whose dump verb
+reads the file with the C parser.
 
 Usage: python scripts/compare_mrtparse.py <updates.mrt[.gz|.bz2]>...
 """
@@ -12,14 +13,13 @@ from __future__ import annotations
 import json
 import sys
 from collections import Counter
+from datetime import datetime
 from ipaddress import ip_address, ip_network
 from pathlib import Path
 
 from mrtparse import Reader
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "detector"))
-
-from bgpwatch.mrt import read_mrt  # noqa: E402
+from dumped_routes import dumped_routes
 
 BGP4MP_TYPES = {16, 17}
 TWO_OCTET_SUBTYPES = {1, 6}
@@ -123,8 +123,9 @@ def reference_routes(path: str) -> tuple[list[Route], Counter]:
 
 def parser_routes(path: str) -> list[Route]:
     return [
-        (int(a.seen_at.timestamp()), a.peer, str(a.prefix), a.withdrawn, a.as_path, canonical(a.next_hop))
-        for a in read_mrt(path)
+        (int(datetime.fromisoformat(r["seen_at"]).timestamp()), r["peer"], r["prefix"], r["withdrawn"],
+         tuple(r["as_path"]), canonical(r["next_hop"]))
+        for r in dumped_routes(path)
     ]
 
 

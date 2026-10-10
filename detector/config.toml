@@ -1,7 +1,4 @@
 # Ground truth for the detector. The lab uses one monitored prefix and one ROA.
-# database_url is overridden by BGPWATCH_DATABASE_URL in the compose stack.
-
-database_url = "postgresql://bgp:bgp@db:5432/bgp"
 
 [[monitored]]
 prefix = "203.0.113.0/24"
