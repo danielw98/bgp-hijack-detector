@@ -16,13 +16,15 @@ Componente: un laborator cu trei rutere FRR, care își raportează rutele prin 
 - Ruterele folosesc numere AS private (65000, 65001, 65003) și prefixul de documentație `203.0.113.0/24` (RFC 5737). Stația BMP doar ascultă: nu are sesiuni BGP și nu anunță nimic.
 - Deturnarea din laborator este un test: ruterul „atacator” anunță prefixul doar în această rețea închisă.
 - Redarea incidentului din 2008 citește un fișier înregistrat. Nu contactează nicio rețea.
-- Pagina este publicată pe portul 8080 al calculatorului și comandă laboratorul prin socket-ul Docker. Folosește-o local.
+- Local, pagina este publicată pe portul 8080 al calculatorului; pe server este servită sub prefixul `/bgp`. În ambele cazuri comandă laboratorul prin socket-ul Docker, deci oricine vede pagina poate declanșa și reseta deturnarea de test, și nimic altceva.
 - Niciun pachet real nu traversează laboratorul: Docker aruncă pachetele adresate în afara subrețelei unei rețele interne. „Întreabă nucleele” citește decizia de rutare a fiecărui ruter în loc să trimită pachete.
 - Figura 5 întreabă RIPEstat (`stat.ripe.net`) despre un prefix real; este singura cerere către Internet și doar citește.
 
 ## Pornire și oprire
 
-Ai nevoie de [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Instanța publică rulează la <https://student-dev.ro/bgp/>: aceeași aplicație, cu laboratorul pornit pe server.
+
+Local ai nevoie de [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 - **Pornire:** dublu-clic pe `start.bat`. Pornește Docker Desktop dacă este oprit, apoi laboratorul și detectorul, și deschide pagina `http://localhost:8080`. Prima pornire construiește imaginile și durează câteva minute.
 - **Oprire:** dublu-clic pe `stop.bat`. Istoricul rutelor și alertele rămân în volumul Docker.
@@ -60,5 +62,6 @@ Pagina de pornire este aplicația: laboratorul în direct, pe tot ecranul, cu pa
 - `detector/mrt/`: parserul BGP și MRT în C.
 - `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: datele incidentului din 2008, configurația laboratorului și schema bazei de date.
 - `scripts/`: măsurătorile din referat și verificările lui și ale paginii.
+- `docker-compose.yml` este forma de producție; `docker-compose.override.yml` (încărcat implicit) adaugă portul local și fișierele montate din arborele de lucru; `docker-compose.server.yml` și `deploy/nginx-bgp.conf` sunt stratul pentru server.
 
 Teste: `sh detector/mrt/build.sh`, apoi `dotnet test --solution BGPWatch.slnx`.

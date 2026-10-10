@@ -5,6 +5,10 @@ name: bgp-hijack-app
 # the recorded 2008 incident into the database once, and the dashboard. The lab's
 # internal network is joined as an external network (bring the lab up first:
 # cd lab && docker compose up -d).
+#
+# This file is the production shape. docker-compose.override.yml (loaded by default)
+# adds the local port and the bind mounts for development; docker-compose.server.yml
+# is the student-dev.ro layer (compose -f docker-compose.yml -f docker-compose.server.yml).
 
 networks:
   labnet:
@@ -46,14 +50,8 @@ services:
       ConnectionStrings__BGPWatch: Host=db;Username=bgp;Password=bgp;Database=bgp
       LAB_CONTROL: "1"
       LAB_ATTACKER_CONTAINER: lab-attacker
-    ports:
-      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./src/BGPWatch.Web/wwwroot:/app/wwwroot:ro
-      - ./detector/config.toml:/data/config.toml:ro
-      - ./detector/incidents:/data/incidents:ro
-      - ./detector/schema.sql:/data/schema.sql:ro
     networks:
       labnet:
         ipv4_address: 10.10.0.100

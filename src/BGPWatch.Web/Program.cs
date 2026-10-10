@@ -51,6 +51,10 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 
 var app = builder.Build();
 await RouteLog.EnsureSchemaAsync(app.Services.GetRequiredService<NpgsqlDataSource>(), settings.Schema, CancellationToken.None);
+if (settings.PathBase.Length > 0)
+{
+    app.UsePathBase(settings.PathBase);
+}
 app.UseStaticFiles();
 app.MapRazorPages();
 ReadEndpoints.Map(app);

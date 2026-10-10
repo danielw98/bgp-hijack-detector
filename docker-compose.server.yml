@@ -1,0 +1,19 @@
+# student-dev.ro layer: docker compose -f docker-compose.yml -f docker-compose.server.yml up -d --no-build
+# The app is served at https://student-dev.ro/bgp/ by the shared studlab nginx over studlab_net
+# (vhost: deploy/nginx-bgp.conf); no host port. The image is built locally and shipped
+# (infra scripts/deploy_bgp.ps1). The lab compose is unchanged on the server.
+
+networks:
+  studlab_net:
+    external: true
+
+services:
+  db:
+    restart: unless-stopped
+
+  app:
+    restart: unless-stopped
+    environment:
+      PATH_BASE: /bgp
+    networks:
+      studlab_net:

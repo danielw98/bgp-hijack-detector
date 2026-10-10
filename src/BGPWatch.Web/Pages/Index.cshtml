@@ -4,26 +4,26 @@
     ViewData["BodyClass"] = "app";
 }
 @section Styles {
-<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="~/static/app.css">
 }
 @section Scripts {
-<script type="module" src="/static/app.js"></script>
+<script type="module" src="~/static/app.js"></script>
 }
 <header class="topbar">
-  <a class="brand" href="/">Rute furate</a>
+  <a class="brand" href="~/">Rute furate</a>
   <nav class="views" aria-label="vederile aplicației">
     <a href="#lab" data-view="lab">Laborator</a>
     <a href="#2008" data-view="2008">YouTube 2008</a>
     <a href="#prefixe" data-view="prefixe">Prefixe</a>
     <a href="#verifica" data-view="verifica">Verifică</a>
-    <a href="/ghid" class="guide">Ghid</a>
+    <a href="~/ghid" class="guide">Ghid</a>
   </nav>
   <p class="status"><span id="dot-lab" class="dot"></span>Laborator <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux <span id="data-state">se verifică</span>. <span id="updated"></span></p>
 </header>
 
 <main class="workspace">
 <section class="view" id="view-lab">
-  <div class="view-head"><h2>Laboratorul, în direct</h2><span class="note">trei rutere FRR într-o rețea închisă, citite la fiecare două secunde</span><a class="guide-link" href="/ghid#s1">Cum funcționează, în ghid</a></div>
+  <div class="view-head"><h2>Laboratorul, în direct</h2><span class="note">trei rutere FRR într-o rețea închisă, citite la fiecare două secunde</span><a class="guide-link" href="~/ghid#s1">Cum funcționează, în ghid</a></div>
   <div class="hero">
     <div class="panel map">
       <div id="graph"></div>
@@ -49,7 +49,7 @@
       </div>
     </div>
     <aside class="panel side">
-      <h3>Incidente <a class="guide-link" href="/ghid#s2">cele trei verificări, în ghid</a></h3>
+      <h3>Incidente <a class="guide-link" href="~/ghid#s2">cele trei verificări, în ghid</a></h3>
       <div id="incidents" class="feed"><div class="empty">Se încarcă...</div></div>
     </aside>
   </div>
@@ -60,11 +60,11 @@
   <div class="ribs" id="ribs"><div class="empty">Se citesc tabelele...</div></div>
   <details class="raw"><summary>Date brute: starea ruterelor, așa cum o dă vtysh</summary><pre id="raw-lab"></pre></details>
   <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre id="raw-incidents"></pre></details>
-  <p class="guide-row">Ce vezi aici, pe larg: <a href="/ghid#s1">cum își spun rețelele pe unde să trimită traficul</a>, <a href="/ghid#s2">ce verifică detectorul</a>, <a href="/ghid#s6">glosarul</a>.</p>
+  <p class="guide-row">Ce vezi aici, pe larg: <a href="~/ghid#s1">cum își spun rețelele pe unde să trimită traficul</a>, <a href="~/ghid#s2">ce verifică detectorul</a>, <a href="~/ghid#s6">glosarul</a>.</p>
 </section>
 
 <section class="view" id="view-2008" hidden>
-  <div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="/ghid#s3">Povestea, în ghid</a></div>
+  <div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="~/ghid#s3">Povestea, în ghid</a></div>
   <div class="panel">
     <div id="lanes" class="graphbox"></div>
     <div class="controls">
@@ -95,7 +95,7 @@
 </section>
 
 <section class="view" id="view-prefixe" hidden>
-  <div class="view-head"><h2>Istoricul unui prefix</h2><label>prefix urmărit <select id="prefix-select"></select></label><a class="guide-link" href="/ghid#s4">Ce se păstrează, în ghid</a></div>
+  <div class="view-head"><h2>Istoricul unui prefix</h2><label>prefix urmărit <select id="prefix-select"></select></label><a class="guide-link" href="~/ghid#s4">Ce se păstrează, în ghid</a></div>
   <div class="panel"><div class="body lookup-result" id="prefix-head">Se încarcă...</div></div>
   <div class="panel"><h3>Ruta curentă la fiecare punct de observație</h3><div class="scroll-x" id="prefix-current"></div></div>
   <div class="panel"><h3>Schimbările, cele mai noi primele</h3><div class="scroll-x" id="prefix-changes"></div></div>
@@ -103,7 +103,7 @@
 </section>
 
 <section class="view" id="view-verifica" hidden>
-  <div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC</span><a class="guide-link" href="/ghid#s5">RPKI, în ghid</a></div>
+  <div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC</span><a class="guide-link" href="~/ghid#s5">RPKI, în ghid</a></div>
   <div class="panel">
     <form class="controls" id="lookup-form">
       <label>adresă sau prefix <input type="text" id="lookup-input" value="193.0.0.0/21" spellcheck="false" autocomplete="off"></label>

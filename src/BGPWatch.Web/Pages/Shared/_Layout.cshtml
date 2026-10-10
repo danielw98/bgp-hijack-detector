@@ -1,17 +1,17 @@
 <!doctype html>
-<html lang="ro">
+<html lang="ro" data-base="@Context.Request.PathBase">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@ViewData["Title"]</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23c0182b'/%3E%3Cpath d='M7 22 L16 10 L25 22' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/static/fonts.css">
-<link rel="stylesheet" href="/static/page.css">
+<link rel="stylesheet" href="~/static/fonts.css">
+<link rel="stylesheet" href="~/static/page.css">
 @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="@ViewData["BodyClass"]">
 @RenderBody()
-<script type="module" src="/static/main.js"></script>
+<script type="module" src="~/static/main.js"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
