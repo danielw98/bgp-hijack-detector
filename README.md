@@ -8,12 +8,12 @@ Detectează trei situații:
 - **sub-prefix**: o parte mai specifică a prefixului, anunțată de un AS străin;
 - **RPKI-invalid**: anunț pe care nicio autorizație de origine (ROA) nu îl permite.
 
-Componente: un laborator cu trei rutere FRR, un colector (exabgp) care ascultă toate ruterele, detectorul scris în Python, o bază de date Postgres pentru istoricul rutelor și al alertelor, o pagină web și un parser MRT scris în C, care redă date reale din arhiva RIPE RIS.
+Componente: un laborator cu trei rutere FRR, care își raportează rutele prin BMP (BGP Monitoring Protocol) către o stație de monitorizare, aplicația BGPWatch scrisă în C# (stația BMP, detectorul, pagina web), o bază de date Postgres pentru istoricul rutelor și al alertelor și un parser BGP scris în C, care decodează atât mesajele din laborator, cât și datele reale din arhiva RIPE RIS.
 
 ## Garanții de izolare
 
 - Rețeaua laboratorului este internă (`internal: true` în `lab/docker-compose.yml`), fără uplink. Niciun anunț nu părăsește calculatorul.
-- Ruterele folosesc numere AS private (65000, 65001, 65003, colectorul 65100) și prefixul de documentație `203.0.113.0/24` (RFC 5737).
+- Ruterele folosesc numere AS private (65000, 65001, 65003) și prefixul de documentație `203.0.113.0/24` (RFC 5737). Stația BMP doar ascultă: nu are sesiuni BGP și nu anunță nimic.
 - Deturnarea din laborator este un test: ruterul „atacator” anunță prefixul doar în această rețea închisă.
 - Redarea incidentului din 2008 citește un fișier înregistrat. Nu contactează nicio rețea.
 - Pagina este publicată pe portul 8080 al calculatorului și comandă laboratorul prin socket-ul Docker. Folosește-o local.
@@ -43,7 +43,7 @@ Pagina de pornire este aplicația: laboratorul în direct, pe tot ecranul, cu pa
 3. **Figura 3, YouTube 2008.** O cronologie de derulat: harta sistemelor autonome din căile înregistrate (vecinii colectorului la stânga, originile la dreapta) se colorează cu căile folosite în momentul ales, iar o bandă pentru fiecare dintre cei 11 vecini ai colectorului rrc00 arată cui îi trimitea traficul pentru blocul deturnat, roșu către AS17557, verde către YouTube. Trage cursorul sau apasă „Redă” (180x); cele cinci evenimente documentate de RIPE NCC sunt marcate, iar sub hartă stă prima observare a sub-prefixului la fiecare vecin. Actualizările BGP reale (18:45-21:05 UTC, 136.344 de actualizări) sunt încărcate o singură dată la pornire; detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Reîncarcă incidentul din fișiere”, în sertar, le rescrie fără dubluri.
 4. **Figura 4, istoricul unui prefix.** Pentru prefixul ales: ruta curentă la fiecare punct de observație și fiecare schimbare, cu starea dinainte și cea de după.
 5. **Figura 5, un prefix real.** Caută un prefix sau o adresă, ori apasă „Adresa mea”: prefixul care o acoperă, originea, deținătorul și verdictul RPKI, de la RIPEstat. Este singura cerere a paginii către Internet și doar citește.
-6. **„Golește istoricul laboratorului”**, la finalul paginii. După confirmare, șterge alertele și istoricul de rute ale laboratorului; incidentul din 2008 rămâne. Ruterele își retrimit apoi tabelele către colector, așa că rutele curente reapar imediat.
+6. **„Golește istoricul laboratorului”**, la finalul paginii. După confirmare, șterge alertele și istoricul de rute ale laboratorului; incidentul din 2008 rămâne. Stația închide apoi conexiunile BMP, ruterele se reconectează și își retrimit tabelele, așa că rutele curente reapar imediat.
 
 ## Unde citești mai mult
 
@@ -54,9 +54,11 @@ Pagina de pornire este aplicația: laboratorul în direct, pe tot ecranul, cu pa
 ## Structură
 
 - `lab/`: configurațiile FRR și scripturile care pornesc și opresc deturnarea de test.
-- `detector/bgpwatch/`: modelele, detecția, parserele și scrierea în Postgres.
-- `detector/mrt/`: parserul MRT în C.
-- `dashboard/`: pagina web și API-ul ei.
-- `scripts/`: măsurătorile din referat și verificarea lui.
+- `src/BGPWatch.Core/`: nucleul, fără dependențe: modelul de domeniu, detecția, gruparea alertelor în incidente, istoricul unui prefix, cazurile de utilizare.
+- `src/BGPWatch.Web/`: adaptoarele și gazda: stația BMP, legătura cu parserul C, Postgres, Docker, RIPEstat, API-ul și paginile (Razor Pages, `wwwroot/static/`).
+- `tests/BGPWatch.Tests/`: testele unitare.
+- `detector/mrt/`: parserul BGP și MRT în C.
+- `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: datele incidentului din 2008, configurația laboratorului și schema bazei de date.
+- `scripts/`: măsurătorile din referat și verificările lui și ale paginii.
 
-Teste: `sh detector/mrt/build.sh`, apoi `python -m pytest detector/tests dashboard/tests`.
+Teste: `sh detector/mrt/build.sh`, apoi `dotnet test --solution BGPWatch.slnx`.
