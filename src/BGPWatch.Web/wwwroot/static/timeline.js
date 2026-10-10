@@ -4,7 +4,7 @@
 
 import { get, post } from "./api.js";
 import { createAsGraph } from "./asgraph.js";
-import { chain, esc, fmtUtc, nameOf, registerNames, shortName } from "./format.js";
+import { chain, esc, fmtUtc, nameOf, plural, registerNames, shortName } from "./format.js";
 import { contains, prefixLength } from "./simulate.js";
 
 const $ = (id) => document.getElementById(id);
@@ -47,7 +47,7 @@ async function load() {
     setTime(current);
     $("raw-2008").textContent = JSON.stringify({ meta, updates }, null, 2);
     $("msg-2008").textContent = updates.length
-      ? `${updates.length} actualizări ale prefixelor YouTube, de la ${incident.peers.length} vecini ai colectorului; ${graph.size.nodes} sisteme autonome și ${graph.size.edges} legături în căile lor.`
+      ? `${plural(updates.length, "actualizare", "actualizări")} ale prefixelor YouTube, de la ${plural(incident.peers.length, "vecin", "vecini")} ai colectorului. Căile lor trec prin ${plural(graph.size.nodes, "sistem autonom", "sisteme autonome")}; harta le arată pe cele ${graph.size.shown} care decid drumul: vecinii, cele care predau ruta originii și originile.`
       : "Incidentul nu este încărcat încă; apasă „Reîncarcă incidentul”.";
   } catch (e) {
     $("msg-2008").textContent = "Eroare: " + e.message;

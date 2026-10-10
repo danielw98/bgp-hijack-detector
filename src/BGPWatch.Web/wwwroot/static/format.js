@@ -82,8 +82,12 @@ export function fmtUtc(iso, withSeconds = true) {
   return isNaN(t) ? esc(iso) : t.toISOString().slice(11, withSeconds ? 19 : 16);
 }
 
+// A count with its noun; from 20 on, Romanian puts "de" between them (51 de alerte),
+// except after 01-19 in the last two digits (101 alerte).
 export function plural(n, one, many) {
-  return `${n} ${n === 1 ? one : many}`;
+  if (n === 1) return `1 ${one}`;
+  const de = n >= 20 && (n % 100 === 0 || n % 100 >= 20) ? "de " : "";
+  return `${n} ${de}${many}`;
 }
 
 export function pretty(data) {

@@ -259,7 +259,10 @@ dl.glossary dd { margin: 2px 0 0; }
 /* The 2008 incident: AS graph, lanes, scrubber. */
 .graphbox { overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
 svg.asgraph, svg.lanes { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--prose); }
-svg.asgraph .edges line { stroke: var(--line); stroke-width: 1.5; transition: stroke .15s; }
+svg.asgraph .edges line { stroke: var(--line); stroke-width: 1.5; stroke-opacity: 0; transition: stroke .15s, stroke-opacity .15s; }
+svg.asgraph .edges line.folded { stroke-dasharray: 7 5; }
+svg.asgraph .edges line.green, svg.asgraph .edges line.red, svg.asgraph .edges line.grey { stroke-opacity: 1; }
+svg.asgraph .edges line.grey { stroke: var(--muted); stroke-width: 2.5; }
 svg.asgraph .edges line.green { stroke: var(--green); stroke-width: 3; }
 svg.asgraph .edges line.red { stroke: var(--red); stroke-width: 3.5; }
 svg.asgraph .asnode rect { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
