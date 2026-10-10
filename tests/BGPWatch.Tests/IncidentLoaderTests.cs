@@ -98,6 +98,46 @@ public class IncidentLoaderTests
         Assert.Equal("208.65.152.0/22", Assert.Single(log.Synced).Prefix.ToString());
     }
 
+    private sealed class HeldLog(TaskCompletionSource release) : IRouteLog
+    {
+        public int Counts { get; private set; }
+
+        public Task SyncMonitoredAsync(IEnumerable<MonitoredPrefix> monitored, CancellationToken cancel)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task AppendAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
+        {
+            return release.Task;
+        }
+
+        public Task<SourceCounts> CountAsync(string source, CancellationToken cancel)
+        {
+            Counts++;
+            return Task.FromResult(new SourceCounts(0, 0));
+        }
+
+        public Task DeleteAsync(string source, CancellationToken cancel)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public async Task ASecondLoadWaitsForTheFirstToFinish()
+    {
+        var release = new TaskCompletionSource();
+        var log = new HeldLog(release);
+        var loader = new IncidentLoader(log, new FakeArchive(1), NullLogger.Instance);
+        var first = loader.LoadAsync(Config, Source, ["a.gz"], force: true, CancellationToken.None);
+        var second = loader.LoadAsync(Config, Source, ["a.gz"], force: true, CancellationToken.None);
+        Assert.Equal(1, log.Counts);
+        release.SetResult();
+        await Task.WhenAll(first, second);
+        Assert.Equal(2, log.Counts);
+    }
+
     [Fact]
     public async Task AnAlertCarriesTheCoveringPrefixAndThePath()
     {

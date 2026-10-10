@@ -7,11 +7,27 @@ public sealed record LoadSummary(string Source, long Updates, long Alerts, bool 
 /// <summary>
 /// Loads the recorded files of an incident through the pipeline under the incident's
 /// name, once: a source already stored is left alone unless the load is forced, which
-/// replaces it.
+/// replaces it. Loads run one at a time, so a reload never interleaves with another load.
 /// </summary>
 public sealed class IncidentLoader(IRouteLog log, IUpdateArchive archive, ILogger logger)
 {
+    private readonly SemaphoreSlim oneAtATime = new(1, 1);
+
     public async Task<LoadSummary> LoadAsync(DetectorConfig config, string source, IEnumerable<string> files,
+        bool force, CancellationToken cancel)
+    {
+        await oneAtATime.WaitAsync(cancel);
+        try
+        {
+            return await LoadAloneAsync(config, source, files, force, cancel);
+        }
+        finally
+        {
+            oneAtATime.Release();
+        }
+    }
+
+    private async Task<LoadSummary> LoadAloneAsync(DetectorConfig config, string source, IEnumerable<string> files,
         bool force, CancellationToken cancel)
     {
         var pipeline = new Pipeline(config, log, logger, source);
