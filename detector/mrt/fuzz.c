@@ -1,5 +1,6 @@
 /* Mutation harness for the MRT parser: parses a seed file under random byte flips and
-   truncations. Built with ASan and UBSan by fuzz.sh, so any out-of-bounds read or
+   truncations, as MRT records and, from a BGP marker of the seed on, as one bare BGP
+   message. Built with ASan and UBSan by fuzz.sh, so any out-of-bounds read or
    undefined operation aborts the run.
 
    Usage: fuzz <seed.mrt> <iterations> */
@@ -10,7 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum { MAX_FLIPS = 32 };
+enum { MAX_FLIPS = 32, MARKER_SIZE = 16 };
+
+typedef struct
+{
+    unsigned long long routes;
+    unsigned long long malformed;
+} tally;
 
 static uint64_t state = 0x9E3779B97F4A7C15u;
 
@@ -61,6 +68,40 @@ static uint8_t *mutated(const uint8_t *seed, size_t seed_size, size_t iteration,
     return realloc(data, *size == 0 ? 1 : *size);
 }
 
+/* The offset of a BGP marker (sixteen 0xFF octets) in data, picked at random. */
+static size_t marker_offset(const uint8_t *data, size_t size)
+{
+    size_t count = 0;
+    size_t picked = size;
+    size_t run = 0;
+    for (size_t i = 0; i < size; i++)
+    {
+        run = data[i] == 0xFF ? run + 1 : 0;
+        if (run == MARKER_SIZE && next_random() % ++count == 0)
+        {
+            picked = i + 1 - MARKER_SIZE;
+        }
+    }
+    return picked;
+}
+
+static void drain(mrt_reader *reader, mrt_route *route, tally *counts)
+{
+    mrt_status status;
+    while ((status = mrt_next(reader, route)) != MRT_END)
+    {
+        if (status == MRT_MALFORMED)
+        {
+            counts->malformed++;
+        }
+        else
+        {
+            counts->routes++;
+        }
+    }
+    mrt_close(reader);
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 3)
@@ -72,31 +113,21 @@ int main(int argc, char **argv)
     uint8_t *seed = read_file(argv[1], &seed_size);
     size_t iterations = strtoul(argv[2], NULL, 10);
     mrt_route *route = malloc(sizeof *route);
-    unsigned long long routes = 0;
-    unsigned long long malformed = 0;
+    tally records = {0, 0};
+    tally messages = {0, 0};
 
     for (size_t i = 0; i < iterations; i++)
     {
         size_t size = 0;
         uint8_t *data = mutated(seed, seed_size, i, &size);
-        mrt_reader *reader = mrt_open(data, size);
-        mrt_status status;
-        while ((status = mrt_next(reader, route)) != MRT_END)
-        {
-            if (status == MRT_MALFORMED)
-            {
-                malformed++;
-            }
-            else
-            {
-                routes++;
-            }
-        }
-        mrt_close(reader);
+        drain(mrt_open(data, size), route, &records);
+        size_t offset = marker_offset(data, size);
+        drain(bgp_update_open(data + offset, size - offset), route, &messages);
         free(data);
     }
-    printf("{\"iterations\": %zu, \"routes\": %llu, \"malformed_records\": %llu}\n", iterations, routes,
-           malformed);
+    printf("{\"iterations\": %zu, \"routes\": %llu, \"malformed_records\": %llu, "
+           "\"message_routes\": %llu, \"malformed_messages\": %llu}\n",
+           iterations, records.routes, records.malformed, messages.routes, messages.malformed);
     free(route);
     free(seed);
     return 0;

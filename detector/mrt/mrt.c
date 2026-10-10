@@ -54,6 +54,7 @@ struct mrt_reader
 {
     span input;
     int overrun;
+    int bare; /* the input is one BGP message, not MRT records */
     uint32_t timestamp;
     mrt_address peer;
     as_path path;
@@ -224,7 +225,24 @@ static void read_update(mrt_reader *reader, span update, size_t as_width)
     add_run(reader, (prefix_run){update, 4, 0, next_hop});
 }
 
-/* Decodes the BGP4MP peer header and, when the message is an UPDATE, its body. */
+/* Decodes one BGP message from its marker on and, when it is an UPDATE, its body. */
+static void read_bgp_message(mrt_reader *reader, span *source, size_t as_width)
+{
+    take(source, BGP_MARKER_SIZE);
+    uint32_t message_size = read_uint(source, 2);
+    uint32_t message_type = read_uint(source, 1);
+    if (message_size < BGP_HEADER_SIZE)
+    {
+        reader->overrun = 1;
+        return;
+    }
+    if (message_type == BGP_UPDATE)
+    {
+        read_update(reader, take(source, message_size - BGP_HEADER_SIZE), as_width);
+    }
+}
+
+/* Decodes the BGP4MP peer header and the BGP message after it. */
 static void read_message(mrt_reader *reader, span record, size_t as_width)
 {
     take(&record, as_width); /* peer AS */
@@ -232,18 +250,13 @@ static void read_message(mrt_reader *reader, span record, size_t as_width)
     uint32_t afi = read_uint(&record, 2);
     uint8_t family = family_of(afi);
     reader->peer = read_address(&record, family);
-    take(&record, address_size(family) + BGP_MARKER_SIZE); /* local address, marker */
-    uint32_t message_size = read_uint(&record, 2);
-    uint32_t message_type = read_uint(&record, 1);
-    if (!is_ip(afi) || message_size < BGP_HEADER_SIZE)
+    take(&record, address_size(family)); /* local address */
+    if (!is_ip(afi))
     {
         reader->overrun = 1;
         return;
     }
-    if (message_type == BGP_UPDATE)
-    {
-        read_update(reader, take(&record, message_size - BGP_HEADER_SIZE), as_width);
-    }
+    read_bgp_message(reader, &record, as_width);
 }
 
 static int is_message(uint32_t type, uint32_t subtype)
@@ -269,6 +282,12 @@ static int load_record(mrt_reader *reader)
     if (remaining(&reader->input) == 0)
     {
         return 0;
+    }
+    if (reader->bare)
+    {
+        span message = take(&reader->input, remaining(&reader->input));
+        read_bgp_message(reader, &message, 4);
+        return 1;
     }
     reader->timestamp = read_uint(&reader->input, 4);
     uint32_t type = read_uint(&reader->input, 2);
@@ -336,6 +355,16 @@ mrt_reader *mrt_open(const uint8_t *data, size_t size)
     if (reader != NULL)
     {
         reader->input = (span){data, data + size, &reader->overrun};
+    }
+    return reader;
+}
+
+mrt_reader *bgp_update_open(const uint8_t *message, size_t size)
+{
+    mrt_reader *reader = mrt_open(message, size);
+    if (reader != NULL)
+    {
+        reader->bare = 1;
     }
     return reader;
 }

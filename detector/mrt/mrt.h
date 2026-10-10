@@ -1,5 +1,6 @@
-/* Reader for MRT files (RFC 6396). Decodes the BGP UPDATEs carried by BGP4MP and
-   BGP4MP_ET message records into one mrt_route per IPv4/IPv6 unicast prefix. */
+/* Reader for MRT files (RFC 6396) and for bare BGP UPDATE messages. Decodes the
+   UPDATEs carried by BGP4MP and BGP4MP_ET message records, or one UPDATE as BMP route
+   monitoring carries it (RFC 7854), into one mrt_route per IPv4/IPv6 unicast prefix. */
 
 #ifndef MRT_H
 #define MRT_H
@@ -38,6 +39,11 @@ typedef struct mrt_reader mrt_reader;
 
 /* The reader borrows data, which must outlive it. Returns NULL when out of memory. */
 mrt_reader *mrt_open(const uint8_t *data, size_t size);
+
+/* A reader over one BGP message (RFC 4271, from its marker on) with four-octet AS
+   numbers, as BMP carries it. Its routes have no timestamp and no peer: the caller
+   knows both. Borrows message like mrt_open. Returns NULL when out of memory. */
+mrt_reader *bgp_update_open(const uint8_t *message, size_t size);
 
 /* Fills route with the next prefix. MRT_MALFORMED reports one record whose remaining
    prefixes were dropped; the reader continues with the following record. */
