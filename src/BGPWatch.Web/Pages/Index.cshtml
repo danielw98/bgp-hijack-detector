@@ -33,33 +33,7 @@
 <section class="view" id="view-2008" hidden>
 <div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="~/ghid#s3">În ghid, §3</a></div>
 <div class="view-body"><div class="inner">
-  <div class="panel">
-    <div id="lanes" class="graphbox"></div>
-    <div class="controls">
-      <button id="btn-play" class="btn">Redă</button>
-      <label class="scrub">18:45 <input type="range" id="scrub" min="0" max="8400" step="10" value="240" aria-label="momentul din incident"> 21:05</label>
-      <span id="scrub-time" class="mono"></span>
-    </div>
-    <div class="body"><p class="caption" id="scrub-caption">Se încarcă...</p></div>
-  </div>
-  <div class="panel">
-    <h3>Căile din înregistrare <span class="note">vecinii colectorului la stânga, cine predă ruta originii la mijloc, originile la dreapta; roșu către AS17557, verde către AS36561</span></h3>
-    <div id="asgraph" class="graphbox"></div>
-  </div>
-  <div class="panel">
-    <h3>Evenimentele documentate de RIPE NCC</h3>
-    <ol class="events" id="events"></ol>
-    <div class="body"><p class="caption" id="msg-2008">Se încarcă...</p></div>
-  </div>
-  <div class="panel">
-    <h3>Prima observare a sub-prefixului deturnat, la fiecare vecin</h3>
-    <div class="scroll-x" id="peers-2008"></div>
-  </div>
-  <details class="raw">
-    <summary>Date brute: cronologia, numele AS-urilor și actualizările prefixelor YouTube</summary>
-    <pre id="raw-2008"></pre>
-    <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; simulatorul nu este atins.</span></div>
-  </details>
+  @await Html.PartialAsync("_Incident2008")
 </div>
 </div>
 </section>

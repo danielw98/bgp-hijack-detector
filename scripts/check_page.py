@@ -220,6 +220,10 @@ def check_layout(url: str, name: str) -> list[str]:
                     out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
                 if view == "simulator" and width >= WORKSPACE_FROM and result["scrollHeight"] > result["innerHeight"] + 1:
                     out.append(f"{label}: page scrolls vertically ({result['scrollHeight']} > {result['innerHeight']})")
+                if view == "2008" and width >= WORKSPACE_FROM:
+                    body = page.evaluate("() => { const b = document.querySelector('#view-2008 .view-body'); return [b.scrollHeight, b.clientHeight]; }")
+                    if body[0] > body[1] + 1:
+                        out.append(f"{label}: the 2008 view scrolls ({body[0]} > {body[1]})")
                 for element in result["wide"]:
                     out.append(f"{label}: {element} is wider than the viewport")
                 if view in ("simulator", ""):
@@ -231,8 +235,6 @@ def check_layout(url: str, name: str) -> list[str]:
     return out
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
 def check_references(url: str) -> list[str]:
     from playwright.sync_api import sync_playwright
 
@@ -264,3 +266,5 @@ def check_references(url: str) -> list[str]:
     return out
 
 
+if __name__ == "__main__":
+    raise SystemExit(main())

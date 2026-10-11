@@ -207,37 +207,83 @@ dl.glossary { margin: 0; }
 dl.glossary dt { font-weight: 700; margin-top: 14px; }
 dl.glossary dd { margin: 2px 0 0; }
 
-/* The 2008 incident: AS graph, lanes, scrubber. */
-.graphbox { overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
-svg.asgraph, svg.lanes { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--prose); }
-svg.asgraph .edges line { stroke: var(--line); stroke-width: 1.5; stroke-opacity: 0; transition: stroke .15s, stroke-opacity .15s; }
-svg.asgraph .edges line.folded { stroke-dasharray: 7 5; }
-svg.asgraph .edges line.green, svg.asgraph .edges line.red, svg.asgraph .edges line.grey { stroke-opacity: 1; }
-svg.asgraph .edges line.grey { stroke: var(--muted); stroke-width: 2.5; }
-svg.asgraph .edges line.green { stroke: var(--green); stroke-width: 3; }
-svg.asgraph .edges line.red { stroke: var(--red); stroke-width: 3.5; }
-svg.asgraph .asnode rect { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
-svg.asgraph .asnode text { font-family: var(--mono); font-size: 13px; fill: var(--ink); }
-svg.asgraph .asnode .holder { font-family: var(--prose); font-size: 12px; fill: var(--muted); }
-svg.asgraph .asnode.green rect { stroke: var(--green); stroke-width: 2.5; fill: var(--green-tint); }
-svg.asgraph .asnode.red rect { stroke: var(--red); stroke-width: 2.5; fill: var(--red-tint); }
-svg.asgraph .asnode.hijacker rect { stroke: var(--red); stroke-width: 3; }
-svg.asgraph .asnode.owner rect { stroke: var(--green); stroke-width: 3; }
-svg.asgraph .asnode.hot rect { stroke-width: 5; }
-svg.asgraph .axislabel { font-size: 13px; fill: var(--muted); }
-svg.lanes .peer { font-family: var(--mono); font-size: 12.5px; fill: var(--ink); }
-svg.lanes .seg.green { fill: var(--green); }
-svg.lanes .seg.red { fill: var(--red); }
-svg.lanes .seg.grey { fill: var(--line); }
-svg.lanes .tick { stroke: var(--line); stroke-width: 1; }
-svg.lanes .ticklabel { font-family: var(--mono); font-size: 12px; fill: var(--muted); }
-svg.lanes .event { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
-svg.lanes .eventlabel { font-size: 12px; font-weight: 700; fill: var(--ink); }
-svg.lanes .playhead line { stroke: var(--ink); stroke-width: 2; }
-svg.lanes .playhead polygon { fill: var(--ink); }
-label.scrub { flex: 1 1 320px; display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 15px; }
-label.scrub input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: var(--ink); }
-#scrub-time { font-size: 17px; font-weight: 700; }
+/* The 2008 incident: transport, current event, one row per peer (lane and path). */
+.inc { --peer: 236px; --path: 470px; display: flex; flex-direction: column; gap: 8px; }
+.frame > .inc { padding: 14px 16px; }
+.inc-transport { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+#scrub-time { font-family: var(--mono); font-size: 18px; font-weight: 700; }
+.inc .count { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border: 1.5px solid currentColor; border-radius: 4px; font-size: 15px; }
+.inc .count b { font-size: 17px; }
+.inc .count.attacker { color: var(--red); background: var(--red-tint); }
+.inc .count.victim { color: var(--green); background: var(--green-tint); }
+.inc .count .swatch { width: 14px; height: 14px; background: currentColor; }
+.inc .count .to { color: var(--ink); }
+.inc .speed { margin-left: auto; font-size: 15px; color: var(--muted); }
+.inc-event { display: flex; align-items: center; gap: 14px; padding: 9px 10px 9px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; font-size: 16px; min-height: 58px; }
+.inc-event .badge { flex: none; min-width: 28px; height: 28px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.inc-event .t { flex: none; font-family: var(--mono); font-size: 18px; font-weight: 700; }
+.inc-event .label { flex: 1 1 auto; min-width: 0; }
+.inc-event .jumps { flex: none; display: inline-flex; gap: 8px; }
+.inc-table { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.inc-row { display: grid; grid-template-columns: var(--peer) minmax(0, 1fr) var(--path); align-items: center; height: 34px; border-bottom: 1px solid var(--line); }
+.inc-row.head { height: 36px; background: var(--soft); font-size: 15px; color: var(--muted); }
+.inc-row.axis { height: 30px; border-bottom: none; }
+.inc-row .c-peer { padding-left: 14px; font-family: var(--mono); font-size: 15px; white-space: nowrap; }
+.inc-row.head .c-peer, .inc-row.head .c-path { font-family: var(--prose); }
+.inc-row .c-peer .asn { color: var(--muted); }
+.inc-row .c-lane { position: relative; height: 100%; padding: 0 16px; cursor: ew-resize; touch-action: none; }
+.inc-row .c-lane svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.inc-row .c-path { padding: 0 10px; min-width: 0; overflow: hidden; }
+.inc .seg.green { fill: var(--green); }
+.inc .seg.red { fill: var(--red); }
+.inc .seg.grey { fill: var(--line); }
+.inc line.event { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .5; }
+.inc line.event.current { opacity: 1; }
+.inc line.cursor { stroke: var(--ink); stroke-width: 3; }
+.inc .track { position: absolute; inset: 0 16px; }
+.inc .mark { position: absolute; top: 4px; transform: translateX(-50%); font-weight: 700; color: var(--muted); }
+.inc .mark.current { color: var(--ink); }
+.inc .handle { position: absolute; bottom: 0; width: 0; height: 0; transform: translateX(-7px); border: 7px solid transparent; border-top: 10px solid var(--ink); border-bottom: 0; }
+.inc-row.axis .c-lane { cursor: auto; }
+.inc .tick { position: absolute; top: 11px; transform: translateX(-50%); font-family: var(--mono); font-size: 15px; color: var(--muted); }
+.inc .tick.end { transform: translateX(-100%); }
+.inc #scrub { position: absolute; left: 8px; right: 8px; top: -6px; width: calc(100% - 16px); margin: 0; accent-color: var(--ink); }
+.inc .c-path .chain { flex-wrap: nowrap; }
+.inc .chain .as { padding: 0 5px; border-width: 1px; border-color: var(--line); }
+.inc .chain .as.hand { border-width: 1.5px; }
+.inc .chain .as.hand.attacker, .inc .chain .as.origin.attacker { border-color: var(--red); }
+.inc .chain .as.hand.victim, .inc .chain .as.origin.victim { border-color: var(--green); }
+.inc .chain .as.hand { color: var(--ink); }
+.inc .chain .as.origin { font-size: 17px; font-weight: 700; border-width: 1.5px; }
+.inc .chain .as.origin.attacker { background: var(--red-tint); }
+.inc .chain .as.origin.victim { background: var(--green-tint); }
+.inc .chain .times { font-size: 13px; margin-left: 2px; }
+.inc .assumed { color: var(--muted); font-size: 15px; }
+.inc-more { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: flex-start; }
+.inc-more details { flex: 0 1 auto; }
+.inc-more details[open] { flex: 1 1 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.inc-more details > summary { cursor: pointer; font-size: 16px; font-weight: 700; color: var(--blue); padding: 4px 0; }
+.inc-more details[open] > summary { padding: 8px 14px; border-bottom: 1px solid var(--line); }
+.inc-more details .events, .inc-more details .caption { padding: 0 14px; }
+.inc-more details.raw, .app .inc-more details.raw { border-top: none; margin-top: 0; }
+.inc-more details:not([open]), .app .inc-more details.raw:not([open]) { background: none; border: none; }
+.inc-more details.raw > summary { color: var(--blue); }
+
+/* Below 900px the path drops under the lane, so each peer takes two lines. */
+@media (max-width: 899px) {
+  .inc-row { grid-template-columns: minmax(0, 1fr); height: auto; padding: 6px 0; }
+  .inc-row .c-lane { height: 22px; }
+  .inc-row.head .c-peer, .inc-row.head .c-path { display: none; }
+  .inc-row.head { height: 40px; padding: 0; }
+  .inc-row.head .c-lane { height: 100%; }
+  .inc-row.axis { height: 40px; padding: 0; }
+  .inc-row.axis .c-peer, .inc-row.axis .c-path { display: none; }
+  .inc-row.axis .c-lane { height: 100%; }
+  .inc-row .c-path { padding: 4px 14px 0; }
+  .inc .c-path .chain { flex-wrap: wrap; row-gap: 4px; }
+  .inc .speed { margin-left: 0; }
+  .inc-event { flex-wrap: wrap; }
+}
 
 /* Timeline (filled in by timeline.js). */
 .events { margin: 0; padding: 0; list-style: none; }

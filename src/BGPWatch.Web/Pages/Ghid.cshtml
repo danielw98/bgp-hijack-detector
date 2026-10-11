@@ -61,28 +61,13 @@
   <p>Detectorul primește aici exact mesajele înregistrate atunci de colectorul rrc00, din fișierele <dfn class="term" data-term="mrt" tabindex="0" role="button">MRT</dfn> publice, cu <code>208.65.152.0/22</code> ca prefix urmărit și AS36561 ca origine legitimă. Alerta apare în secunda primului anunț al sub-prefixului, la 18:47:57 UTC.</p>
 </section>
 
-<div class="figure" id="fig-2008">
+<div class="figure wide" id="fig-2008">
   <div class="frame">
     <div class="frame-head"><h3>Figura 3. Deturnarea YouTube, văzută de vecinii colectorului rrc00</h3><span class="note">18:45-21:05 UTC, derulează sau redă</span></div>
-    <div id="asgraph" class="graphbox"></div>
-    <div id="lanes" class="graphbox"></div>
-    <div class="controls">
-      <button id="btn-play" class="btn">Redă</button>
-      <label class="scrub">18:45 <input type="range" id="scrub" min="0" max="8400" step="10" value="240" aria-label="momentul din incident"> 21:05</label>
-      <span id="scrub-time" class="mono"></span>
-    </div>
     <div class="frame-body">
-      <p class="caption" id="scrub-caption">Se încarcă...</p>
-      <p class="caption">Harta: vecinii colectorului la stânga, sistemul autonom care predă ruta originii la mijloc, originile la dreapta; o linie punctată ascunde sistemele autonome dintre ele, numite la trecerea mouse-ului; roșu, calea către AS17557, verde, către AS36561. Benzile: pentru fiecare vecin, cui îi trimitea traficul pentru blocul deturnat; numerele marchează evenimentele de mai jos.</p>
-      <ol class="events" id="events"></ol>
-      <p class="caption" id="msg-2008">Se încarcă...</p>
+      <p class="caption">Un rând pentru fiecare vecin al colectorului: banda arată cui îi trimitea traficul pentru blocul deturnat (roșu, AS17557; verde, AS36561), iar la dreapta, calea AS în momentul ales, cu sistemul autonom care predă ruta originii încadrat. Liniile punctate numerotate sunt evenimentele documentate; derulează cu bara de sub benzi sau apasă „Redă”.</p>
     </div>
-    <div class="frame-body tight scroll-x" id="peers-2008"></div>
-    <details class="raw">
-      <summary>Date brute: cronologia, numele AS-urilor și actualizările prefixelor YouTube</summary>
-      <pre id="raw-2008"></pre>
-      <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; laboratorul nu este atins.</span></div>
-    </details>
+    @await Html.PartialAsync("_Incident2008")
   </div>
 </div>
 
