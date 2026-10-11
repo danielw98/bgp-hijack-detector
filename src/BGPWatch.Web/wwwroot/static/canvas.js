@@ -71,6 +71,7 @@ export function createCanvas(container) {
   function render(data) {
     lab = data;
     const moving = !pick() && svg() ? ["tracks", "tokens", "badges"].map((name) => svg().querySelector(`.${name}`)) : null;
+    const focused = container.contains(document.activeElement) ? document.activeElement.closest(".node[data-role]") : null;
     const routers = Object.fromEntries(data.routers.map((r) => [r.role, r]));
     const [W, H] = layout.size;
     container.innerHTML = `<svg class="map ${layout === TALL ? "tall" : "wide"}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
@@ -83,6 +84,7 @@ export function createCanvas(container) {
       <g class="nodes">${ROUTERS.map((role) => router(role, routers[role])).join("")}${collector(data.collector)}</g>
       <g class="tracks"></g><g class="tokens"></g><g class="badges"></g>
     </svg>`;
+    if (focused) svg().querySelector(`.node[data-role="${focused.dataset.role}"]`).focus({ preventScroll: true });
     if (moving) {
       moving.forEach((group) => svg().querySelector(`.${group.classList[0]}`).replaceWith(group));
       return;
@@ -135,7 +137,7 @@ export function createCanvas(container) {
     else if (!r.reporting) lines.push(["detail down", "nu raportează"]);
     const texts = layout.text(layout.region[role], lines, [cx, cy]).map(([x, y, anchor, [cls, text]]) =>
       text ? `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${esc(text)}</text>` : "").join("");
-    return `<g class="node ${role} ${r.reachable ? "" : "off"}" data-role="${role}">
+    return `<g class="node ${role} ${r.reachable ? "" : "off"}" data-role="${role}" tabindex="0" role="button" aria-label="${ROLE_NAME[role]}, detalii"><title>${ROLE_NAME[role]}: clic pentru detalii</title>
       <circle class="ring" cx="${cx}" cy="${cy}" r="${RADIUS + 10}"></circle>
       <circle class="body" cx="${cx}" cy="${cy}" r="${RADIUS}"></circle>
       ${routerGlyph(cx, cy)}
@@ -200,7 +202,7 @@ export function createCanvas(container) {
   function tokenMarkup(kind, label) {
     const text = `${KIND_LABEL[kind] || kind} ${label || ""}`.trim();
     const width = text.length * 10.5 + 26;
-    return `<g class="token ${kind}"><rect x="${-width / 2}" y="-16" width="${width}" height="32" rx="16"></rect><text y="6" text-anchor="middle">${esc(text)}</text></g>`;
+    return `<g class="token ${kind}" tabindex="0" role="button" aria-label="${esc(text)}, detalii"><title>${esc(text)}: clic pentru detalii</title><rect x="${-width / 2}" y="-16" width="${width}" height="32" rx="16"></rect><text y="6" text-anchor="middle">${esc(text)}</text></g>`;
   }
 
   // A verdict next to a node: delivered, dropped, no route.

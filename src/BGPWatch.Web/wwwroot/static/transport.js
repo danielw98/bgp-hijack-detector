@@ -14,6 +14,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   let cursor = -1;
   let auto = true;
   let running = false;
+  let stepWaiting = false;
   let speedIndex = SPEEDS.indexOf(1);
 
   play.addEventListener("click", () => { auto = !auto; renderControls(); if (auto) run(); });
@@ -51,16 +52,23 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
     try {
       while (auto && cursor + 1 < events.length) await show(cursor + 1, true);
     } finally {
-      running = false;
-      renderControls();
+      settle();
     }
   }
 
+  // A step asked for while a hop is in flight runs once that hop has landed.
   async function forward() {
-    if (running || cursor + 1 >= events.length) return;
+    if (running) { stepWaiting = true; return; }
+    if (cursor + 1 >= events.length) return;
     running = true;
     renderControls();
-    try { await show(cursor + 1, true); } finally { running = false; renderControls(); }
+    try { await show(cursor + 1, true); } finally { settle(); }
+  }
+
+  function settle() {
+    running = false;
+    renderControls();
+    if (stepWaiting) { stepWaiting = false; forward(); }
   }
 
   async function rewind() {
@@ -81,7 +89,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
     renderList();
     const ev = events[i];
     await canvas.move(ev, animate ? HOP_MS / SPEEDS[speedIndex] : 0);
-    if (onShow) onShow(ev);
+    if (onShow) onShow(ev, i, events.length);
   }
 
   function reset() {
@@ -97,7 +105,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   function renderControls() {
     play.textContent = auto ? "Pauză" : "Redă";
     play.setAttribute("aria-pressed", String(auto));
-    step.disabled = running || cursor + 1 >= events.length;
+    step.disabled = cursor + 1 >= events.length;
     back.disabled = running || cursor < 0;
     clear.disabled = !events.length;
   }
@@ -130,5 +138,14 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
     }
   }
 
-  return { enqueue, resume, reset };
+  function pause() {
+    auto = false;
+    renderControls();
+  }
+
+  function current() {
+    return cursor < 0 ? null : { ev: events[cursor], index: cursor, total: events.length };
+  }
+
+  return { enqueue, resume, reset, pause, current };
 }

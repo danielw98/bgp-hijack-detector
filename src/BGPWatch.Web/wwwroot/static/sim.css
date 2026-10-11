@@ -125,6 +125,8 @@ svg.map .track.withdraw { stroke: var(--red); }
 svg.map .marker { fill: var(--ink); stroke: var(--surface); stroke-width: 3; }
 svg.map .marker.withdraw { fill: var(--red); }
 svg.map .marker.packet { fill: var(--amber); }
+svg.map .token, svg.map .marker, svg.map .node[data-role]:not(.collector) { cursor: pointer; }
+svg.map .token:focus-visible, svg.map .node:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 svg.map .token rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; }
 svg.map .token text { font: 700 18px var(--mono); fill: var(--ink); }
 svg.map .token.withdraw rect { stroke: var(--red); }
@@ -243,3 +245,31 @@ table.data.rib th.router .addr { font-family: var(--mono); font-weight: 400; fon
   .sim-stage { aspect-ratio: auto; }
   .sim-canvas { aspect-ratio: 420 / 1040; }
 }
+
+/* The popover of an event or a router: a card beside its anchor, an arrow facing it. */
+.popover { position: fixed; z-index: 50; box-sizing: border-box; padding: 14px 16px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); font-size: 16px; color: var(--ink); }
+.popover .head { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.popover .title { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; }
+.popover .kind { font-size: 18px; }
+.popover .route { font-weight: 700; }
+.popover .pos { font-family: var(--mono); font-size: 15px; color: var(--muted); padding-top: 3px; }
+.popover .close { border: 0; background: none; font: 700 24px/1 var(--prose); color: var(--ink); cursor: pointer; padding: 0 2px; }
+.popover .field { margin-top: 10px; }
+.popover .label { font-size: 15px; color: var(--muted); margin-bottom: 3px; }
+.popover .value .mono, .popover .value b.mono { font-family: var(--mono); }
+.popover .value b.mono { font-size: 18px; }
+.popover .bad { color: var(--red); }
+.popover .chain .as.added { outline: 2px solid var(--ink); outline-offset: 1px; }
+.popover table.mini { border-collapse: collapse; font-size: 15px; }
+.popover table.mini td { padding: 3px 8px 3px 0; vertical-align: middle; }
+.popover .foot { display: flex; gap: 8px; margin-top: 14px; }
+.popover.update .kind, .popover.kernel .kind { color: var(--ink); }
+.popover.withdraw .kind, .popover.attacker .kind { color: var(--red); }
+.popover.report .kind, .popover.transit .kind { color: var(--blue); }
+.popover.packet .kind { color: var(--amber); }
+.popover.victim .kind { color: var(--green); }
+.popover .arrow { position: absolute; width: 14px; height: 14px; background: var(--surface); border: 1px solid var(--line); transform: rotate(45deg); }
+.popover .arrow.right { left: -8px; margin-top: -7px; border-top: 0; border-right: 0; }
+.popover .arrow.left { right: -8px; margin-top: -7px; border-bottom: 0; border-left: 0; }
+.popover .arrow.below { top: -8px; margin-left: -7px; border-right: 0; border-bottom: 0; }
+.popover .arrow.above { bottom: -8px; margin-left: -7px; border-top: 0; border-left: 0; }
