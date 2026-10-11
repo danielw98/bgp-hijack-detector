@@ -26,7 +26,7 @@ SHOTS = ROOT / ".playwright-mcp"
 VIEWPORTS = ((390, 844), (1366, 768), (1920, 1080))
 WORKSPACE_FROM = 1000
 VIEWS = ("simulator", "2008", "prefixe", "verifica")
-SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view.scroll, .sim-canvas"
+SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view-body, .sim-canvas"
 MIN_CONTRAST = 4.5
 MIN_FONT = 15.0
 TEXT_SUFFIXES = {
@@ -147,6 +147,8 @@ def check_tokens() -> list[str]:
     t = tokens()
     pairs = [(text, bg) for text in ("ink", "muted", "green", "red", "blue", "amber") for bg in ("paper", "surface", "canvas")]
     pairs += [("surface", role) for role in ("green", "red", "blue", "amber", "ink")]
+    pairs += [(text, bg) for text in ("on-ink-text", "on-ink-muted") for bg in ("ink", "on-ink-hover")]
+    pairs += [("muted", "on-ink-text")]
     out = []
     for text, bg in pairs:
         ratio = contrast(t[text], t[bg])

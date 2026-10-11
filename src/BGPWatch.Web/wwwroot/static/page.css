@@ -17,6 +17,13 @@
   --amber-tint: #fdf1e3;
   --canvas: #eef0f3;
   --grid: #c4cad3;
+  --on-ink-text: #ffffff;
+  --on-ink-muted: #e3e6e1;
+  --on-ink-hover: #333333;
+  --on-ink-up: #4cc46d;
+  --on-ink-down: #ff6b7a;
+  --on-ink-unknown: #8a8f99;
+  --on-ink-focus: #e8eef8;
   --prose: "Atkinson Hyperlegible Next", system-ui, "Segoe UI", sans-serif;
   --mono: "Atkinson Hyperlegible Mono", Consolas, monospace;
   --column: 720px;
@@ -53,6 +60,8 @@ small, .small { font-size: 16px; }
 .status .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: var(--muted); margin-right: 5px; vertical-align: -1px; }
 .status .dot.up { background: var(--green); }
 .status .dot.down { background: var(--red); }
+.status .updated { display: inline-block; }
+.status .updated::first-letter { text-transform: uppercase; }
 
 a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {

@@ -6,7 +6,10 @@ const links = [...document.querySelectorAll("nav.views a[data-view]")];
 
 function show(name) {
   views.forEach((view) => { view.hidden = view.id !== `view-${name}`; });
-  links.forEach((link) => link.classList.toggle("current", link.dataset.view === name));
+  links.forEach((link) => {
+    link.classList.toggle("current", link.dataset.view === name);
+    if (link.dataset.view === name) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+  });
   window.scrollTo({ top: 0 });
 }
 
