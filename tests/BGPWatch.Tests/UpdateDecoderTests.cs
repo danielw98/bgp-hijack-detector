@@ -78,6 +78,15 @@ public class UpdateDecoderTests
     }
 
     [Fact]
+    public void AFourOctetAsAboveTwoToThe31IsKept()
+    {
+        var message = UpdateMessage(attributes: Attribute(2, AsPath([64500, 4200000000], width: 4)), nlri: Prefix("198.51.100.0/24"));
+        var route = Assert.Single(Parse(Record(message, subtype: MessageAs4)));
+        Assert.Equal([64500, 4200000000], route.AsPath);
+        Assert.Equal(4200000000, route.OriginAs);
+    }
+
+    [Fact]
     public void As4PathReplacesAsTransOnATwoOctetSession()
     {
         var message = UpdateMessage(

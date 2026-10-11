@@ -8,11 +8,11 @@ namespace BGPWatch.Web.Lookup;
 /// <summary>RIPEstat did not answer, or answered without the expected data.</summary>
 public sealed class RipeStatException(string message) : Exception(message);
 
-public sealed record Roa(string? Prefix, long? MaxLength, int? Origin, string? Validity);
+public sealed record Roa(string? Prefix, long? MaxLength, long? Origin, string? Validity);
 
 public sealed record Rpki(string Status, List<Roa> Roas);
 
-public sealed record Origin(int Asn, string Holder, Rpki Rpki);
+public sealed record Origin(long Asn, string Holder, Rpki Rpki);
 
 /// <summary>What RIPEstat says about an address or prefix today.</summary>
 public sealed record Lookup(string Resource, string? Prefix, bool Announced, List<Origin> Origins);
@@ -65,7 +65,7 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         var holders = (overview["asns"]?.AsArray() ?? [])
             .ToDictionary(a => a!["asn"]!.ToString(), a => a!["holder"]?.GetValue<string>() ?? "");
         var origins = new List<Origin>();
-        foreach (var asn in (info["asns"]?.AsArray() ?? []).Select(a => int.Parse(a!.ToString())))
+        foreach (var asn in (info["asns"]?.AsArray() ?? []).Select(a => long.Parse(a!.ToString())))
         {
             origins.Add(new Origin(asn, holders.GetValueOrDefault(asn.ToString(), ""), await RpkiAsync(asn, prefix, cancel)));
         }
@@ -93,13 +93,13 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         }
     }
 
-    private async Task<Rpki> RpkiAsync(int asn, string prefix, CancellationToken cancel)
+    private async Task<Rpki> RpkiAsync(long asn, string prefix, CancellationToken cancel)
     {
         var data = await DataAsync("rpki-validation", cancel, ("resource", $"AS{asn}"), ("prefix", prefix));
         var roas = (data["validating_roas"]?.AsArray() ?? []).Select(roa => new Roa(
             roa!["prefix"]?.GetValue<string>(),
             roa["max_length"]?.GetValue<long>(),
-            roa["origin"]?.ToString() is { Length: > 0 } origin ? int.Parse(origin) : null,
+            roa["origin"]?.ToString() is { Length: > 0 } origin ? long.Parse(origin) : null,
             roa["validity"]?.GetValue<string>()));
         return new Rpki(data["status"]?.GetValue<string>() ?? "unknown", [.. roas]);
     }

@@ -9,7 +9,7 @@ public class IncidentsTests
 
     private static StoredAlert Alert(long id, DateTime at, string type, string prefix, string peer, string? covering = null)
     {
-        int[] expected = type != "rpki_invalid" ? [65001] : [];
+        long[] expected = type != "rpki_invalid" ? [65001] : [];
         return new StoredAlert(id, at, type, prefix, 65003, expected, covering, peer, [], "", "lab");
     }
 

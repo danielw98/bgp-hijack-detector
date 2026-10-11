@@ -93,7 +93,7 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
                 await queue.Writer.WriteAsync(routes, stop);
             }
         }
-        catch (Exception e) when (e is MalformedUpdateException or OverflowException)
+        catch (MalformedUpdateException e)
         {
             logger.LogWarning("BMP message from {Address} skipped: {Reason}", address, e.Message);
         }

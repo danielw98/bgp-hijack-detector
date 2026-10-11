@@ -6,7 +6,7 @@ public class PrefixHistoryTests
 {
     private static readonly DateTime T0 = new(2026, 10, 9, 18, 56, 0, DateTimeKind.Utc);
 
-    private static StoredRoute Row(long id, int seconds, string peer, string prefix, int? origin, int[] path, bool withdrawn = false)
+    private static StoredRoute Row(long id, int seconds, string peer, string prefix, long? origin, long[] path, bool withdrawn = false)
     {
         return new StoredRoute(id, T0.AddSeconds(seconds), peer, prefix, origin, path, null, withdrawn, "lab");
     }

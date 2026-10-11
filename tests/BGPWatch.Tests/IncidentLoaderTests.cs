@@ -11,7 +11,7 @@ public class IncidentLoaderTests
     private const string Source = "youtube-2008";
     private static readonly DateTime Seen = new(2008, 2, 24, 18, 47, 57, DateTimeKind.Utc);
     private static readonly DetectorConfig Config = new(
-        [new MonitoredPrefix(IPNetwork.Parse("208.65.152.0/22"), new HashSet<int> { 36561 }, "YouTube")], []);
+        [new MonitoredPrefix(IPNetwork.Parse("208.65.152.0/22"), new HashSet<long> { 36561 }, "YouTube")], []);
 
     private sealed class FakeLog(SourceCounts stored) : IRouteLog
     {

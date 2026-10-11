@@ -78,10 +78,10 @@ public static unsafe class UpdateDecoder
         {
             return Announcement.Withdrawal(prefix, from, at);
         }
-        var asPath = new int[route->AsPathLength];
+        var asPath = new long[route->AsPathLength];
         for (var i = 0; i < asPath.Length; i++)
         {
-            asPath[i] = checked((int)route->AsPath[i]);
+            asPath[i] = route->AsPath[i];
         }
         var nextHop = route->NextHop.Family == 0 ? null : ToAddress(&route->NextHop).ToString();
         return Announcement.Of(prefix, asPath, from, nextHop, at);

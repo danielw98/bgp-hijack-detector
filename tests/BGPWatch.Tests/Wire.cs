@@ -31,7 +31,7 @@ public static class Wire
         return [0x40, code, (byte)value.Length, .. value];
     }
 
-    public static byte[] AsPath(int[] asns, int width = 2, byte segment = AsSequence)
+    public static byte[] AsPath(long[] asns, int width = 2, byte segment = AsSequence)
     {
         return [segment, (byte)asns.Length, .. asns.SelectMany(a => BigEndian((uint)a, width))];
     }

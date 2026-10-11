@@ -5,14 +5,14 @@ namespace BGPWatch.Core.Domain;
 /// <summary>One prefix as a vantage point saw it in a BGP update.</summary>
 public sealed record Announcement(
     IPNetwork Prefix,
-    int? OriginAs,
-    IReadOnlyList<int> AsPath,
+    long? OriginAs,
+    IReadOnlyList<long> AsPath,
     string Peer,
     string? NextHop,
     bool Withdrawn,
     DateTime SeenAt)
 {
-    public static Announcement Of(IPNetwork prefix, IReadOnlyList<int> asPath, string peer, string? nextHop, DateTime seenAt)
+    public static Announcement Of(IPNetwork prefix, IReadOnlyList<long> asPath, string peer, string? nextHop, DateTime seenAt)
     {
         return new Announcement(prefix, asPath.Count > 0 ? asPath[^1] : null, asPath, peer, nextHop, false, seenAt);
     }
@@ -24,10 +24,10 @@ public sealed record Announcement(
 }
 
 /// <summary>A prefix whose legitimate origin ASes are known in advance.</summary>
-public sealed record MonitoredPrefix(IPNetwork Prefix, IReadOnlySet<int> ExpectedOrigins, string Description);
+public sealed record MonitoredPrefix(IPNetwork Prefix, IReadOnlySet<long> ExpectedOrigins, string Description);
 
 /// <summary>A Validated ROA Payload: prefix, the longest length it authorizes, and origin.</summary>
-public sealed record Roa(IPNetwork Prefix, int MaxLength, int OriginAs);
+public sealed record Roa(IPNetwork Prefix, int MaxLength, long OriginAs);
 
 public enum RpkiState
 {
@@ -46,11 +46,11 @@ public enum AlertType
 public sealed record Alert(
     AlertType Type,
     IPNetwork Prefix,
-    int? ObservedOrigin,
+    long? ObservedOrigin,
     string Peer,
-    IReadOnlyList<int> AsPath,
+    IReadOnlyList<long> AsPath,
     string Detail,
-    IReadOnlySet<int> ExpectedOrigins,
+    IReadOnlySet<long> ExpectedOrigins,
     IPNetwork? CoveringPrefix,
     DateTime RaisedAt);
 

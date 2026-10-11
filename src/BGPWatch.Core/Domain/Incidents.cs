@@ -9,8 +9,8 @@ namespace BGPWatch.Core.Domain;
 public sealed record Incident(
     string Source,
     string Prefix,
-    int? Origin,
-    IReadOnlyList<int> ExpectedOrigins,
+    long? Origin,
+    IReadOnlyList<long> ExpectedOrigins,
     DateTime FirstSeen,
     DateTime LastSeen,
     IReadOnlyList<string> Peers,
@@ -36,7 +36,7 @@ public static class Incidents
     {
         var networks = monitored.Select(IPNetwork.Parse).ToList();
         var incidents = new List<Builder>();
-        var open = new Dictionary<(string, string, int?), Builder>();
+        var open = new Dictionary<(string, string, long?), Builder>();
         foreach (var alert in alerts.OrderBy(a => a.RaisedAt).ThenBy(a => a.Id))
         {
             var key = (alert.Source, MonitoredOf(alert, networks), alert.ObservedOrigin);
@@ -64,9 +64,9 @@ public static class Incidents
         return networks.MostSpecific(IPNetwork.Parse(alert.Prefix))?.ToString() ?? alert.Prefix;
     }
 
-    private sealed class Builder((string Source, string Prefix, int? Origin) key, DateTime firstSeen)
+    private sealed class Builder((string Source, string Prefix, long? Origin) key, DateTime firstSeen)
     {
-        private readonly SortedSet<int> expectedOrigins = [];
+        private readonly SortedSet<long> expectedOrigins = [];
         private readonly SortedSet<string> peers = new(StringComparer.Ordinal);
         private readonly SortedSet<string> alertTypes = new(StringComparer.Ordinal);
         private readonly SortedSet<string> prefixes = new(StringComparer.Ordinal);

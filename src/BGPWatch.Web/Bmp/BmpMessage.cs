@@ -95,7 +95,7 @@ public sealed record BmpMessage(BmpType Type, PeerHeader? Peer, byte[] Body)
         {
             return [];
         }
-        var routerAs = checked((int)peer.PeerAs);
+        long routerAs = peer.PeerAs;
         return UpdateDecoder.ReadUpdate(Body, peer.BgpId.ToString(), seenAt)
             .Select(r => r.Withdrawn || r.AsPath.Count > 0 ? r : r with { AsPath = [routerAs], OriginAs = routerAs, NextHop = null })
             .ToList();

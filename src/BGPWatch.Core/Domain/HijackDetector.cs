@@ -63,7 +63,7 @@ public sealed class HijackDetector(IEnumerable<MonitoredPrefix> monitored, IEnum
         }
         yield return new Alert(AlertType.RpkiInvalid, ann.Prefix, ann.OriginAs, ann.Peer, ann.AsPath,
             $"{ann.Prefix} from AS{FormatAsn(ann.OriginAs)} is RPKI-invalid (no VRP authorizes this origin or length)",
-            new HashSet<int>(), null, ann.SeenAt);
+            new HashSet<long>(), null, ann.SeenAt);
     }
 
     private static Alert Raise(Announcement ann, AlertType type, MonitoredPrefix watched, IPNetwork? covering, string detail)
@@ -72,12 +72,12 @@ public sealed class HijackDetector(IEnumerable<MonitoredPrefix> monitored, IEnum
             watched.ExpectedOrigins, covering, ann.SeenAt);
     }
 
-    private static string FormatOrigins(IReadOnlySet<int> origins)
+    private static string FormatOrigins(IReadOnlySet<long> origins)
     {
         return origins.Count == 0 ? "none" : string.Join(", ", origins.Order().Select(a => $"AS{a}"));
     }
 
-    private static string FormatAsn(int? asn)
+    private static string FormatAsn(long? asn)
     {
         return asn?.ToString() ?? "None";
     }

@@ -118,6 +118,19 @@ public class BmpTests
     }
 
     [Fact]
+    public async Task ARouterWithAFourOctetPrivateAsReportsTheRoutesItOriginates()
+    {
+        const uint routerAs = 4200000001;
+        byte[] peer = [PeerHeader.LocRib, 0, .. new byte[8], .. new byte[12], 10, 10, 0, 20, .. BigEndian(routerAs, 4), 10, 10, 0, 20, .. new byte[8]];
+        var update = UpdateMessage(attributes: [.. Attribute(2, []), .. Attribute(3, [0, 0, 0, 0])], nlri: Prefix("203.0.113.0/24"));
+        byte[] message = [3, .. BigEndian((uint)(6 + peer.Length + update.Length), 4), (byte)BmpType.RouteMonitoring, .. peer, .. update];
+        using var stream = new MemoryStream(message);
+        var route = Assert.Single((await BmpMessage.ReadAsync(stream, CancellationToken.None))!.LocRibRoutes(Arrival));
+        Assert.Equal([routerAs], route.AsPath);
+        Assert.Equal(routerAs, route.OriginAs);
+    }
+
+    [Fact]
     public async Task AnIpv6PeerAddressIsReadWhenItsFlagIsSet()
     {
         byte[] peer = [0, 0x80, .. new byte[8], 0x20, 0x01, 0x0d, 0xb8, .. new byte[11], 1, .. BigEndian(65010, 4), 10, 0, 0, 1, .. new byte[8]];

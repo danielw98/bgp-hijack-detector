@@ -4,18 +4,18 @@ using System.Text.Json;
 namespace BGPWatch.Web.Lab;
 
 /// <summary>A lab router; Hosts are the addresses of the monitored prefix it answers for itself (its loopback).</summary>
-public sealed record Router(string Role, string Container, string Address, int Asn, string[] Hosts);
+public sealed record Router(string Role, string Container, string Address, long Asn, string[] Hosts);
 
 public sealed record Session(string Peer, long RemoteAs, bool Established);
 
 /// <summary>A path of a router's BGP table; NextHop is null for a route the router originates.</summary>
-public sealed record LabPath(string Prefix, int[] AsPath, int OriginAs, string? NextHop, bool Best, string Reason);
+public sealed record LabPath(string Prefix, long[] AsPath, long OriginAs, string? NextHop, bool Best, string Reason);
 
 /// <summary>A router as it reports itself; Reporting tells whether its BMP session to the station is up.</summary>
 public sealed record RouterState(
     string Role,
     string Address,
-    int Asn,
+    long Asn,
     string[] Hosts,
     bool Reachable,
     bool Reporting,
@@ -93,7 +93,7 @@ public static class LabView
         {
             return [];
         }
-        var localAs = table.GetProperty("localAS").GetInt32();
+        var localAs = table.GetProperty("localAS").GetInt64();
         return routes.EnumerateObject()
             .SelectMany(prefix => prefix.Value.EnumerateArray()
                 .OrderBy(IsSpare)
@@ -114,9 +114,9 @@ public static class LabView
         }
     }
 
-    private static LabPath PathOf(string prefix, JsonElement entry, int localAs)
+    private static LabPath PathOf(string prefix, JsonElement entry, long localAs)
     {
-        var asPath = entry.GetProperty("path").GetString()!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+        var asPath = entry.GetProperty("path").GetString()!.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray();
         var reason = entry.TryGetProperty("selectionReason", out var why) ? why.GetString() ?? "" : "";
         return new LabPath(prefix, asPath, asPath.Length > 0 ? asPath[^1] : localAs, NextHop(entry), !IsSpare(entry), reason);
     }

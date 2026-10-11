@@ -73,7 +73,7 @@ public static class Cli
         return 0;
     }
 
-    private sealed record DumpedRoute(DateTime SeenAt, string Peer, string Prefix, bool Withdrawn, IReadOnlyList<int> AsPath, string? NextHop);
+    private sealed record DumpedRoute(DateTime SeenAt, string Peer, string Prefix, bool Withdrawn, IReadOnlyList<long> AsPath, string? NextHop);
 
     private sealed record Measurement(
         int Updates,
@@ -83,7 +83,7 @@ public static class Cli
         int Alerts,
         Dictionary<string, int> AlertsByType,
         List<string> AlertedPrefixes,
-        List<int?> AlertedOrigins,
+        List<long?> AlertedOrigins,
         DateTime? FirstAlert,
         DateTime? LastAlert,
         Dictionary<string, DateTime> FirstAlertByPeer,

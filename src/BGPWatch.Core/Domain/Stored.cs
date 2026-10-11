@@ -6,8 +6,8 @@ public sealed record StoredRoute(
     DateTime SeenAt,
     string Peer,
     string Prefix,
-    int? OriginAs,
-    int[] AsPath,
+    long? OriginAs,
+    long[] AsPath,
     string? NextHop,
     bool Withdrawn,
     string Source);
@@ -18,13 +18,13 @@ public sealed record StoredAlert(
     DateTime RaisedAt,
     string AlertType,
     string Prefix,
-    int? ObservedOrigin,
-    int[] ExpectedOrigins,
+    long? ObservedOrigin,
+    long[] ExpectedOrigins,
     string? CoveringPrefix,
     string Peer,
-    int[] AsPath,
+    long[] AsPath,
     string Detail,
     string Source);
 
 /// <summary>A row of monitored_prefixes, as the API returns it.</summary>
-public sealed record StoredMonitored(string Prefix, int[] ExpectedOrigins, string Description);
+public sealed record StoredMonitored(string Prefix, long[] ExpectedOrigins, string Description);

@@ -5,14 +5,14 @@ namespace BGPWatch.Tests;
 
 public class DetectTests
 {
-    private static readonly MonitoredPrefix[] Monitored = [new(IPNetwork.Parse("203.0.113.0/24"), new HashSet<int> { 65001 }, "lab victim")];
+    private static readonly MonitoredPrefix[] Monitored = [new(IPNetwork.Parse("203.0.113.0/24"), new HashSet<long> { 65001 }, "lab victim")];
     private static readonly Roa[] Vrps = [new(IPNetwork.Parse("203.0.113.0/24"), 24, 65001)];
 
     /// <summary>A customer /24 originated by its own AS inside its provider's /22.</summary>
     private static readonly MonitoredPrefix[] Nested =
     [
-        new(IPNetwork.Parse("208.65.152.0/22"), new HashSet<int> { 36561 }, "provider aggregate"),
-        new(IPNetwork.Parse("208.65.153.0/24"), new HashSet<int> { 17557 }, "customer"),
+        new(IPNetwork.Parse("208.65.152.0/22"), new HashSet<long> { 36561 }, "provider aggregate"),
+        new(IPNetwork.Parse("208.65.153.0/24"), new HashSet<long> { 17557 }, "customer"),
     ];
     private static readonly DateTime Now = new(2026, 10, 9, 18, 0, 0, DateTimeKind.Utc);
 

@@ -1,7 +1,7 @@
 namespace BGPWatch.Core.Domain;
 
 /// <summary>What a vantage point holds for a prefix.</summary>
-public sealed record RouteState(int? OriginAs, int[] AsPath, bool Withdrawn)
+public sealed record RouteState(long? OriginAs, long[] AsPath, bool Withdrawn)
 {
     public static RouteState Of(StoredRoute row)
     {

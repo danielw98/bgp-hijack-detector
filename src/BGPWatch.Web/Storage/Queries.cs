@@ -109,24 +109,24 @@ public sealed class Queries(NpgsqlDataSource database)
 
     private static StoredAlert ReadAlert(DbDataReader r)
     {
-        return new StoredAlert(r.GetInt64(0), r.GetDateTime(1), r.GetString(2), r.GetString(3), NullableInt(r, 4),
-            r.GetFieldValue<int[]>(5), NullableString(r, 6), r.GetString(7), r.GetFieldValue<int[]>(8), r.GetString(9), r.GetString(10));
+        return new StoredAlert(r.GetInt64(0), r.GetDateTime(1), r.GetString(2), r.GetString(3), NullableLong(r, 4),
+            r.GetFieldValue<long[]>(5), NullableString(r, 6), r.GetString(7), r.GetFieldValue<long[]>(8), r.GetString(9), r.GetString(10));
     }
 
     private static StoredRoute ReadRoute(DbDataReader r)
     {
-        return new StoredRoute(r.GetInt64(0), r.GetDateTime(1), r.GetString(2), r.GetString(3), NullableInt(r, 4),
-            r.GetFieldValue<int[]>(5), NullableString(r, 6), r.GetBoolean(7), r.GetString(8));
+        return new StoredRoute(r.GetInt64(0), r.GetDateTime(1), r.GetString(2), r.GetString(3), NullableLong(r, 4),
+            r.GetFieldValue<long[]>(5), NullableString(r, 6), r.GetBoolean(7), r.GetString(8));
     }
 
     private static StoredMonitored ReadMonitored(DbDataReader r)
     {
-        return new StoredMonitored(r.GetString(0), r.GetFieldValue<int[]>(1), r.GetString(2));
+        return new StoredMonitored(r.GetString(0), r.GetFieldValue<long[]>(1), r.GetString(2));
     }
 
-    private static int? NullableInt(DbDataReader r, int column)
+    private static long? NullableLong(DbDataReader r, int column)
     {
-        return r.IsDBNull(column) ? null : r.GetInt32(column);
+        return r.IsDBNull(column) ? null : r.GetInt64(column);
     }
 
     private static string? NullableString(DbDataReader r, int column)

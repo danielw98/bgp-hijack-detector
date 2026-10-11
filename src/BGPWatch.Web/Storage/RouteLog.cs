@@ -15,7 +15,7 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
     private const string CopyAlerts =
         "COPY alerts (raised_at, alert_type, prefix, observed_origin, expected_origins, covering_prefix, peer, as_path, detail, source) FROM STDIN (FORMAT BINARY)";
 
-    private const NpgsqlDbType IntegerArray = NpgsqlDbType.Array | NpgsqlDbType.Integer;
+    private const NpgsqlDbType BigintArray = NpgsqlDbType.Array | NpgsqlDbType.Bigint;
 
     /// <summary>Runs the schema file; every statement in it is idempotent.</summary>
     public static async Task EnsureSchemaAsync(NpgsqlDataSource database, string schemaPath, CancellationToken cancel)
@@ -36,7 +36,7 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
                       description = EXCLUDED.description
                 """);
             command.Parameters.Add(new NpgsqlParameter { Value = watched.Prefix, NpgsqlDbType = NpgsqlDbType.Cidr });
-            command.Parameters.Add(new NpgsqlParameter { Value = watched.ExpectedOrigins.Order().ToArray(), NpgsqlDbType = IntegerArray });
+            command.Parameters.Add(new NpgsqlParameter { Value = watched.ExpectedOrigins.Order().ToArray(), NpgsqlDbType = BigintArray });
             command.Parameters.Add(new NpgsqlParameter { Value = watched.Description });
             await command.ExecuteNonQueryAsync(cancel);
         }
@@ -95,8 +95,8 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
             await writer.WriteAsync(update.SeenAt, NpgsqlDbType.TimestampTz, cancel);
             await writer.WriteAsync(update.Peer, NpgsqlDbType.Text, cancel);
             await writer.WriteAsync(update.Prefix, NpgsqlDbType.Cidr, cancel);
-            await WriteNullableAsync(writer, update.OriginAs, NpgsqlDbType.Integer, cancel);
-            await writer.WriteAsync(update.AsPath.ToArray(), IntegerArray, cancel);
+            await WriteNullableAsync(writer, update.OriginAs, NpgsqlDbType.Bigint, cancel);
+            await writer.WriteAsync(update.AsPath.ToArray(), BigintArray, cancel);
             await WriteNullableAsync(writer, update.NextHop is null ? null : IPAddress.Parse(update.NextHop), NpgsqlDbType.Inet, cancel);
             await writer.WriteAsync(update.Withdrawn, NpgsqlDbType.Boolean, cancel);
             await writer.WriteAsync(source, NpgsqlDbType.Text, cancel);
@@ -113,11 +113,11 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
             await writer.WriteAsync(alert.RaisedAt, NpgsqlDbType.TimestampTz, cancel);
             await writer.WriteAsync(alert.Type.Name(), NpgsqlDbType.Text, cancel);
             await writer.WriteAsync(alert.Prefix, NpgsqlDbType.Cidr, cancel);
-            await WriteNullableAsync(writer, alert.ObservedOrigin, NpgsqlDbType.Integer, cancel);
-            await writer.WriteAsync(alert.ExpectedOrigins.Order().ToArray(), IntegerArray, cancel);
+            await WriteNullableAsync(writer, alert.ObservedOrigin, NpgsqlDbType.Bigint, cancel);
+            await writer.WriteAsync(alert.ExpectedOrigins.Order().ToArray(), BigintArray, cancel);
             await WriteNullableAsync(writer, alert.CoveringPrefix, NpgsqlDbType.Cidr, cancel);
             await writer.WriteAsync(alert.Peer, NpgsqlDbType.Text, cancel);
-            await writer.WriteAsync(alert.AsPath.ToArray(), IntegerArray, cancel);
+            await writer.WriteAsync(alert.AsPath.ToArray(), BigintArray, cancel);
             await writer.WriteAsync(alert.Detail, NpgsqlDbType.Text, cancel);
             await writer.WriteAsync(source, NpgsqlDbType.Text, cancel);
         }

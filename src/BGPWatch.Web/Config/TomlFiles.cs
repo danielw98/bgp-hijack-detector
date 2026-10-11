@@ -7,7 +7,7 @@ using Tomlyn;
 namespace BGPWatch.Web.Config;
 
 /// <summary>A monitored prefix as a config.toml writes it.</summary>
-public sealed record MonitoredEntry(string Prefix, int[] ExpectedOrigins, string Description = "")
+public sealed record MonitoredEntry(string Prefix, long[] ExpectedOrigins, string Description = "")
 {
     public MonitoredPrefix ToDomain()
     {
@@ -58,7 +58,7 @@ public static class TomlFiles
         public List<EventEntry> Events { get; init; } = [];
     }
 
-    private sealed record VrpEntry(string Prefix, int MaxLength, int OriginAs);
+    private sealed record VrpEntry(string Prefix, int MaxLength, long OriginAs);
 
     private sealed record EventEntry(DateTimeOffset At, string Label);
 }
