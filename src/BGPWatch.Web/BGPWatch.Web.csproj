@@ -7,6 +7,9 @@
     <InternalsVisibleTo Include="BGPWatch.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\docs\lecturi-bgp.md" LogicalName="lecturi-bgp.md" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\BGPWatch.Core\BGPWatch.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

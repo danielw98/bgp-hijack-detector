@@ -3,9 +3,12 @@ sizes in Chromium and fails on: horizontal page overflow or an element wider tha
 viewport outside an inner scroller; vertical page scroll of the application at laptop
 and desktop sizes (the simulator fills the window); any text of the simulator's map
 rendered under MIN_FONT px; any map text crossed by a line, a path or the edge of a box
-(a label on a white halo may cover a line). Also checks the colour tokens of page.css
+(a label on a white halo may cover a line). On the references page, with every block
+closed and with every block open: no horizontal overflow, also inside its scroller, and
+every in-page link has its target. Also checks the colour tokens of page.css
 for 4.5:1 contrast, refuses emoji in every tracked text file and non-ASCII in code
-comments, and writes one full-page screenshot per size into .playwright-mcp/.
+comments, and writes one full-page screenshot per size into .playwright-mcp/ (the
+references page open at its full height).
 Exits 1 on any finding.
 
 Usage: python scripts/check_page.py [--url http://localhost:8080/]
@@ -107,6 +110,19 @@ MAP_TEXT_JS = """
 }
 """
 
+# Opens every block of the references page; returns the in-page links without a target,
+# whether its scroller overflows sideways, and the window height that shows it all.
+REFERENCES_JS = """
+() => {
+  document.querySelectorAll('details').forEach((block) => { block.open = true; });
+  const ids = [...document.querySelectorAll('a[href^="#"]')].map((a) => decodeURIComponent(a.getAttribute('href').slice(1)));
+  const body = document.querySelector('.view-body');
+  return { missing: [...new Set(ids.filter((id) => id && !document.getElementById(id)))],
+           sideways: body.scrollWidth > body.clientWidth,
+           height: Math.ceil(body.getBoundingClientRect().top + body.scrollHeight) };
+}
+"""
+
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -116,6 +132,7 @@ def main() -> int:
     findings = check_tokens() + check_text()
     for name, path in (("app", ""), ("ghid", "ghid")):
         findings += check_layout(args.url.rstrip("/") + "/" + path, name)
+    findings += check_references(args.url.rstrip("/") + "/referinte")
     for finding in findings:
         print("FAIL", finding)
     print("ok" if not findings else f"{len(findings)} findings")
@@ -191,7 +208,7 @@ def check_layout(url: str, name: str) -> list[str]:
             page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
             page.wait_for_selector("svg.map", state="attached", timeout=15000)
             if name == "ghid":
-                page.wait_for_selector("svg.lanes", state="attached", timeout=15000)
+                page.wait_for_selector(".inc-row svg", state="attached", timeout=15000)
             page.wait_for_timeout(800)
             for view in (VIEWS if name == "app" else ("",)):
                 if view:
@@ -216,3 +233,34 @@ def check_layout(url: str, name: str) -> list[str]:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+def check_references(url: str) -> list[str]:
+    from playwright.sync_api import sync_playwright
+
+    SHOTS.mkdir(exist_ok=True)
+    out = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        for width, height in VIEWPORTS:
+            page = browser.new_page(viewport={"width": width, "height": height})
+            page.goto(url, wait_until="load")
+            page.wait_for_selector(".refs-stage", state="attached", timeout=15000)
+            for state in ("closed", "open"):
+                label = f"referinte {state} {width}px"
+                if state == "open":
+                    opened = page.evaluate(REFERENCES_JS)
+                    out += [f"{label}: link #{target} has no target" for target in opened["missing"]]
+                    if opened["sideways"]:
+                        out.append(f"{label}: the page body scrolls sideways")
+                    page.set_viewport_size({"width": width, "height": max(height, opened["height"] + 40)})
+                    page.wait_for_timeout(300)
+                result = page.evaluate(OVERFLOW_JS, ".scroll-x")
+                if result["scrollWidth"] > result["innerWidth"]:
+                    out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
+                for element in result["wide"]:
+                    out.append(f"{label}: {element} is wider than the viewport")
+                page.screenshot(path=str(SHOTS / f"check-referinte-{state}-{width}.png"), full_page=True)
+            page.close()
+        browser.close()
+    return out
+
+

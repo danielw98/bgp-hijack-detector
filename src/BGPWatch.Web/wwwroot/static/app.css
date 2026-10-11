@@ -51,6 +51,9 @@ body.app { background: var(--paper); height: 100vh; display: flex; flex-directio
   font-weight: 700;
 }
 .topbar .guide:hover { background: var(--on-ink-hover); }
+.topbar .guide.current { background: var(--on-ink-text); color: var(--ink); }
+.topbar .pages { display: flex; gap: 8px; }
+.topbar .views + .pages { margin-left: auto; }
 
 .workspace { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); }
 .view { min-height: 0; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
@@ -100,7 +103,7 @@ body.app { background: var(--paper); height: 100vh; display: flex; flex-directio
     padding: 10px 12px;
   }
   .topbar .brand { grid-area: brand; }
-  .topbar .guide { grid-area: guide; }
+  .topbar .pages { grid-area: guide; }
   .topbar .status { grid-area: status; margin: 0; gap: 16px; }
   .topbar .updated { display: none; }
   .topbar .views { grid-area: views; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }

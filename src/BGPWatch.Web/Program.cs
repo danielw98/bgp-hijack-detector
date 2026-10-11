@@ -10,6 +10,7 @@ using BGPWatch.Web.Config;
 using BGPWatch.Web.Lab;
 using BGPWatch.Web.Lookup;
 using BGPWatch.Web.Native;
+using BGPWatch.Web.Reading;
 using BGPWatch.Web.Storage;
 using Microsoft.Extensions.WebEncoders;
 using Npgsql;
@@ -41,6 +42,7 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<BmpStation>());
 builder.Services.AddHostedService<IncidentStartup>();
 builder.Services.AddSingleton(new DockerEngine(DockerEngine.Client()));
 builder.Services.AddSingleton(new RipeStat(RipeStat.Over(new HttpClient()), () => Stopwatch.GetElapsedTime(started)));
+builder.Services.AddSingleton(ReadingList.Embedded());
 builder.Services.AddRazorPages();
 builder.Services.Configure<WebEncoderOptions>(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 builder.Services.ConfigureHttpJsonOptions(o =>

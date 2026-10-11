@@ -6,4 +6,5 @@ tests
 *.png
 detector/mrt/build
 referat
-docs
+docs/*
+!docs/lecturi-bgp.md

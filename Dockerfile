@@ -17,6 +17,7 @@ COPY src/BGPWatch.Core/BGPWatch.Core.csproj src/BGPWatch.Core/
 COPY src/BGPWatch.Web/BGPWatch.Web.csproj src/BGPWatch.Web/
 RUN dotnet restore src/BGPWatch.Web/BGPWatch.Web.csproj
 COPY src/ src/
+COPY docs/lecturi-bgp.md docs/
 RUN dotnet publish src/BGPWatch.Web/BGPWatch.Web.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

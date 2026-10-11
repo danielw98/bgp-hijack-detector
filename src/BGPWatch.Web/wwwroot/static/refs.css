@@ -1,0 +1,116 @@
+/* The references page inside the shell: an index rail from 1200px, the start-here picks,
+   then the stages and the specification lineage as collapsible blocks, closed at load.
+   Tokens from page.css; the top bar from app.css. */
+
+.refs { display: grid; grid-template-columns: minmax(0, 880px); justify-content: center; gap: 40px; }
+
+.refs-index { display: none; }
+.refs-index-title { margin: 0 0 8px; color: var(--muted); font-size: 16px; font-weight: 700; }
+.refs-index ol { margin: 0; padding: 0; list-style: none; }
+.refs-index li { margin: 0 0 2px; }
+.refs-index a { display: flex; gap: 10px; padding: 5px 8px; border-radius: 4px; color: var(--ink); text-decoration: none; font-size: 17px; line-height: 1.35; }
+.refs-index a:hover { background: var(--soft); text-decoration: underline; }
+.refs-index .num { flex: 0 0 2.2em; color: var(--muted); font-family: var(--mono); font-weight: 700; }
+
+.refs-lede { margin: 4px 0 20px; }
+
+.refs-start, .refs-stage { margin: 0 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.refs-start { margin-bottom: 24px; padding: 16px 20px 6px; }
+.refs-start h3 { margin: 0 0 8px; }
+.refs-start ol { margin: 0 0 12px; padding-left: 1.4em; }
+.refs-start li { margin: 0 0 6px; }
+
+.refs-stage > summary, .refs-updates > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.refs-stage > summary { padding: 14px 20px; }
+.refs-stage > summary::-webkit-details-marker, .refs-updates > summary::-webkit-details-marker { display: none; }
+.refs-stage > summary::before, .refs-updates > summary::before {
+  content: "";
+  flex: 0 0 auto;
+  align-self: center;
+  width: 9px;
+  height: 9px;
+  margin-right: 2px;
+  border-right: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+  transform: rotate(-45deg);
+}
+.refs-stage[open] > summary::before, .refs-updates[open] > summary::before { transform: rotate(45deg); }
+.refs-stage > summary:hover .refs-name, .refs-updates > summary:hover > span:first-child { text-decoration: underline; }
+.refs-num { color: var(--muted); font-family: var(--mono); font-size: 17px; font-weight: 700; }
+.refs-name { font-size: 22px; font-weight: 700; line-height: 1.3; }
+.refs-count { margin-left: auto; color: var(--muted); font-size: 16px; font-weight: 400; }
+.refs-body { padding: 0 20px 16px; border-top: 1px solid var(--line); }
+.refs-intro { margin: 14px 0 4px; font-size: 18px; }
+
+.refs-sources { margin: 0; padding: 0; list-style: none; }
+.refs-sources > li {
+  display: grid;
+  grid-template-columns: 2.2em minmax(0, 1fr);
+  gap: 0 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 16px;
+}
+.refs-sources > li:last-child { border-bottom: none; }
+.refs-sources > li:target, .refs-timeline > li:target { background: var(--amber-tint); outline: 8px solid var(--amber-tint); }
+.refs-n { color: var(--muted); font-family: var(--mono); font-size: 18px; font-weight: 700; line-height: 1.45; }
+.refs-head { margin: 0; font-size: 19px; line-height: 1.4; overflow-wrap: anywhere; }
+.refs-head a { font-weight: 700; }
+.refs-year, .refs-label {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 7px;
+  border: 1.5px solid var(--muted);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+.refs-label { white-space: normal; border-color: var(--blue); color: var(--blue); font-family: var(--prose); font-weight: 700; }
+.refs-title { margin-left: 4px; }
+.refs-why { margin: 4px 0 0; font-size: 18px; }
+.refs-host, .refs-rel { margin: 2px 0 0; color: var(--muted); font-size: 16px; }
+.refs-host { font-family: var(--mono); font-size: 15px; }
+
+/* The lineage strip: the chain of versions, visible while the block is closed. */
+.refs-strip { display: flex; flex-wrap: wrap; flex-basis: 100%; gap: 6px; padding-left: 25px; }
+.refs-strip span { padding: 1px 8px; border: 1.5px solid var(--blue); border-radius: 3px; color: var(--blue); font-family: var(--mono); font-size: 15px; white-space: nowrap; }
+.refs-strip b { color: var(--ink); }
+
+/* The timeline: years on the left, a rail with one dot per RFC, the current spec filled. */
+.refs-timeline { margin: 18px 0 6px; padding: 0; list-style: none; }
+.refs-timeline > li { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 0 46px; padding: 0 0 22px; scroll-margin-top: 16px; }
+.refs-timeline > li::before { content: ""; position: absolute; left: 80px; top: 14px; bottom: -14px; width: 2px; background: var(--muted); }
+.refs-timeline > li:last-child::before { display: none; }
+.refs-timeline > li::after { content: ""; position: absolute; left: 73px; top: 6px; width: 16px; height: 16px; border: 3px solid var(--blue); border-radius: 50%; background: var(--surface); }
+.refs-major > li:last-child::after { background: var(--blue); }
+.refs-minor > li::after { left: 75px; top: 8px; width: 12px; height: 12px; border-width: 2.5px; }
+.refs-when { font-family: var(--mono); font-size: 18px; font-weight: 700; line-height: 1.55; text-align: right; }
+
+.refs-updates { margin-top: 4px; border-top: 1px solid var(--line); }
+.refs-updates > summary { padding: 14px 0 6px; font-size: 19px; font-weight: 700; }
+
+@media (min-width: 1200px) {
+  .refs { grid-template-columns: 280px minmax(0, 880px); }
+  .refs-index { display: block; position: sticky; top: 0; align-self: start; }
+}
+@media (max-width: 700px) {
+  .topbar { grid-template-areas: "brand guide" "views views"; }
+  .refs-start { padding: 14px 14px 4px; }
+  .refs-stage > summary { padding: 12px 14px; }
+  .refs-name { font-size: 20px; }
+  .refs-count { margin-left: 0; flex-basis: 100%; padding-left: 25px; }
+  .refs-body { padding: 0 14px 12px; }
+  .refs-timeline > li { grid-template-columns: 50px minmax(0, 1fr); gap: 0 42px; }
+  .refs-timeline > li::before { left: 64px; }
+  .refs-timeline > li::after { left: 57px; }
+  .refs-minor > li::after { left: 59px; }
+}

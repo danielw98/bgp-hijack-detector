@@ -38,7 +38,7 @@ docker compose down && docker compose -f lab/docker-compose.yml down
 
 ## Ce să apeși
 
-Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi în bara de sus (Simulator, YouTube 2008, Prefixe, Verifică) și butonul „Ghid”. Ghidul (`/ghid`) este pagina de citit de sus în jos, cu aceleași figuri între paragrafe și explicațiile; fiecare vedere a aplicației trimite la capitolul ei din ghid. Fiecare figură are datele brute la îndemână, un tab în simulator și un sertar „Date brute” în celelalte, iar în ghid termenii subliniați punctat deschid o definiție.
+Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi în bara de sus (Simulator, YouTube 2008, Prefixe, Verifică) și butoanele „Ghid” și „Referințe”. Ghidul (`/ghid`) este pagina de citit de sus în jos, cu aceleași figuri între paragrafe și explicațiile; fiecare vedere a aplicației trimite la capitolul ei din ghid. Fiecare figură are datele brute la îndemână, un tab în simulator și un sertar „Date brute” în celelalte, iar în ghid termenii subliniați punctat deschid o definiție. Referințele (`/referinte`) sunt lecturile pentru a învăța BGP, pe etape, cu genealogia specificației de la RFC 1105 la RFC 4271.
 
 1. **Figura 1, simulatorul.** Pe pânză, harta celor trei sisteme autonome cu ruterele lor, sesiunile BGP și colectorul; în dreapta, inspectorul cu tabela BGP a fiecărui ruter, incidentele și datele brute, citite la fiecare două secunde. Bara de sus ține acțiunile: alege scenariul (prefixul exact, sub-prefixul sau ambele) și apasă „Deturnează”. Fiecare salt al mesajelor UPDATE, de la atacator din ruter în ruter și spre colector, este un eveniment în lista de sub hartă, iar jetonul lui parcurge legătura; rândurile atacatorului apar cu roșu, sub-prefixul `203.0.113.0/25` este ales pe toate ruterele, iar prefixul exact rămâne rută de rezervă pe tranzit, care păstrează ruta mai veche a victimei. Bara de redare, ca în Packet Tracer: „Pauză” și „Redă”, „Pas” (un eveniment înainte), „Înapoi”, viteza de la 0,25x la 4x, „Șterge evenimentele”; un clic pe un eveniment sare la el. „Trimite pachetul” urmărește un pachet către `203.0.113.1` (în sub-prefix) sau `203.0.113.129` (în afara lui), după tabelele BGP, cu rândul consultat evidențiat în inspector la fiecare salt și verdictul lângă ruterul unde se oprește. „Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare pentru aceeași adresă și spune dacă nucleele confirmă simularea; niciun pachet nu este trimis. „Retrage anunțurile” readuce ruterele la starea de bază.
 2. **Figura 2, incidentele.** Alertele aceleiași deturnări, văzute din mai multe puncte de observație, formează un incident. Apasă pe el și primești explicația: cine a anunțat, ce era așteptat, de unde a venit anunțul.
@@ -50,7 +50,7 @@ Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi �
 ## Unde citești mai mult
 
 - `referat/referat.md`: referatul cursului, cu noțiunile BGP, patru incidente documentate, arhitectura detectorului, rezultate și limite.
-- `docs/lecturi-bgp.md`: listă de lecturi despre BGP, 25 de surse în 8 etape.
+- `docs/lecturi-bgp.md`: lista de lecturi despre BGP, pe etape, cu genealogia specificației; pagina `/referinte` se generează din ea, iar `scripts/check_lecturi.py` îi verifică linkurile și jurnalul de verificare.
 - `detector/incidents/youtube-2008/config.toml`: sursa datelor redate, prefixul monitorizat și cronologia documentată a incidentului.
 
 ## Structură
