@@ -122,6 +122,9 @@ svg.map .node .detail.down { fill: var(--red); font-weight: 700; }
 svg.map .track { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 6; opacity: .6; }
 svg.map .track.packet, svg.map .track.kernel { stroke: var(--amber); stroke-width: 3; opacity: .9; }
 svg.map .track.withdraw { stroke: var(--red); }
+svg.map .marker { fill: var(--ink); stroke: var(--surface); stroke-width: 3; }
+svg.map .marker.withdraw { fill: var(--red); }
+svg.map .marker.packet { fill: var(--amber); }
 svg.map .token rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; }
 svg.map .token text { font: 700 18px var(--mono); fill: var(--ink); }
 svg.map .token.withdraw rect { stroke: var(--red); }

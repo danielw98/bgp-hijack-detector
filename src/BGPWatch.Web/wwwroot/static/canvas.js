@@ -1,6 +1,6 @@
 // The simulator's map: three AS regions with a router glyph each, the BGP sessions
-// between routers, the BMP reports into the collector, and one token at a time that
-// travels the links. Each router shows its address, and a line more only when it is
+// between routers, the BMP reports into the collector, and one message at a time: a
+// small marker travels the link, eased, while its label waits still at the target. Each router shows its address, and a line more only when it is
 // off or not reporting. Two layouts, wide (routers in a row) and tall (routers in a
 // column), chosen by the container's width; the SVG scales to its box. Labels sit in
 // the quadrant of each glyph that no link leaves from, so no line crosses text.
@@ -11,6 +11,9 @@ const ROLE_NAME = { victim: "Victimă", transit: "Tranzit", attacker: "Atacator"
 const ROUTERS = ["victim", "transit", "attacker"];
 const SESSIONS = [["victim", "transit"], ["transit", "attacker"]];
 const RADIUS = 30;
+const MARKER_RADIUS = 11;
+const REFERENCE_LENGTH = 330;
+const LABEL_FADE_MS = 250;
 const TALL_BELOW = 720;
 const KIND_LABEL = { update: "UPDATE", withdraw: "RETRAS", packet: "pachet", kernel: "nucleu" };
 const VERDICT_LABEL = { delivered: "livrat", dropped: "aruncat", unreachable: "fără rută", lost: "pierdut", loop: "buclă" };
@@ -67,7 +70,7 @@ export function createCanvas(container) {
 
   function render(data) {
     lab = data;
-    pick();
+    const moving = !pick() && svg() ? ["tracks", "tokens", "badges"].map((name) => svg().querySelector(`.${name}`)) : null;
     const routers = Object.fromEntries(data.routers.map((r) => [r.role, r]));
     const [W, H] = layout.size;
     container.innerHTML = `<svg class="map ${layout === TALL ? "tall" : "wide"}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
@@ -80,6 +83,10 @@ export function createCanvas(container) {
       <g class="nodes">${ROUTERS.map((role) => router(role, routers[role])).join("")}${collector(data.collector)}</g>
       <g class="tracks"></g><g class="tokens"></g><g class="badges"></g>
     </svg>`;
+    if (moving) {
+      moving.forEach((group) => svg().querySelector(`.${group.classList[0]}`).replaceWith(group));
+      return;
+    }
     if (token) place(token.kind, token.at, token.label);
     if (badge) mark(badge.at, badge.verdict);
   }
@@ -206,46 +213,56 @@ export function createCanvas(container) {
     badge = { at, verdict };
   }
 
-  // Moves the token of an event from its source to its target over `ms`, then leaves it
-  // there; with no target the token sits on the source and the verdict is marked.
+  // Shows an event: its label at the target from the start, and a marker travelling the
+  // link from source to target, eased in and out, at the same speed on every link (`ms`
+  // is the time of a direct session). With no target the label sits on the source.
   function move(ev, ms) {
     svg().querySelector(".badges").innerHTML = "";
     badge = null;
     if (!ev.to) {
       place(ev.kind, ev.from, ev.label);
+      fadeIn();
       if (ev.verdict) mark(ev.from, ev.verdict);
       pulse(ev.from);
       return Promise.resolve();
     }
+    place(ev.kind, ev.to, ev.label);
+    fadeIn();
     return new Promise((resolve) => {
       const tracks = svg().querySelector(".tracks");
-      tracks.innerHTML = `<path class="track ${ev.kind}" d="${trackPath(ev.from, ev.to)}"></path>`;
-      const track = tracks.firstElementChild;
+      tracks.innerHTML = `<path class="track ${ev.kind}" d="${trackPath(ev.from, ev.to)}"></path><circle class="marker ${ev.kind}" r="${MARKER_RADIUS}"></circle>`;
+      const [track, marker] = tracks.children;
       const length = track.getTotalLength();
-      const g = svg().querySelector(".tokens");
-      g.innerHTML = tokenMarkup(ev.kind, ev.label);
-      const el = g.firstElementChild;
       const at = (t) => {
         const p = track.getPointAtLength(length * t);
-        el.setAttribute("transform", `translate(${p.x} ${p.y - 24})`);
+        marker.setAttribute("transform", `translate(${p.x} ${p.y})`);
       };
       const done = () => {
         tracks.innerHTML = "";
-        place(ev.kind, ev.to, ev.label);
         if (ev.verdict) mark(ev.to, ev.verdict);
         pulse(ev.to);
         resolve();
       };
-      if (reduced || ms <= 0) { done(); return; }
+      if (reduced || ms <= 0 || !length) { done(); return; }
+      const duration = ms * Math.min(2, Math.max(0.6, length / REFERENCE_LENGTH));
       const start = performance.now();
       const frame = (now) => {
-        const t = Math.min(1, (now - start) / ms);
-        at(t);
+        const t = Math.min(1, (now - start) / duration);
+        at(easeInOut(t));
         if (t < 1) requestAnimationFrame(frame); else done();
       };
       at(0);
       requestAnimationFrame(frame);
     });
+  }
+
+  function fadeIn() {
+    const label = svg().querySelector(".tokens .token");
+    if (label && !reduced) label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: LABEL_FADE_MS, easing: "ease-out" });
+  }
+
+  function easeInOut(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
   }
 
   new ResizeObserver(() => { if (lab && pick()) render(lab); }).observe(container);
