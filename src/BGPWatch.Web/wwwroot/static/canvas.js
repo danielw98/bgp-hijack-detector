@@ -1,6 +1,7 @@
 // The simulator's map: three AS regions with a router glyph each, the BGP sessions
 // between routers, the BMP reports into the collector, and one token at a time that
-// travels the links. Two layouts, wide (routers in a row) and tall (routers in a
+// travels the links. Each router shows its address, and a line more only when it is
+// off or not reporting. Two layouts, wide (routers in a row) and tall (routers in a
 // column), chosen by the container's width; the SVG scales to its box. Labels sit in
 // the quadrant of each glyph that no link leaves from, so no line crosses text.
 
@@ -20,7 +21,7 @@ const WIDE = {
   size: [1000, 500],
   region: { victim: [20, 30, 300, 260], transit: [350, 30, 300, 260], attacker: [680, 30, 300, 260] },
   at: { victim: [170, 222], transit: [500, 222], attacker: [830, 222], collector: [500, 415] },
-  text: (cx, cy, lines) => lines.map((line, i) => [cx, cy - RADIUS - 94 + i * 24, "middle", line]),
+  text: ([x, y], lines) => lines.map((line, i) => [x + 16, y + 58 + i * 24, "start", line]),
   regionLabel: ([x, y]) => [x + 16, y + 28, "start"],
   sessionLabel: ([x1, y1], [x2]) => [(x1 + x2) / 2, y1 + 36, "middle"],
   report: (role, [x, y], [cx, cy]) => {
@@ -39,7 +40,7 @@ const TALL = {
   size: [420, 1040],
   region: { victim: [100, 16, 304, 250], transit: [100, 316, 304, 250], attacker: [100, 616, 304, 250] },
   at: { victim: [170, 156], transit: [170, 456], attacker: [170, 756], collector: [60, 990] },
-  text: (cx, cy, lines) => lines.map((line, i) => [cx + RADIUS + 16, cy - 30 + i * 24, "start", line]),
+  text: (box, lines, [cx, cy]) => lines.map((line, i) => [cx + RADIUS + 16, cy - 6 + i * 24, "start", line]),
   regionLabel: ([x, y, w]) => [x + w - 14, y + 28, "end"],
   sessionLabel: ([x1, y1], [, y2]) => [x1 + 14, (y1 + y2) / 2 + 6, "start"],
   report: (role, [x, y], [cx, cy]) => `M ${x - RADIUS} ${y} L ${cx - 10} ${y} L ${cx - 10} ${cy - 25}`,
@@ -122,14 +123,10 @@ export function createCanvas(container) {
 
   function router(role, r) {
     const [cx, cy] = layout.at[role];
-    const lines = r.reachable
-      ? [
-        ["mono", r.address],
-        ["detail", `${r.paths.length} ${r.paths.length === 1 ? "cale" : "căi"} în tabelă`],
-        [r.reporting ? "detail up" : "detail down", r.reporting ? "raportează prin BMP" : "nu raportează"],
-      ]
-      : [["mono", r.address], ["detail down", "ruter oprit"], ["detail", ""]];
-    const texts = layout.text(cx, cy, lines).map(([x, y, anchor, [cls, text]]) =>
+    const lines = [["mono", r.address]];
+    if (!r.reachable) lines.push(["detail down", "ruter oprit"]);
+    else if (!r.reporting) lines.push(["detail down", "nu raportează"]);
+    const texts = layout.text(layout.region[role], lines, [cx, cy]).map(([x, y, anchor, [cls, text]]) =>
       text ? `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${esc(text)}</text>` : "").join("");
     return `<g class="node ${role} ${r.reachable ? "" : "off"}" data-role="${role}">
       <circle class="ring" cx="${cx}" cy="${cy}" r="${RADIUS + 10}"></circle>

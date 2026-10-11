@@ -14,7 +14,7 @@ const $ = (id) => document.getElementById(id);
 if ($("glossary")) renderGlossary($("glossary"));
 wirePopovers();
 document.querySelectorAll("[data-simulator]").forEach(mountSimulator);
-if ($("incidents")) startIncidents();
+if (document.querySelector("[data-incidents]")) startIncidents();
 if ($("lanes")) startIncident2008();
 if ($("prefix-choice")) startPrefix();
 if ($("lookup-form")) startLookup();

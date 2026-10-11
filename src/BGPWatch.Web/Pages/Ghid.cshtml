@@ -38,7 +38,7 @@
 
 <section class="col">
   <p>Fiecare ruter alege o singură rută pentru un prefix. Când primește două anunțuri pentru același prefix, preferă calea cu mai puține sisteme autonome, iar la egalitate o păstrează pe cea mai veche. Când două prefixe se suprapun, pachetele urmează prefixul mai specific, <dfn class="term" data-term="subprefix" tabindex="0" role="button">sub-prefixul</dfn>. Apasă „Deturnează” și urmărește tabelele din inspector: anunțul fals pentru <code>/24</code> rămâne rută de rezervă pe tranzit, dar <code>/25</code> nu are concurent și este ales peste tot.</p>
-  <p>Harta arată cele trei sisteme autonome, sesiunile BGP dintre rutere și colectorul. Când o tabelă se schimbă, mesajele UPDATE pornesc de la origine și trec din ruter în ruter, apoi fiecare ruter îi spune colectorului ce a ales. Fiecare salt este un eveniment în lista de sub hartă: bara de redare le rulează la viteza aleasă, „Pas” face un salt, „Înapoi” îl întoarce, iar un clic pe un eveniment sare la el. „Trimite pachetul” urmărește un pachet către adresa aleasă: la fiecare ruter câștigă ruta cu prefixul cel mai specific, iar <dfn class="term" data-term="next_hop" tabindex="0" role="button">următorul salt</dfn> al ei spune încotro merge pachetul. Adresa <code>203.0.113.1</code> este în sub-prefixul anunțat de atacator; <code>203.0.113.129</code> nu este. În timpul deturnării, prima ajunge la atacator și este aruncată pe o <dfn class="term" data-term="blackhole" tabindex="0" role="button">rută blackhole</dfn>, a doua ajunge în continuare la victimă.</p>
+  <p>Harta arată cele trei sisteme autonome, sesiunile BGP dintre rutere și colectorul. Când o tabelă se schimbă, mesajele UPDATE pornesc de la origine și trec din ruter în ruter, apoi fiecare ruter îi spune colectorului ce a ales. Fiecare salt este un eveniment: bara de sub hartă le rulează la viteza aleasă și arată evenimentul curent, „Pas” face un salt, „Înapoi” îl întoarce, iar în tabul „Evenimente” al inspectorului un clic pe un eveniment sare la el. „Trimite pachetul” urmărește un pachet către adresa aleasă: la fiecare ruter câștigă ruta cu prefixul cel mai specific, iar <dfn class="term" data-term="next_hop" tabindex="0" role="button">următorul salt</dfn> al ei spune încotro merge pachetul. Adresa <code>203.0.113.1</code> este în sub-prefixul anunțat de atacator; <code>203.0.113.129</code> nu este. În timpul deturnării, prima ajunge la atacator și este aruncată pe o <dfn class="term" data-term="blackhole" tabindex="0" role="button">rută blackhole</dfn>, a doua ajunge în continuare la victimă.</p>
   <p>Pachetul simulat citește tabelele BGP; „Întreabă nucleele” verifică: fiecare ruter răspunde cu decizia sa reală de rutare pentru aceeași adresă, salt cu salt. Pe segmentul partajat al laboratorului următorul salt al unei rute poate fi direct ruterul de origine, deci atacatorul trimite pachetele victimei fără să treacă prin tranzit, iar nucleele confirmă.</p>
 </section>
 
@@ -50,8 +50,8 @@
 <div class="figure" id="fig-incidents">
   <div class="frame">
     <div class="frame-head"><h3>Figura 2. Incidentele</h3><span class="note">apasă pe un incident ca să vezi ce înseamnă</span></div>
-    <div class="frame-body tight" id="incidents"><div class="empty">Se încarcă...</div></div>
-    <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre id="raw-incidents"></pre></details>
+    <div class="frame-body tight" data-incidents><div class="empty">Se încarcă...</div></div>
+    <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre data-raw-incidents></pre></details>
   </div>
 </div>
 

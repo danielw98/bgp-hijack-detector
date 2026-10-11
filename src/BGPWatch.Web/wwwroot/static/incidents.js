@@ -1,22 +1,27 @@
 // Figure 2: the alerts grouped into incidents, each with its plain-language explanation.
+// The guide shows them twice, in Figure 2 and in the simulator's inspector, so every
+// feed and every raw drawer is found by its data attribute.
 
 import { every, get } from "./api.js";
 import { ALERT_NAME, asChip, chain, esc, fmtTime, nameOf, peerMarkup, peerName, plural, pretty } from "./format.js";
 import { setData } from "./status.js";
 
 const $ = (id) => document.getElementById(id);
+const all = (attr) => document.querySelectorAll(`[${attr}]`);
 const SOURCE_NAME = { lab: "simulator", "youtube-2008": "YouTube, 2008" };
 const open = new Set();
 let shown = [];
 
 export function startIncidents() {
-  $("incidents").addEventListener("click", (e) => {
-    const row = e.target.closest(".incident");
-    if (row && !e.target.closest("a")) toggle(row.dataset.key);
-  });
-  $("incidents").addEventListener("keydown", (e) => {
-    const row = e.target.closest(".incident");
-    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(row.dataset.key); }
+  all("data-incidents").forEach((box) => {
+    box.addEventListener("click", (e) => {
+      const row = e.target.closest(".incident");
+      if (row && !e.target.closest("a")) toggle(row.dataset.key);
+    });
+    box.addEventListener("keydown", (e) => {
+      const row = e.target.closest(".incident");
+      if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(row.dataset.key); }
+    });
   });
   every(3000, refresh);
 }
@@ -26,11 +31,21 @@ async function refresh() {
     const [incidents, alerts] = await Promise.all([get("/api/incidents"), get("/api/alerts?limit=200")]);
     shown = incidents;
     render(incidents);
-    $("raw-incidents").textContent = JSON.stringify({ incidents, alerts }, null, 2);
+    renderCount(incidents.filter((i) => i.source === "lab").length);
+    const raw = JSON.stringify({ incidents, alerts }, null, 2);
+    all("data-raw-incidents").forEach((pre) => { pre.textContent = raw; });
     setData(true);
   } catch (e) {
     setData(false);
   }
+}
+
+// The simulator's incidents on the inspector tab, red while there are any.
+function renderCount(n) {
+  const count = $("incident-count");
+  if (!count) return;
+  count.textContent = n || "";
+  count.classList.toggle("alert", n > 0);
 }
 
 function keyOf(i) {
@@ -43,12 +58,13 @@ function toggle(key) {
 }
 
 function render(incidents) {
-  const box = $("incidents");
-  if (!incidents.length) {
-    box.innerHTML = '<div class="empty">Niciun incident. Apasă „Deturnează” în simulator.</div>';
-    return;
-  }
-  box.innerHTML = incidents.map((i) => {
+  const html = feed(incidents);
+  all("data-incidents").forEach((box) => { box.innerHTML = html; });
+}
+
+function feed(incidents) {
+  if (!incidents.length) return '<div class="empty">Niciun incident. Apasă „Deturnează” în simulator.</div>';
+  return incidents.map((i) => {
     const key = keyOf(i);
     const isOpen = open.has(key);
     const prefixes = i.prefixes.map((p) => `<span class="mono">${esc(p)}</span>`).join(" și ");

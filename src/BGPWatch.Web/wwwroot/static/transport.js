@@ -9,7 +9,7 @@ export const SPEEDS = [0.25, 0.5, 1, 2, 4];
 const HOP_MS = 1400;
 const KIND_NAME = { update: "UPDATE", withdraw: "retragere", packet: "pachet", kernel: "nucleu" };
 
-export function createTransport({ canvas, list, play, back, step, clear, speed, speedLabel, count, onShow }) {
+export function createTransport({ canvas, list, play, back, step, clear, speed, speedLabel, count, now, onShow }) {
   const events = [];
   let cursor = -1;
   let auto = true;
@@ -115,7 +115,19 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
       : '<li class="empty">Niciun eveniment încă. Apasă „Deturnează” sau „Trimite pachetul”.</li>';
     const current = list.querySelector("li.current");
     if (current) current.scrollIntoView({ block: "nearest" });
-    count.textContent = events.length ? `${Math.max(0, cursor + 1)} din ${events.length}` : "";
+    count.textContent = events.length || "";
+    renderNow();
+  }
+
+  // The event under the cursor, beside the transport; action messages use the same slot.
+  function renderNow() {
+    const ev = events[cursor];
+    now.classList.toggle("event", Boolean(ev));
+    if (ev) {
+      now.innerHTML = `<span class="n">${cursor + 1} / ${events.length}</span> <span class="kind">${KIND_NAME[ev.kind] || esc(ev.kind)}</span> ${esc(ev.fromName || "")}${ev.toName ? ` &rarr; ${esc(ev.toName)}` : ""}`;
+    } else if (!events.length) {
+      now.textContent = "";
+    }
   }
 
   return { enqueue, resume, reset };

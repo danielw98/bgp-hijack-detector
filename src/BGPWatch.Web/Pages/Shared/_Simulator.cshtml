@@ -1,29 +1,29 @@
 <div class="sim" data-simulator>
   <div class="sim-toolbar">
-    <div class="group">
-      <span class="group-name">Deturnare</span>
-      <label>scenariu
-        <select data-sim="scenario">
-          <option value="both">prefixul exact și sub-prefixul</option>
-          <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
-          <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
-        </select>
-      </label>
-      <button data-sim="hijack" class="btn red">Deturnează</button>
-      <button data-sim="reset" class="btn outline">Retrage anunțurile</button>
+    <button data-sim="hijack" class="btn red"><span class="step">1</span>Deturnează</button>
+    <button data-sim="send" class="btn"><span class="step">2</span>Trimite pachetul</button>
+    <button data-sim="ask" class="btn outline"><span class="step">3</span>Întreabă nucleele</button>
+    <button data-sim="reset" class="btn outline"><span class="step">4</span>Retrage anunțurile</button>
+    <div class="options">
+      <button data-sim="options" class="btn outline blue" aria-expanded="false">Opțiuni</button>
+      <div class="options-panel" data-sim="options-panel" hidden>
+        <h4>Opțiuni</h4>
+        <label>Pasul 1, ce anunță atacatorul
+          <select data-sim="scenario">
+            <option value="both">prefixul exact și sub-prefixul</option>
+            <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
+            <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
+          </select>
+        </label>
+        <label>Pasul 2, pachetul pleacă de la <select data-sim="from"></select></label>
+        <label>către <select data-sim="to"></select></label>
+      </div>
     </div>
-    <div class="group">
-      <span class="group-name">Pachet</span>
-      <label>de la <select data-sim="from"></select></label>
-      <label>către <select data-sim="to"></select></label>
-      <button data-sim="send" class="btn">Trimite pachetul</button>
-      <button data-sim="ask" class="btn outline">Întreabă nucleele</button>
-    </div>
-    <p class="msg" data-sim="action-msg"></p>
   </div>
 
   <div class="sim-stage">
     <div class="sim-canvas" data-sim="canvas"></div>
+    <p class="sim-note">rețea închisă: AS private, 203.0.113.0/24 (RFC 5737)</p>
     <dl class="sim-legend">
       <div><dt><span class="swatch session"></span></dt><dd>sesiune BGP</dd></div>
       <div><dt><span class="swatch report"></span></dt><dd>raportare BMP</dd></div>
@@ -37,29 +37,27 @@
     <button data-sim="play" class="btn">Pauză</button>
     <button data-sim="step" class="btn outline">Pas</button>
     <label class="speed">viteză <input type="range" data-sim="speed" min="0" max="4" step="1" value="2" aria-label="viteza redării"> <b data-sim="speed-label">1x</b></label>
-    <span class="count" data-sim="count"></span>
-    <button data-sim="clear" class="btn outline">Șterge evenimentele</button>
-    <button data-sim="toggle-events" class="btn outline" aria-expanded="true">Evenimente</button>
+    <p class="now" data-sim="now" aria-live="polite"></p>
   </div>
-  <ol class="evlist" data-sim="events"></ol>
 
   <aside class="sim-inspector">
     <div class="tabs" role="tablist">
       <button class="tab current" role="tab" aria-selected="true" data-tab="tables">Tabele BGP</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="incidents">Incidente</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="raw">Date brute</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="events">Evenimente <span class="count" data-sim="count"></span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="incidents">Incidente <span class="count" id="incident-count"></span></button>
     </div>
-    <div class="panel" data-panel="tables"><div class="ribs" data-sim="tables"><div class="empty">Se citesc tabelele...</div></div></div>
-    <div class="panel" data-panel="incidents" hidden><div id="incidents" class="feed"><div class="empty">Se încarcă...</div></div></div>
-    <div class="panel raw" data-panel="raw" hidden>
-      <h4>Starea ruterelor, așa cum o dă vtysh</h4>
-      <pre id="raw-lab"></pre>
-      <h4>Incidentele și ultimele 200 de alerte</h4>
-      <pre id="raw-incidents"></pre>
+    <div class="panel" data-panel="tables">
+      <div class="ribs" data-sim="tables"><div class="empty">Se citesc tabelele...</div></div>
+      <details class="raw"><summary>Date brute</summary><pre id="raw-lab"></pre></details>
     </div>
-    <footer class="sim-foot">
-      <p>Rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul.</p>
-      <p><button id="btn-clear" class="btn outline red small">Golește istoricul simulatorului</button> <span id="clear-msg" class="msg"></span></p>
-    </footer>
+    <div class="panel" data-panel="events" hidden>
+      <ol class="evlist" data-sim="events"></ol>
+      <p class="panel-foot"><button data-sim="clear" class="btn outline small">Șterge evenimentele</button></p>
+    </div>
+    <div class="panel" data-panel="incidents" hidden>
+      <div class="feed" data-incidents><div class="empty">Se încarcă...</div></div>
+      <p class="panel-foot"><button id="btn-clear" class="btn outline red small">Golește istoricul simulatorului</button> <span id="clear-msg" class="msg"></span></p>
+      <details class="raw"><summary>Date brute</summary><pre data-raw-incidents></pre></details>
+    </div>
   </aside>
 </div>

@@ -53,17 +53,14 @@ export function mountSimulator(root) {
     speed: $("speed"),
     speedLabel: $("speed-label"),
     count: $("count"),
+    now: $("now"),
     onShow: highlightRow,
   });
   let previous = null;        // the paths seen at the last poll
   let lastSim = null;         // the last packet walk, for the agreement line
 
   wireTabs(root);
-  $("toggle-events").addEventListener("click", () => {
-    const open = $("events").hidden;
-    $("events").hidden = !open;
-    $("toggle-events").setAttribute("aria-expanded", String(open));
-  });
+  wireOptions($("options"), $("options-panel"));
   fillSelect($("from"), [["transit", "Tranzit"], ["victim", "Victimă"], ["attacker", "Atacator"]]);
   fillSelect($("to"), DESTINATIONS);
   $("hijack").addEventListener("click", () => act("trigger"));
@@ -166,14 +163,14 @@ export function mountSimulator(root) {
 
   async function act(kind) {
     const scenario = $("scenario").value;
-    const msg = $("action-msg");
+    const msg = $("now");
     const buttons = [$("hijack"), $("reset")];
     buttons.forEach((b) => { b.disabled = true; });
     msg.textContent = kind === "trigger" ? "se injectează..." : "se retrag...";
     try {
       const res = await post(`/api/lab/${kind}`, kind === "trigger" ? { scenario } : undefined);
       msg.innerHTML = kind === "trigger"
-        ? `Atacatorul <b>${esc(SCENARIO_TEXT[scenario])}</b>. Mesajele apar în lista de evenimente.`
+        ? `Atacatorul <b>${esc(SCENARIO_TEXT[scenario])}</b>. Mesajele urmează pe hartă.`
         : "Atacatorul și-a retras anunțurile. Tabelele revin la starea de bază.";
       if (!res.ok) msg.textContent = "Eroare: " + (res.error || "necunoscută");
       transport.resume();
@@ -224,7 +221,7 @@ export function mountSimulator(root) {
     const from = $("from").value;
     const to = $("to").value;
     const btn = $("ask");
-    const msg = $("action-msg");
+    const msg = $("now");
     btn.disabled = true;
     msg.textContent = "se întreabă nucleele...";
     try {
@@ -261,6 +258,14 @@ export function mountSimulator(root) {
 
 function fillSelect(select, options) {
   select.innerHTML = options.map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join("");
+}
+
+// The options panel opens under its button and closes on Escape or a click outside.
+function wireOptions(button, panel) {
+  const show = (open) => { panel.hidden = !open; button.setAttribute("aria-expanded", String(open)); };
+  button.addEventListener("click", () => show(panel.hidden));
+  document.addEventListener("click", (e) => { if (!panel.hidden && !button.parentElement.contains(e.target)) show(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) { show(false); button.focus(); } });
 }
 
 function wireTabs(root) {
