@@ -55,7 +55,16 @@ if (settings.PathBase.Length > 0)
 {
     app.UsePathBase(settings.PathBase);
 }
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    // The page's modules and styles change with every release: the browser revalidates
+    // them on each load (an ETag round trip); the vendored fonts never change.
+    OnPrepareResponse = context =>
+    {
+        var fonts = context.Context.Request.Path.StartsWithSegments("/static/fonts");
+        context.Context.Response.Headers.CacheControl = fonts ? "public, max-age=31536000, immutable" : "no-cache";
+    },
+});
 app.MapRazorPages();
 ReadEndpoints.Map(app);
 LabEndpoints.Map(app);
