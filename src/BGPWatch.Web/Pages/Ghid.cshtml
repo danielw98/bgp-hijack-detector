@@ -76,14 +76,10 @@
   <p>Fiecare anunț și fiecare retragere primite de colector sunt păstrate în baza de date, cu prefixul într-un tip nativ care permite căutări de incluziune. Pentru un prefix urmărit, pagina arată ce rută are acum fiecare punct de observație și fiecare moment în care ruta s-a schimbat.</p>
 </section>
 
-<div class="figure" id="fig-prefix">
+<div class="figure wide" id="fig-prefix">
   <div class="frame">
-    <div class="frame-head"><h3>Figura 4. Istoricul unui prefix</h3><label>prefix urmărit <select id="prefix-select"></select></label></div>
-    <div class="frame-body lookup-result" id="prefix-head">Se încarcă...</div>
-    <div class="frame-body tight scroll-x" id="prefix-current"></div>
-    <div class="frame-head"><h3>Schimbările, cele mai noi primele</h3></div>
-    <div class="frame-body tight scroll-x" id="prefix-changes"></div>
-    <details class="raw"><summary>Date brute: starea curentă, schimbările și alertele prefixului</summary><pre id="raw-prefix"></pre></details>
+    <div class="frame-head"><h3>Figura 4. Istoricul unui prefix</h3><span class="note">un rând pentru fiecare ruter și prefix văzut</span></div>
+    @await Html.PartialAsync("_Prefix")
   </div>
 </div>
 
@@ -95,14 +91,7 @@
 <div class="figure" id="fig-lookup">
   <div class="frame">
     <div class="frame-head"><h3>Figura 5. Un prefix real, astăzi</h3></div>
-    <form class="controls" id="lookup-form">
-      <label>adresă sau prefix <input type="text" id="lookup-input" value="193.0.0.0/21" spellcheck="false" autocomplete="off"></label>
-      <button type="submit" id="btn-lookup" class="btn">Caută</button>
-      <button type="button" id="btn-self" class="btn outline">Adresa mea</button>
-      <span id="lookup-msg" class="msg"></span>
-    </form>
-    <div class="frame-body lookup-result" id="lookup-result"><p class="caption">Încearcă prefixul RIPE NCC de mai sus, sau apasă „Adresa mea”.</p></div>
-    <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
+    @await Html.PartialAsync("_Lookup")
   </div>
 </div>
 

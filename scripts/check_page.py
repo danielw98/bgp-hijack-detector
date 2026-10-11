@@ -28,6 +28,7 @@ STATIC = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static"
 SHOTS = ROOT / ".playwright-mcp"
 VIEWPORTS = ((390, 844), (1366, 768), (1920, 1080))
 WORKSPACE_FROM = 1000
+ONE_SCREEN_VIEWS = ("2008", "prefixe", "verifica")  # views that fit one screen from WORKSPACE_FROM up
 VIEWS = ("simulator", "2008", "prefixe", "verifica")
 SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view-body, .sim-canvas"
 MIN_CONTRAST = 4.5
@@ -208,7 +209,7 @@ def check_layout(url: str, name: str) -> list[str]:
             page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
             page.wait_for_selector("svg.map", state="attached", timeout=15000)
             if name == "ghid":
-                page.wait_for_selector(".inc-row svg", state="attached", timeout=15000)
+                page.wait_for_selector(".lane-row svg", state="attached", timeout=15000)
             page.wait_for_timeout(800)
             for view in (VIEWS if name == "app" else ("",)):
                 if view:
@@ -220,10 +221,10 @@ def check_layout(url: str, name: str) -> list[str]:
                     out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
                 if view == "simulator" and width >= WORKSPACE_FROM and result["scrollHeight"] > result["innerHeight"] + 1:
                     out.append(f"{label}: page scrolls vertically ({result['scrollHeight']} > {result['innerHeight']})")
-                if view == "2008" and width >= WORKSPACE_FROM:
-                    body = page.evaluate("() => { const b = document.querySelector('#view-2008 .view-body'); return [b.scrollHeight, b.clientHeight]; }")
+                if view in ONE_SCREEN_VIEWS and width >= WORKSPACE_FROM:
+                    body = page.evaluate("(v) => { const b = document.querySelector('#view-' + v + ' .view-body'); return [b.scrollHeight, b.clientHeight]; }", view)
                     if body[0] > body[1] + 1:
-                        out.append(f"{label}: the 2008 view scrolls ({body[0]} > {body[1]})")
+                        out.append(f"{label}: the view scrolls ({body[0]} > {body[1]})")
                 for element in result["wide"]:
                     out.append(f"{label}: {element} is wider than the viewport")
                 if view in ("simulator", ""):

@@ -3,7 +3,7 @@
 // path at the cursor; the documented event under the cursor above the rows.
 
 import { get, post } from "./api.js";
-import { esc, fmtUtc, registerNames } from "./format.js";
+import { esc, fmtUtc, pathChain, registerNames } from "./format.js";
 import { contains, prefixLength } from "./simulate.js";
 
 const $ = (id) => document.getElementById(id);
@@ -32,7 +32,7 @@ let current = START;
 export function startIncident2008() {
   $("btn-reload").addEventListener("click", reload);
   $("btn-play").addEventListener("click", togglePlay);
-  $("inc-event").addEventListener("click", (e) => {
+  $("event-card").addEventListener("click", (e) => {
     const target = e.target.closest("[data-jump]");
     if (target) { stop(); setTime(Number(target.dataset.jump)); }
   });
@@ -116,7 +116,7 @@ function renderRows() {
   const eventLines = events.map((t, i) => `<line class="event" data-i="${i}" x1="${x(t)}" x2="${x(t)}" y1="0" y2="10" vector-effect="non-scaling-stroke"></line>`).join("");
   const rows = incident.peers.map((peer) => {
     const rects = segmentsOf(peer).map(([a, b, c]) => `<rect class="seg ${c}" x="${x(a)}" y="2" width="${Math.max(1, x(b) - x(a))}" height="6"></rect>`).join("");
-    return `<div class="inc-row" data-peer="${esc(peer)}">
+    return `<div class="lane-row" data-peer="${esc(peer)}">
       <span class="c-peer"><span class="ip">${esc(peer)}</span> <span class="asn">${peerAsn(peer)}</span></span>
       <span class="c-lane"><svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">${rects}${eventLines}<line class="cursor" x1="0" x2="0" y1="0" y2="10" vector-effect="non-scaling-stroke"></line></svg></span>
       <span class="c-path"></span>
@@ -127,19 +127,19 @@ function renderRows() {
   ticks.push(`<span class="tick end" style="left:100%">${fmtUtc(new Date(T1).toISOString(), false)}</span>`);
   const max = (T1 - T0) / 1000;
   $("lanes").innerHTML = `
-    <div class="inc-row head">
+    <div class="lane-row head">
       <span class="c-peer">Vecin RIS</span>
       <span class="c-lane"><span class="track">${marks}<span class="handle"></span></span></span>
       <span class="c-path" id="path-head"></span>
     </div>
     ${rows}
-    <div class="inc-row axis">
+    <div class="lane-row axis">
       <span class="c-peer"></span>
       <span class="c-lane"><span class="track">${ticks.join("")}</span><input type="range" id="scrub" min="0" max="${max}" step="${SCRUB_STEP_S}" aria-label="momentul din incident"></span>
       <span class="c-path"></span>
     </div>`;
   $("scrub").addEventListener("input", () => { stop(); setTime(T0 + Number($("scrub").value) * 1000); });
-  $("lanes").querySelectorAll(".inc-row:not(.axis) .c-lane").forEach((lane) => lane.addEventListener("pointerdown", scrubFrom));
+  $("lanes").querySelectorAll(".lane-row:not(.axis) .c-lane").forEach((lane) => lane.addEventListener("pointerdown", scrubFrom));
 }
 
 // Press and drag on any lane moves the cursor there.
@@ -153,22 +153,9 @@ function scrubFrom(down) {
   window.addEventListener("pointerup", up);
 }
 
-// Consecutive repeats (prepending) fold into one chip with a count.
 function pathMarkup(path, origin) {
   if (!path) return `<span class="assumed">ruta /22 a YouTube, anunțată înainte</span>`;
-  const folded = [];
-  path.forEach((asn) => {
-    const last = folded[folded.length - 1];
-    if (last && last.asn === asn) last.times++;
-    else folded.push({ asn, times: 1 });
-  });
-  const role = (ORIGIN[origin] || { role: "" }).role;
-  const chips = folded.map(({ asn, times }, i) => {
-    const kind = i === folded.length - 1 ? `origin ${role}` : i === folded.length - 2 ? `hand ${role}` : "";
-    const repeat = times > 1 ? `<span class="times">&times;${times}</span>` : "";
-    return `<span class="as ${kind}">${esc(asn)}${repeat}</span>`;
-  });
-  return `<span class="chain">${chips.join('<span class="sep">&rsaquo;</span>')}</span>`;
+  return pathChain(path, (ORIGIN[origin] || { role: "" }).role);
 }
 
 function setTime(t) {
@@ -181,7 +168,7 @@ function setTime(t) {
   $("lanes").querySelector(".handle").style.left = pct(current);
   $("lanes").querySelectorAll("line.cursor").forEach((line) => { line.setAttribute("x1", x(current)); line.setAttribute("x2", x(current)); });
   state.forEach((s) => {
-    const row = $("lanes").querySelector(`.inc-row[data-peer="${s.peer}"]`);
+    const row = $("lanes").querySelector(`.lane-row[data-peer="${s.peer}"]`);
     row.querySelector(".c-path").innerHTML = pathMarkup(s.path, s.origin);
   });
   renderCount("count-hijacker", state, HIJACKER);
@@ -205,7 +192,7 @@ function renderCurrentEvent() {
   const body = i >= 0
     ? `<span class="badge">${i + 1}</span><span class="t">${fmtUtc(events[i].at, false)}</span><span class="label">${esc(events[i].label)}.</span>`
     : `<span class="label">Niciun eveniment documentat încă: toți vecinii au ruta /22 a YouTube, anunțată înainte de fereastra înregistrată.</span>`;
-  $("inc-event").innerHTML = `${body}<span class="jumps">${jump(i - 1, `&lsaquo; ${i}`)}${jump(i + 1, `${i + 2} &rsaquo;`)}</span>`;
+  $("event-card").innerHTML = `${body}<span class="jumps">${jump(i - 1, `&lsaquo; ${i}`)}${jump(i + 1, `${i + 2} &rsaquo;`)}</span>`;
 }
 
 function togglePlay() {

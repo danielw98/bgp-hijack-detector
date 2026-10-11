@@ -1,0 +1,29 @@
+<div class="lanes prefix-view">
+  <div class="choice-row">
+    <span class="choice-label">prefix</span>
+    <div class="seg-control" id="prefix-choice" role="group" aria-label="prefixul urmărit"></div>
+    <span class="choice-label push">fereastra</span>
+    <div class="seg-control" id="window-choice" role="group" aria-label="fereastra de timp">
+      <button type="button" data-window="600" aria-pressed="true">10 min</button>
+      <button type="button" data-window="3600" aria-pressed="false">1 oră</button>
+      <button type="button" data-window="86400" aria-pressed="false">24 h</button>
+      <button type="button" data-window="0" aria-pressed="false">tot</button>
+    </div>
+  </div>
+  <div class="verdict" id="prefix-verdict" aria-live="polite">Se încarcă...</div>
+  <div class="lane-table" id="prefix-lanes" role="group" aria-label="Pentru fiecare ruter și prefix: cui îi trimite traficul, de-a lungul ferestrei, și calea AS de acum"></div>
+  <div class="more-row">
+    <details>
+      <summary id="prefix-changes-summary">Schimbările</summary>
+      <div class="scroll-x" id="prefix-changes"></div>
+    </details>
+    <details>
+      <summary id="prefix-alerts-summary">Alertele</summary>
+      <div class="scroll-x" id="prefix-alerts"></div>
+    </details>
+    <details class="raw">
+      <summary>Date brute</summary>
+      <pre id="raw-prefix"></pre>
+    </details>
+  </div>
+</div>

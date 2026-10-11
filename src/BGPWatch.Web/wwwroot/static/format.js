@@ -65,6 +65,23 @@ export function chain(asPath, localAsn) {
   return `<span class="chain">${chips.join('<span class="sep">&rsaquo;</span>')}</span>`;
 }
 
+// A path in the lane views: consecutive repeats (prepending) fold into one chip with a
+// count; the origin and the AS that hands the route to it carry the origin's role.
+export function pathChain(path, role) {
+  const folded = [];
+  path.forEach((asn) => {
+    const last = folded[folded.length - 1];
+    if (last && last.asn === asn) last.times++;
+    else folded.push({ asn, times: 1 });
+  });
+  const chips = folded.map(({ asn, times }, i) => {
+    const kind = i === folded.length - 1 ? `origin ${role}` : i === folded.length - 2 ? `hand ${role}` : "";
+    const repeat = times > 1 ? `<span class="times">&times;${times}</span>` : "";
+    return `<span class="as ${kind}">${esc(asn)}${repeat}</span>`;
+  });
+  return `<span class="chain">${chips.join('<span class="sep">&rsaquo;</span>')}</span>`;
+}
+
 // Lab times are local (today's show the clock only); recorded incidents keep UTC.
 export function fmtTime(iso, utc = false) {
   const t = new Date(iso);

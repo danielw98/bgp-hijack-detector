@@ -16,7 +16,7 @@ wirePopovers();
 document.querySelectorAll("[data-simulator]").forEach(mountSimulator);
 if ($("incidents")) startIncidents();
 if ($("lanes")) startIncident2008();
-if ($("prefix-select")) startPrefix();
+if ($("prefix-choice")) startPrefix();
 if ($("lookup-form")) startLookup();
 
 if ($("btn-clear")) {

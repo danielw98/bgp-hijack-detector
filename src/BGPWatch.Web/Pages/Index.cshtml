@@ -39,33 +39,19 @@
 </section>
 
 <section class="view" id="view-prefixe" hidden>
-<div class="view-head"><h2>Istoricul unui prefix</h2><span class="note">ruta curentă și schimbările, la fiecare punct de observație</span><a class="guide-link" href="~/ghid#s4">În ghid, §4</a></div>
+<div class="view-head"><h2>Istoricul unui prefix</h2><span class="note">cui îi trimite fiecare ruter traficul pentru prefix, de-a lungul timpului</span><a class="guide-link" href="~/ghid#s4">În ghid, §4</a></div>
 <div class="view-body">
 <div class="inner">
-  <div class="panel"><div class="controls"><label>prefix urmărit <select id="prefix-select"></select></label></div></div>
-  <div class="panel"><div class="body lookup-result" id="prefix-head">Se încarcă...</div></div>
-  <div class="panel"><h3>Ruta curentă la fiecare punct de observație</h3><div class="scroll-x" id="prefix-current"></div></div>
-  <div class="panel"><h3>Schimbările, cele mai noi primele</h3><div class="scroll-x" id="prefix-changes"></div></div>
-  <details class="raw"><summary>Date brute: starea curentă, schimbările și alertele prefixului</summary><pre id="raw-prefix"></pre></details>
+  @await Html.PartialAsync("_Prefix")
 </div>
 </div>
 </section>
 
 <section class="view" id="view-verifica" hidden>
-<div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC</span><a class="guide-link" href="~/ghid#s5">În ghid, §5</a></div>
+<div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC; doar citește</span><a class="guide-link" href="~/ghid#s5">În ghid, §5</a></div>
 <div class="view-body">
 <div class="inner">
-  <div class="panel">
-    <form class="controls" id="lookup-form">
-      <label>adresă sau prefix <input type="text" id="lookup-input" value="193.0.0.0/21" spellcheck="false" autocomplete="off"></label>
-      <button type="submit" id="btn-lookup" class="btn">Caută</button>
-      <button type="button" id="btn-self" class="btn outline">Adresa mea</button>
-      <span id="lookup-msg" class="msg"></span>
-    </form>
-    <div class="body lookup-result" id="lookup-result"><p class="caption">Încearcă prefixul RIPE NCC de mai sus, sau apasă „Adresa mea”.</p></div>
-  </div>
-  <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
-  <p class="appfoot">Verificarea unui prefix real este singura cerere către Internet și doar citește.</p>
+  @await Html.PartialAsync("_Lookup")
 </div>
 </div>
 </section>

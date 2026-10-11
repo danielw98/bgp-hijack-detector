@@ -1,0 +1,18 @@
+<div class="lookup">
+  <form class="search-row" id="lookup-form">
+    <input type="text" id="lookup-input" value="193.0.0.0/21" spellcheck="false" autocomplete="off" aria-label="adresă sau prefix">
+    <button type="submit" id="btn-lookup" class="btn">Verifică</button>
+    <button type="button" id="btn-self" class="btn outline">Adresa mea</button>
+  </form>
+  <div class="examples" id="lookup-examples">
+    <span class="choice-label">exemple</span>
+    <button type="button" data-q="193.0.0.0/21"><span class="mono">193.0.0.0/21</span> <span class="note">RIPE NCC</span></button>
+    <button type="button" data-q="208.65.152.0/22"><span class="mono">208.65.152.0/22</span> <span class="note">YouTube</span></button>
+    <button type="button" data-q="1.1.1.0/24"><span class="mono">1.1.1.0/24</span> <span class="note">Cloudflare</span></button>
+  </div>
+  <p class="msg" id="lookup-msg" aria-live="polite"></p>
+  <div class="answer" id="lookup-result" hidden></div>
+  <div class="more-row">
+    <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
+  </div>
+</div>
