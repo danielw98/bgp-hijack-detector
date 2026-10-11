@@ -117,6 +117,18 @@ public class BmpTests
         await Assert.ThrowsAsync<InvalidDataException>(() => BmpMessage.ReadAsync(stream, CancellationToken.None));
     }
 
+    [Theory]
+    [InlineData("10.10.0.10", true)]
+    [InlineData("10.10.0.11", true)]
+    [InlineData("10.10.0.13", true)]
+    [InlineData("10.10.0.100", false)]
+    [InlineData("172.22.0.2", false)]
+    [InlineData("127.0.0.1", false)]
+    public void OnlyTheLabRoutersMayOpenASession(string address, bool accepted)
+    {
+        Assert.Equal(accepted, BmpStation.IsLabRouter(address));
+    }
+
     [Fact]
     public async Task ARouterWithAFourOctetPrivateAsReportsTheRoutesItOriginates()
     {

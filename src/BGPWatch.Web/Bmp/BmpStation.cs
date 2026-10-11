@@ -4,18 +4,22 @@ using System.Net.Sockets;
 using System.Threading.Channels;
 using BGPWatch.Core.Application;
 using BGPWatch.Core.Domain;
+using BGPWatch.Web.Lab;
 using BGPWatch.Web.Native;
 
 namespace BGPWatch.Web.Bmp;
 
 /// <summary>
-/// The BMP station: accepts the lab routers' BMP sessions and runs the routes of every
-/// Loc-RIB route monitoring message through the pipeline, one message at a time, in
-/// arrival order. A row's time is the moment its message arrived.
+/// The BMP station: accepts the BMP sessions of the lab routers (LabView.Routers) and no
+/// other peer, and runs the routes of every Loc-RIB route monitoring message through the
+/// pipeline, one message at a time, in arrival order. A row's time is the moment its
+/// message arrived.
 /// </summary>
 public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : BackgroundService
 {
     public const int Port = 5000;
+
+    private static readonly HashSet<string> LabRouters = [.. LabView.Routers.Select(r => r.Address)];
 
     private readonly ConcurrentDictionary<string, TcpClient> sessions = new();
     private readonly Channel<List<Announcement>> queue =
@@ -57,6 +61,12 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
     private async Task ServeAsync(TcpClient client, CancellationToken stop)
     {
         var address = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.MapToIPv4().ToString();
+        if (!IsLabRouter(address))
+        {
+            logger.LogWarning("BMP session from {Address} refused: not a lab router", address);
+            client.Dispose();
+            return;
+        }
         sessions[address] = client;
         logger.LogInformation("BMP session from {Address}", address);
         try
@@ -76,6 +86,12 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
             sessions.TryRemove(KeyValuePair.Create(address, client));
             client.Dispose();
         }
+    }
+
+    /// <summary>Whether the address is one of the lab routers', the only peers the station accepts.</summary>
+    public static bool IsLabRouter(string address)
+    {
+        return LabRouters.Contains(address);
     }
 
     private async Task AcceptAsync(BmpMessage message, string address, CancellationToken stop)
