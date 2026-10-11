@@ -14,7 +14,7 @@ public sealed class Queries(NpgsqlDataSource database)
 
     private const string RouteColumns = """
         id, seen_at, peer, prefix::text AS prefix, origin_as, as_path,
-        next_hop::text AS next_hop, withdrawn, source
+        host(next_hop) AS next_hop, withdrawn, source
         """;
 
     public async Task<Stats> StatsAsync(CancellationToken cancel)
