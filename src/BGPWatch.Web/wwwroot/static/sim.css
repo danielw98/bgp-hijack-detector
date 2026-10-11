@@ -203,7 +203,9 @@ svg.map .badge.dropped text, svg.map .badge.unreachable text, svg.map .badge.los
 .rib { border-bottom: 1px solid var(--line); }
 .rib h4 { margin: 0; padding: 9px 14px; font-size: 17px; background: var(--soft); border-bottom: 1px solid var(--line); }
 .rib h4 .addr { font-family: var(--mono); font-weight: 400; font-size: 15px; color: var(--muted); margin-left: 6px; }
-.rib table.data { font-size: 16px; }
+.rib table.data { font-size: 16px; table-layout: fixed; }
+.rib table.data th:nth-child(1) { width: 180px; }
+.rib table.data th:nth-child(3) { width: 120px; }
 .rib table.data th, .rib table.data td { padding: 7px 10px; }
 .rib td:first-child { white-space: nowrap; }
 .rib .state { font-size: 14px; }
