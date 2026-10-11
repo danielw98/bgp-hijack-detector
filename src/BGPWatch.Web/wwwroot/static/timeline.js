@@ -1,6 +1,9 @@
 // Figure 3: the recorded 2008 incident on one screen. One row per RIS peer: its lane,
 // coloured by who its most specific route for the hijacked block pointed to, and its AS
-// path at the cursor; the documented event under the cursor above the rows.
+// path at the cursor; the documented event under the cursor above the rows. The lane's
+// axis is cut into phases at the documented events: linear inside a phase, each phase as
+// wide as the square root of its duration (at least MIN_PHASE of the lane), its real
+// duration written above it, a break mark on a phase drawn much narrower than linear.
 
 import { get, post } from "./api.js";
 import { esc, fmtUtc, pathChain, registerNames } from "./format.js";
@@ -20,14 +23,18 @@ const T0 = Date.UTC(2008, 1, 24, 18, 45);
 const T1 = Date.UTC(2008, 1, 24, 21, 5);
 const START = Date.UTC(2008, 1, 24, 18, 49);
 const EVENT_LEAD_MS = 3 * 60 * 1000;
-const TICK_EVERY_MIN = 30;
-const SPEED = 180;
+const MIN_PHASE = 0.1;
+const MARK_RADIUS = 13;
+const TICK_GAP = 6;
+const BROKEN_BELOW = 2 / 3;
+const PLAY_MS = 45000;
 const TICK_MS = 100;
-const SCRUB_STEP_S = 10;
+const SCRUB_STEPS = 1000;
 
 export const incident = { meta: null, updates: [], peers: [] };
 let timer = null;
 let current = START;
+let phases = [];
 
 export function startIncident2008() {
   $("btn-reload").addEventListener("click", reload);
@@ -80,9 +87,49 @@ function laneOf(origin) {
   return (ORIGIN[origin] || { lane: "grey" }).lane;
 }
 
+// The phases between T0, the documented events and T1, each with its share of the lane.
+function phasesOf(times) {
+  const bounds = [T0, ...times.filter((t) => t > T0 && t < T1), T1];
+  const spans = bounds.slice(1).map((b, i) => ({ from: bounds[i], to: b }));
+  const roots = spans.map((s) => Math.sqrt(s.to - s.from));
+  const total = roots.reduce((a, b) => a + b, 0);
+  const floored = roots.map((r) => Math.max(MIN_PHASE, r / total));
+  const sum = floored.reduce((a, b) => a + b, 0);
+  let left = 0;
+  return spans.map((s, i) => {
+    const share = floored[i] / sum;
+    const phase = { ...s, left, share, broken: share < BROKEN_BELOW * ((s.to - s.from) / (T1 - T0)) };
+    left += share;
+    return phase;
+  });
+}
+
+function phaseAt(t) {
+  return phases.find((p) => t <= p.to) || phases[phases.length - 1];
+}
+
 // Position on the lane, 0..1000 in the lane's viewBox; pct() for HTML overlays.
 function x(t) {
-  return ((t - T0) / (T1 - T0)) * 1000;
+  const p = phaseAt(t);
+  return (p.left + p.share * ((t - p.from) / (p.to - p.from))) * 1000;
+}
+
+// The time at a position on the lane, 0..1.
+function timeAt(f) {
+  const p = phases.find((q) => f <= q.left + q.share) || phases[phases.length - 1];
+  return p.from + ((f - p.left) / p.share) * (p.to - p.from);
+}
+
+// A duration sits centred in the room its phase leaves between the event badges.
+function durShift(i) {
+  const left = i > 0 ? MARK_RADIUS : 0;
+  const right = i < phases.length - 1 ? MARK_RADIUS : 0;
+  return (left - right) / 2;
+}
+
+function duration(ms) {
+  const min = Math.round(ms / 60000);
+  return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`;
 }
 
 function pct(t) {
@@ -112,20 +159,21 @@ function peerAsn(peer) {
 
 function renderRows() {
   const events = eventTimes();
-  const marks = events.map((t, i) => `<span class="mark" data-i="${i}" style="left:${pct(t)}">${i + 1}</span>`).join("");
+  phases = phasesOf(events);
+  const marks = events.map((t, i) => `<span class="mark" data-i="${i}" style="left:${pct(t)}">${i + 1}</span>`).join("") +
+    phases.map((p, i) => `<span class="dur" style="left:calc(${(p.left + p.share / 2) * 100}% + ${durShift(i)}px)">${p.broken ? "// " : ""}${duration(p.to - p.from)}</span>`).join("");
+  const breaks = phases.filter((p) => p.broken)
+    .map((p) => `<span class="break" style="left:calc(16px + (100% - 32px) * ${p.left + p.share / 2})"></span>`).join("");
   const eventLines = events.map((t, i) => `<line class="event" data-i="${i}" x1="${x(t)}" x2="${x(t)}" y1="0" y2="10" vector-effect="non-scaling-stroke"></line>`).join("");
   const rows = incident.peers.map((peer) => {
     const rects = segmentsOf(peer).map(([a, b, c]) => `<rect class="seg ${c}" x="${x(a)}" y="2" width="${Math.max(1, x(b) - x(a))}" height="6"></rect>`).join("");
     return `<div class="lane-row" data-peer="${esc(peer)}">
       <span class="c-peer"><span class="ip">${esc(peer)}</span> <span class="asn">${peerAsn(peer)}</span></span>
-      <span class="c-lane"><svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">${rects}${eventLines}<line class="cursor" x1="0" x2="0" y1="0" y2="10" vector-effect="non-scaling-stroke"></line></svg></span>
+      <span class="c-lane"><svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">${rects}${eventLines}<line class="cursor" x1="0" x2="0" y1="0" y2="10" vector-effect="non-scaling-stroke"></line></svg>${breaks}</span>
       <span class="c-path"></span>
     </div>`;
   }).join("");
-  const ticks = [];
-  for (let t = T0; t <= T1; t += TICK_EVERY_MIN * 60 * 1000) ticks.push(`<span class="tick" style="left:${pct(t)}">${fmtUtc(new Date(t).toISOString(), false)}</span>`);
-  ticks.push(`<span class="tick end" style="left:100%">${fmtUtc(new Date(T1).toISOString(), false)}</span>`);
-  const max = (T1 - T0) / 1000;
+  const ticks = events.map((t) => `<span class="tick" style="left:${pct(t)}">${fmtUtc(new Date(t).toISOString(), false)}</span>`);
   $("lanes").innerHTML = `
     <div class="lane-row head">
       <span class="c-peer">Vecin RIS</span>
@@ -135,17 +183,29 @@ function renderRows() {
     ${rows}
     <div class="lane-row axis">
       <span class="c-peer"></span>
-      <span class="c-lane"><span class="track">${ticks.join("")}</span><input type="range" id="scrub" min="0" max="${max}" step="${SCRUB_STEP_S}" aria-label="momentul din incident"></span>
+      <span class="c-lane"><span class="track">${ticks.join("")}</span><input type="range" id="scrub" min="0" max="${SCRUB_STEPS}" step="1" aria-label="momentul din incident"></span>
       <span class="c-path"></span>
     </div>`;
-  $("scrub").addEventListener("input", () => { stop(); setTime(T0 + Number($("scrub").value) * 1000); });
+  $("scrub").addEventListener("input", () => { stop(); setTime(timeAt(Number($("scrub").value) / SCRUB_STEPS)); });
+  new ResizeObserver(hideCrowdedTicks).observe($("lanes"));
   $("lanes").querySelectorAll(".lane-row:not(.axis) .c-lane").forEach((lane) => lane.addEventListener("pointerdown", scrubFrom));
+}
+
+// On a narrow lane two event times can meet: the later one is hidden.
+function hideCrowdedTicks() {
+  let right = -Infinity;
+  $("lanes").querySelectorAll(".lane-row.axis .tick").forEach((tick) => {
+    tick.style.visibility = "";
+    const box = tick.getBoundingClientRect();
+    if (box.left < right + TICK_GAP) tick.style.visibility = "hidden";
+    else right = box.right;
+  });
 }
 
 // Press and drag on any lane moves the cursor there.
 function scrubFrom(down) {
   const box = down.currentTarget.getBoundingClientRect();
-  const move = (e) => setTime(T0 + ((e.clientX - box.left) / box.width) * (T1 - T0));
+  const move = (e) => setTime(timeAt(Math.max(0, Math.min(1, (e.clientX - box.left) / box.width))));
   const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
   stop();
   move(down);
@@ -162,7 +222,8 @@ function setTime(t) {
   current = Math.max(T0, Math.min(T1, t));
   const state = stateAt(current);
   const clock = fmtUtc(new Date(current).toISOString());
-  $("scrub").value = Math.round((current - T0) / 1000);
+  $("scrub").value = Math.round((x(current) / 1000) * SCRUB_STEPS);
+  $("speed-2008").textContent = `viteză ${Math.round(rateAt(current))}x`;
   $("scrub-time").textContent = `${clock} UTC`;
   $("path-head").textContent = `Calea AS la ${clock.slice(0, 5)}, spre origine`;
   $("lanes").querySelector(".handle").style.left = pct(current);
@@ -195,14 +256,22 @@ function renderCurrentEvent() {
   $("event-card").innerHTML = `${body}<span class="jumps">${jump(i - 1, `&lsaquo; ${i}`)}${jump(i + 1, `${i + 2} &rsaquo;`)}</span>`;
 }
 
+// Playback moves the cursor at one speed along the lane, so the incident's clock runs
+// faster through a wide-compressed phase.
 function togglePlay() {
   if (timer) { stop(); return; }
   if (current >= T1) current = T0;
   $("btn-play").textContent = "Pauză";
   timer = setInterval(() => {
-    setTime(current + SPEED * TICK_MS);
+    setTime(timeAt(Math.min(1, x(current) / 1000 + TICK_MS / PLAY_MS)));
     if (current >= T1) stop();
   }, TICK_MS);
+}
+
+// Incident time per playback time in the phase at t.
+function rateAt(t) {
+  const p = phaseAt(t);
+  return (p.to - p.from) / (p.share * PLAY_MS);
 }
 
 function stop() {
