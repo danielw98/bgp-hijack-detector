@@ -11,8 +11,8 @@ function show(name) {
 }
 
 function fromHash() {
-  const name = location.hash.replace("#", "") || "lab";
-  show(views.some((view) => view.id === `view-${name}`) ? name : "lab");
+  const name = location.hash.replace("#", "").replace(/^lab$/, "simulator") || "simulator";
+  show(views.some((view) => view.id === `view-${name}`) ? name : "simulator");
 }
 
 window.addEventListener("hashchange", fromHash);

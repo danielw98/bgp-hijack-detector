@@ -4,7 +4,7 @@ const $ = (id) => document.getElementById(id);
 
 export function setLab(up) {
   $("dot-lab").className = "dot " + (up ? "up" : "down");
-  $("lab-state").textContent = up ? "pornit" : "oprit";
+  $("lab-state").textContent = up ? "pornite" : "oprite";
 }
 
 export function setData(up) {

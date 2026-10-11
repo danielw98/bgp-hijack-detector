@@ -1,9 +1,12 @@
-"""Gate for the page. Loads it at 390, 1366 and 1920 px in Chromium and fails on any
-horizontal page overflow or any element wider than the viewport outside an inner
-scroller; checks the colour tokens of page.css for 4.5:1 contrast on the paper and on
-the white surface, and white text on the role colours; refuses emoji in every tracked
-text file and non-ASCII in code comments; writes one full-page screenshot per width
-into .playwright-mcp/. Exits 1 on any finding.
+"""Gate for the page. Loads the application and the guide at phone, laptop and desktop
+sizes in Chromium and fails on: horizontal page overflow or an element wider than the
+viewport outside an inner scroller; vertical page scroll of the application at laptop
+and desktop sizes (the simulator fills the window); any text of the simulator's map
+rendered under MIN_FONT px; any map text crossed by a line, a path or the edge of a box
+(a label on a white halo may cover a line). Also checks the colour tokens of page.css
+for 4.5:1 contrast, refuses emoji in every tracked text file and non-ASCII in code
+comments, and writes one full-page screenshot per size into .playwright-mcp/.
+Exits 1 on any finding.
 
 Usage: python scripts/check_page.py [--url http://localhost:8080/]
 Needs: pip install playwright, then python -m playwright install chromium
@@ -20,9 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static"
 SHOTS = ROOT / ".playwright-mcp"
-WIDTHS = (390, 1366, 1920)
-SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, #graph"
+VIEWPORTS = ((390, 844), (1366, 768), (1920, 1080))
+WORKSPACE_FROM = 1000
+VIEWS = ("simulator", "2008", "prefixe", "verifica")
+SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view.scroll, .sim-canvas"
 MIN_CONTRAST = 4.5
+MIN_FONT = 15.0
 TEXT_SUFFIXES = {
     ".md", ".html", ".cshtml", ".js", ".css", ".py", ".cs", ".csproj", ".slnx", ".props", ".c", ".h",
     ".tex", ".toml", ".sql", ".sh", ".conf", ".bat", ".txt", ".yml", ".json",
@@ -40,12 +46,70 @@ OVERFLOW_JS = """
     const r = el.getBoundingClientRect();
     return r.right > w + 1 && !el.closest(scrollers);
   }).map((el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' right=' + Math.round(el.getBoundingClientRect().right));
-  return { scrollWidth: document.documentElement.scrollWidth, innerWidth: w, wide: wide.slice(0, 10) };
+  return { scrollWidth: document.documentElement.scrollWidth, scrollHeight: document.documentElement.scrollHeight,
+           innerWidth: w, innerHeight: window.innerHeight, wide: wide.slice(0, 10) };
+}
+"""
+
+# Every text of the map: its rendered size, and whether a line, a path or a box edge
+# crosses it. A text on a halo (the rect before it, data-halo) must sit inside the halo.
+MAP_TEXT_JS = """
+(minFont) => {
+  const out = [];
+  const seen = (el) => el.closest('.token, .badge, defs');
+  const shrink = (r, by) => ({ left: r.left + by, top: r.top + by, right: r.right - by, bottom: r.bottom - by });
+  const inside = (p, r) => p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+  const contains = (outer, inner) => inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1;
+  const segmentHits = (a, b, r) => {
+    for (let i = 0; i <= 40; i++) { const t = i / 40; if (inside({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }, r)) return true; }
+    return false;
+  };
+  const toClient = (svg, x, y) => { const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(svg.getScreenCTM()); };
+  document.querySelectorAll('svg.map').forEach((svg) => {
+    const vb = svg.viewBox.baseVal;
+    const box = svg.getBoundingClientRect();
+    const scale = Math.min(box.width / vb.width, box.height / vb.height);
+    const texts = [...svg.querySelectorAll('text, tspan')].filter((t) => !seen(t) && t.textContent.trim());
+    texts.forEach((t) => {
+      const px = parseFloat(getComputedStyle(t).fontSize) * scale;
+      if (px < minFont) out.push(`text "${t.textContent.trim()}" renders at ${px.toFixed(1)}px`);
+    });
+    const labels = [...svg.querySelectorAll('text')].filter((t) => !seen(t) && t.textContent.trim());
+    const lines = [...svg.querySelectorAll('line')].filter((l) => !seen(l));
+    const paths = [...svg.querySelectorAll('path')].filter((p) => !seen(p) && !p.closest('.glyph, .tracks'));
+    const rects = [...svg.querySelectorAll('rect')].filter((r) => !seen(r));
+    const circles = [...svg.querySelectorAll('circle.body')];
+    labels.forEach((t) => {
+      const r = shrink(t.getBoundingClientRect(), 1);
+      const halo = t.previousElementSibling && t.previousElementSibling.hasAttribute('data-halo') ? t.previousElementSibling : null;
+      const name = `text "${t.textContent.trim()}"`;
+      if (halo) { if (!contains(halo.getBoundingClientRect(), r)) out.push(`${name} spills out of its halo`); return; }
+      lines.forEach((l) => {
+        const a = toClient(svg, l.x1.baseVal.value, l.y1.baseVal.value), b = toClient(svg, l.x2.baseVal.value, l.y2.baseVal.value);
+        if (segmentHits(a, b, r)) out.push(`${name} is crossed by a line`);
+      });
+      paths.forEach((p) => {
+        const len = p.getTotalLength();
+        for (let d = 0; d <= len; d += 3) { const q = p.getPointAtLength(d); if (inside(toClient(svg, q.x, q.y), r)) { out.push(`${name} is crossed by path ${p.getAttribute('class') || ''}`); break; } }
+      });
+      rects.forEach((b) => {
+        const x = b.x.baseVal.value, y = b.y.baseVal.value, w = b.width.baseVal.value, h = b.height.baseVal.value;
+        const c = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].map(([px, py]) => toClient(svg, px, py));
+        for (let i = 0; i < 4; i++) if (segmentHits(c[i], c[(i + 1) % 4], r)) { out.push(`${name} is crossed by the edge of rect ${b.getAttribute('class') || ''}`); break; }
+      });
+      circles.forEach((c) => {
+        const cx = c.cx.baseVal.value, cy = c.cy.baseVal.value, rad = c.r.baseVal.value;
+        for (let i = 0; i < 64; i++) { const a = (i / 64) * Math.PI * 2; if (inside(toClient(svg, cx + rad * Math.cos(a), cy + rad * Math.sin(a)), r)) { out.push(`${name} is crossed by a router circle`); break; } }
+      });
+    });
+  });
+  return [...new Set(out)];
 }
 """
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default="http://localhost:8080/")
     args = parser.parse_args()
@@ -81,8 +145,8 @@ def contrast(a: str, b: str) -> float:
 
 def check_tokens() -> list[str]:
     t = tokens()
-    pairs = [(text, bg) for text in ("ink", "muted", "green", "red", "blue") for bg in ("paper", "surface")]
-    pairs += [("surface", role) for role in ("green", "red", "blue", "ink")]
+    pairs = [(text, bg) for text in ("ink", "muted", "green", "red", "blue", "amber") for bg in ("paper", "surface", "canvas")]
+    pairs += [("surface", role) for role in ("green", "red", "blue", "amber", "ink")]
     out = []
     for text, bg in pairs:
         ratio = contrast(t[text], t[bg])
@@ -93,7 +157,7 @@ def check_tokens() -> list[str]:
 
 def tracked_files() -> list[Path]:
     listed = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
-    return [ROOT / line for line in listed.splitlines() if Path(line).suffix in TEXT_SUFFIXES]
+    return [ROOT / line for line in listed.splitlines() if Path(line).suffix in TEXT_SUFFIXES and (ROOT / line).exists()]
 
 
 def check_text() -> list[str]:
@@ -119,18 +183,30 @@ def check_layout(url: str, name: str) -> list[str]:
     out = []
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        for width in WIDTHS:
-            page = browser.new_page(viewport={"width": width, "height": 900})
+        for width, height in VIEWPORTS:
+            page = browser.new_page(viewport={"width": width, "height": height})
             page.goto(url, wait_until="load")
-            page.wait_for_selector("#ribs table", state="attached", timeout=15000)
-            page.wait_for_selector("svg.lanes", state="attached", timeout=15000)
-            page.wait_for_timeout(500)
-            result = page.evaluate(OVERFLOW_JS, SCROLLERS)
-            if result["scrollWidth"] > result["innerWidth"]:
-                out.append(f"{width}px: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
-            for element in result["wide"]:
-                out.append(f"{width}px: {element} is wider than the viewport")
-            page.screenshot(path=str(SHOTS / f"check-{name}-{width}.png"), full_page=True)
+            page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
+            page.wait_for_selector("svg.map", state="attached", timeout=15000)
+            if name == "ghid":
+                page.wait_for_selector("svg.lanes", state="attached", timeout=15000)
+            page.wait_for_timeout(800)
+            for view in (VIEWS if name == "app" else ("",)):
+                if view:
+                    page.evaluate("(hash) => { location.hash = hash; }", view)
+                    page.wait_for_timeout(600)
+                label = f"{name}{' #' + view if view else ''} {width}px"
+                result = page.evaluate(OVERFLOW_JS, SCROLLERS)
+                if result["scrollWidth"] > result["innerWidth"]:
+                    out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
+                if view == "simulator" and width >= WORKSPACE_FROM and result["scrollHeight"] > result["innerHeight"] + 1:
+                    out.append(f"{label}: page scrolls vertically ({result['scrollHeight']} > {result['innerHeight']})")
+                for element in result["wide"]:
+                    out.append(f"{label}: {element} is wider than the viewport")
+                if view in ("simulator", ""):
+                    for finding in page.evaluate(MAP_TEXT_JS, MIN_FONT):
+                        out.append(f"{label}: {finding}")
+                page.screenshot(path=str(SHOTS / f"check-{name}{'-' + view if view else ''}-{width}.png"), full_page=True)
             page.close()
         browser.close()
     return out

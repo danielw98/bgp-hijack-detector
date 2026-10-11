@@ -5,7 +5,7 @@ import { ALERT_NAME, asChip, chain, esc, fmtTime, nameOf, peerMarkup, peerName, 
 import { setData } from "./status.js";
 
 const $ = (id) => document.getElementById(id);
-const SOURCE_NAME = { lab: "laborator", "youtube-2008": "YouTube, 2008" };
+const SOURCE_NAME = { lab: "simulator", "youtube-2008": "YouTube, 2008" };
 const open = new Set();
 let shown = [];
 
@@ -45,7 +45,7 @@ function toggle(key) {
 function render(incidents) {
   const box = $("incidents");
   if (!incidents.length) {
-    box.innerHTML = '<div class="empty">Niciun incident. Apasă „Simulează deturnarea” în Figura 1.</div>';
+    box.innerHTML = '<div class="empty">Niciun incident. Apasă „Deturnează” în simulator.</div>';
     return;
   }
   box.innerHTML = incidents.map((i) => {

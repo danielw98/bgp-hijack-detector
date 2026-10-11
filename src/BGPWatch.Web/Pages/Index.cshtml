@@ -1,6 +1,6 @@
 @page
 @{
-    ViewData["Title"] = "Rute furate, laboratorul";
+    ViewData["Title"] = "Rute furate, simulatorul";
     ViewData["BodyClass"] = "app";
 }
 @section Styles {
@@ -12,58 +12,22 @@
 <header class="topbar">
   <a class="brand" href="~/">Rute furate</a>
   <nav class="views" aria-label="vederile aplicației">
-    <a href="#lab" data-view="lab">Laborator</a>
+    <a href="#simulator" data-view="simulator">Simulator</a>
     <a href="#2008" data-view="2008">YouTube 2008</a>
     <a href="#prefixe" data-view="prefixe">Prefixe</a>
     <a href="#verifica" data-view="verifica">Verifică</a>
     <a href="~/ghid" class="guide">Ghid</a>
   </nav>
-  <p class="status"><span id="dot-lab" class="dot"></span>Laborator <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux <span id="data-state">se verifică</span>. <span id="updated"></span></p>
+  <p class="status"><span id="dot-lab" class="dot"></span>Rutere <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux <span id="data-state">se verifică</span>. <span id="updated"></span></p>
 </header>
 
 <main class="workspace">
-<section class="view" id="view-lab">
-  <div class="view-head"><h2>Laboratorul, în direct</h2><span class="note">trei rutere FRR într-o rețea închisă, citite la fiecare două secunde</span><a class="guide-link" href="~/ghid#s1">Cum funcționează, în ghid</a></div>
-  <div class="hero">
-    <div class="panel map">
-      <div id="graph"></div>
-      <div class="controls">
-        <label>Scenariu
-          <select id="scenario">
-            <option value="both">prefixul exact și sub-prefixul</option>
-            <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
-            <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
-          </select>
-        </label>
-        <button id="btn-hijack" class="btn red">Simulează deturnarea</button>
-        <button id="btn-reset" class="btn outline">Resetează</button>
-        <span id="action-msg" class="msg"></span>
-      </div>
-      <div class="controls">
-        <span>Un pachet</span>
-        <label>de la <select id="walk-from"></select></label>
-        <label>către <select id="walk-to"></select></label>
-        <button id="btn-send" class="btn">Trimite pachetul</button>
-        <button id="btn-step" class="btn outline">Pas cu pas</button>
-        <button id="btn-walk" class="btn outline">Întreabă nucleele</button>
-      </div>
-    </div>
-    <aside class="panel side">
-      <h3>Incidente <a class="guide-link" href="~/ghid#s2">cele trei verificări, în ghid</a></h3>
-      <div id="incidents" class="feed"><div class="empty">Se încarcă...</div></div>
-    </aside>
-  </div>
-  <div class="results">
-    <div id="sim-result"><p class="caption">„Trimite pachetul” urmărește pachetul pe hartă, după tabelele BGP de mai jos, salt cu salt. „Pas cu pas” face câte un salt la fiecare apăsare.</p></div>
-    <div id="walk-result"><p class="caption">„Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare. Niciun pachet nu este trimis.</p></div>
-  </div>
-  <div class="ribs" id="ribs"><div class="empty">Se citesc tabelele...</div></div>
-  <details class="raw"><summary>Date brute: starea ruterelor, așa cum o dă vtysh</summary><pre id="raw-lab"></pre></details>
-  <details class="raw"><summary>Date brute: incidentele și ultimele 200 de alerte</summary><pre id="raw-incidents"></pre></details>
-  <p class="guide-row">Ce vezi aici, pe larg: <a href="~/ghid#s1">cum își spun rețelele pe unde să trimită traficul</a>, <a href="~/ghid#s2">ce verifică detectorul</a>, <a href="~/ghid#s6">glosarul</a>.</p>
+<section class="view sim-view" id="view-simulator">
+  @await Html.PartialAsync("_Simulator")
 </section>
 
-<section class="view" id="view-2008" hidden>
+<section class="view scroll" id="view-2008" hidden>
+<div class="inner">
   <div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="~/ghid#s3">Povestea, în ghid</a></div>
   <div class="panel">
     <div id="lanes" class="graphbox"></div>
@@ -90,19 +54,23 @@
   <details class="raw">
     <summary>Date brute: cronologia, numele AS-urilor și actualizările prefixelor YouTube</summary>
     <pre id="raw-2008"></pre>
-    <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; laboratorul nu este atins.</span></div>
+    <div class="drawer-actions"><button id="btn-reload" class="btn outline small">Reîncarcă incidentul din fișiere</button><span class="msg">Șterge și rescrie rândurile incidentului; simulatorul nu este atins.</span></div>
   </details>
+</div>
 </section>
 
-<section class="view" id="view-prefixe" hidden>
+<section class="view scroll" id="view-prefixe" hidden>
+<div class="inner">
   <div class="view-head"><h2>Istoricul unui prefix</h2><label>prefix urmărit <select id="prefix-select"></select></label><a class="guide-link" href="~/ghid#s4">Ce se păstrează, în ghid</a></div>
   <div class="panel"><div class="body lookup-result" id="prefix-head">Se încarcă...</div></div>
   <div class="panel"><h3>Ruta curentă la fiecare punct de observație</h3><div class="scroll-x" id="prefix-current"></div></div>
   <div class="panel"><h3>Schimbările, cele mai noi primele</h3><div class="scroll-x" id="prefix-changes"></div></div>
   <details class="raw"><summary>Date brute: starea curentă, schimbările și alertele prefixului</summary><pre id="raw-prefix"></pre></details>
+</div>
 </section>
 
-<section class="view" id="view-verifica" hidden>
+<section class="view scroll" id="view-verifica" hidden>
+<div class="inner">
   <div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC</span><a class="guide-link" href="~/ghid#s5">RPKI, în ghid</a></div>
   <div class="panel">
     <form class="controls" id="lookup-form">
@@ -114,11 +82,7 @@
     <div class="body lookup-result" id="lookup-result"><p class="caption">Încearcă prefixul RIPE NCC de mai sus, sau apasă „Adresa mea”.</p></div>
   </div>
   <details class="raw"><summary>Date brute: răspunsul RIPEstat</summary><pre id="raw-lookup"></pre></details>
+  <p class="appfoot">Verificarea unui prefix real este singura cerere către Internet și doar citește.</p>
+</div>
 </section>
 </main>
-
-<footer class="appfoot">
-  <p>Rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul. Verificarea unui prefix real este singura cerere către Internet și doar citește.</p>
-  <p><button id="btn-clear" class="btn outline red small">Golește istoricul laboratorului</button> <span id="clear-msg" class="msg"></span></p>
-</footer>
-

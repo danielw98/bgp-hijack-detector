@@ -3,7 +3,7 @@
 
 import { post } from "./api.js";
 import { renderGlossary, wirePopovers } from "./glossary.js";
-import { startLab } from "./lab.js";
+import { mountSimulator } from "./simulator.js";
 import { startIncidents } from "./incidents.js";
 import { startIncident2008 } from "./timeline.js";
 import { startPrefix } from "./prefix.js";
@@ -13,7 +13,7 @@ const $ = (id) => document.getElementById(id);
 
 if ($("glossary")) renderGlossary($("glossary"));
 wirePopovers();
-if ($("ribs")) startLab();
+document.querySelectorAll("[data-simulator]").forEach(mountSimulator);
 if ($("incidents")) startIncidents();
 if ($("lanes")) startIncident2008();
 if ($("prefix-select")) startPrefix();
@@ -21,7 +21,7 @@ if ($("lookup-form")) startLookup();
 
 if ($("btn-clear")) {
   $("btn-clear").addEventListener("click", async () => {
-    if (!confirm("Ștergi alertele și istoricul de rute ale laboratorului? Incidentul din 2008 și laboratorul rămân neschimbate.")) return;
+    if (!confirm("Ștergi alertele și istoricul de rute ale simulatorului? Incidentul din 2008 și ruterele rămân neschimbate.")) return;
     const btn = $("btn-clear");
     const msg = $("clear-msg");
     btn.disabled = true;

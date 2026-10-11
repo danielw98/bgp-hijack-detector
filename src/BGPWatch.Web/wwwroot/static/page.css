@@ -4,7 +4,7 @@
   --paper: #f7f8f6;
   --surface: #ffffff;
   --ink: #000000;
-  --muted: #5b6470;
+  --muted: #3f4752;
   --line: #d6d9d4;
   --soft: #eef0ec;
   --green: #1b6e3a;
@@ -13,6 +13,10 @@
   --green-tint: #e6f2ea;
   --red-tint: #fbeaec;
   --blue-tint: #e8eef8;
+  --amber: #ad4f08;
+  --amber-tint: #fdf1e3;
+  --canvas: #eef0f3;
+  --grid: #c4cad3;
   --prose: "Atkinson Hyperlegible Next", system-ui, "Segoe UI", sans-serif;
   --mono: "Atkinson Hyperlegible Mono", Consolas, monospace;
   --column: 720px;
@@ -85,6 +89,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visib
 
 /* Figures break out of the column. */
 .figure { max-width: var(--figure); margin: 26px auto 30px; padding: 0 16px; }
+.figure.wide { max-width: min(1520px, 100vw); }
 .frame { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
 .frame-head { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
 .frame-head .note { color: var(--muted); font-size: 16px; }
@@ -155,61 +160,6 @@ table.data tr.good td { background: var(--green-tint); }
 .state.spare { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
 .why { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
 
-/* The lab graph: AS boxes, router nodes, sessions, collector taps, travelling tokens. */
-#graph { overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
-svg.graph { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--prose); }
-svg.graph .asbox { fill: var(--soft); stroke: var(--line); stroke-width: 1.5; }
-svg.graph .asbox.victim { fill: var(--green-tint); stroke: var(--green); }
-svg.graph .asbox.transit, svg.graph .asbox.collector { fill: var(--blue-tint); stroke: var(--blue); }
-svg.graph .asbox.attacker { fill: var(--red-tint); stroke: var(--red); }
-svg.graph .asbox.collector { stroke-dasharray: 6 5; }
-svg.graph .aslabel { font-size: 17px; font-weight: 700; fill: var(--ink); }
-svg.graph .aslabel .asn { font-family: var(--mono); font-weight: 400; fill: var(--muted); }
-svg.graph .aslabel.victim { fill: var(--green); }
-svg.graph .aslabel.transit, svg.graph .aslabel.collector { fill: var(--blue); }
-svg.graph .aslabel.attacker { fill: var(--red); }
-svg.graph .node rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2; transition: stroke-width .2s; }
-svg.graph .node.victim rect { stroke: var(--green); }
-svg.graph .node.transit rect, svg.graph .node.collector rect { stroke: var(--blue); }
-svg.graph .node.attacker rect { stroke: var(--red); }
-svg.graph .node.off rect { stroke-dasharray: 5 4; }
-svg.graph .node.hot rect { stroke-width: 5; }
-svg.graph .node .name { font-size: 18px; font-weight: 700; fill: var(--ink); }
-svg.graph .node .name .addr { font-family: var(--mono); font-weight: 400; font-size: 14px; fill: var(--muted); }
-svg.graph .node .detail { font-size: 14px; fill: var(--muted); }
-svg.graph .edge { stroke: var(--green); stroke-width: 5; stroke-linecap: round; }
-svg.graph .edge.down { stroke: var(--red); stroke-dasharray: 10 8; }
-svg.graph .edgelabel { font-size: 14px; fill: var(--muted); }
-svg.graph .edgelabel.down { fill: var(--red); font-weight: 700; }
-svg.graph .tap { stroke: var(--blue); stroke-width: 2; stroke-dasharray: 6 5; opacity: .7; }
-svg.graph .tap.down { stroke: var(--red); }
-svg.graph .track { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .7; }
-svg.graph .track.packet { stroke: var(--ink); stroke-width: 2; }
-svg.graph .token rect { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
-svg.graph .token text { font-family: var(--mono); font-size: 14px; font-weight: 700; fill: var(--ink); }
-svg.graph .token.withdraw rect { stroke: var(--red); }
-svg.graph .token.withdraw text { fill: var(--red); }
-svg.graph .token.packet rect { fill: var(--ink); }
-svg.graph .token.packet text { fill: #fff; }
-.results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px 28px; }
-@media (min-width: 1000px) { .results { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
-.results .caption { margin-top: 0; }
-
-/* The three router tables under the lab figure. */
-.ribs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
-.rib { border-right: 1px solid var(--line); min-width: 0; overflow-x: auto; }
-.rib:last-child { border-right: none; }
-.rib h4 { margin: 0; padding: 10px 14px; font-size: 18px; border-bottom: 1px solid var(--line); background: var(--soft); }
-.rib h4 .addr { font-family: var(--mono); font-weight: 400; font-size: 15px; color: var(--muted); margin-left: 8px; }
-.rib td:first-child { width: 1%; white-space: nowrap; }
-.pathline { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 4px 12px; }
-.pathline > div { text-align: right; }
-@media (max-width: 1000px) {
-  .ribs { grid-template-columns: minmax(0, 1fr); }
-  .rib { border-right: none; border-bottom: 1px solid var(--line); }
-  .rib:last-child { border-bottom: none; }
-}
-
 /* Incidents. */
 .incident { padding: 14px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .incident:last-child { border-bottom: none; }
@@ -220,14 +170,6 @@ svg.graph .token.packet text { fill: #fff; }
 .incident .explain { margin-top: 10px; font-size: 17px; }
 .incident .explain p { margin: 0 0 8px; }
 .tag { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); border-radius: 3px; font-size: 14px; color: var(--muted); background: var(--surface); }
-
-/* Kernel walk and other hop lists. */
-.hops { margin: 0; padding: 0; list-style: none; font-size: 17px; }
-.hops li { padding: 6px 0; border-bottom: 1px dashed var(--line); }
-.hops li:last-child { border-bottom: none; }
-.hops .verdict { font-weight: 700; }
-.hops .delivered { color: var(--green); }
-.hops .dropped, .hops .unreachable, .hops .lost, .hops .loop { color: var(--red); }
 
 /* Lookup result. */
 .lookup-result { font-size: 17px; }
@@ -303,6 +245,7 @@ footer.col { padding: 40px 16px 64px; color: var(--muted); font-size: 16px; }
   .subtitle { font-size: 20px; }
   h2 { font-size: 24px; margin-top: 48px; }
   .frame-body { padding: 14px; }
+  .figure.wide { padding: 0; }
   .controls { padding: 12px 14px; }
   table.data { font-size: 15.5px; }
   table.data th, table.data td { padding: 7px 8px; }

@@ -5,14 +5,14 @@
 <header class="col">
   <h1>Rute furate</h1>
   <p class="subtitle">Cum se deturnează o rută pe Internet și cum o prinde un detector.</p>
-  <p class="status"><span id="dot-lab" class="dot"></span>Laborator <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux de rute <span id="data-state">se verifică</span>. <span id="updated"></span></p>
-  <p class="status">Acesta este ghidul, de citit de sus în jos. <a href="~/">Aplicația</a> are aceleași figuri, una pe ecran: laboratorul, incidentul din 2008, prefixele, verificarea.</p>
+  <p class="status"><span id="dot-lab" class="dot"></span>Rutere <span id="lab-state">se verifică</span>. <span id="dot-data" class="dot"></span>Flux de rute <span id="data-state">se verifică</span>. <span id="updated"></span></p>
+  <p class="status">Acesta este ghidul, de citit de sus în jos. <a href="~/">Aplicația</a> are aceleași figuri, una pe ecran: simulatorul, incidentul din 2008, prefixele, verificarea.</p>
 </header>
 
 <main>
 <section class="col">
   <p>La 24 februarie 2008, un anunț BGP pentru un bloc de 256 de adrese a deviat traficul YouTube la scară globală și a fost retras abia după două ore și un sfert. Niciun ruter nu a încălcat protocolul: BGP nu are cum să verifice dacă o rețea are dreptul să anunțe un prefix.</p>
-  <p>Pagina aceasta pornește de la un laborator real, care rulează chiar acum: trei rutere, un atacator pe care îl declanșezi tu și un detector care ascultă totul. Urmează aceeași deturnare din 2008, redată din datele înregistrate atunci, istoricul fiecărui prefix urmărit și o verificare a oricărui prefix real de pe Internet.</p>
+  <p>Pagina aceasta pornește de la un simulator cu rutere reale, care rulează chiar acum: trei rutere FRR, un atacator pe care îl declanșezi tu și un detector care ascultă totul. Urmează aceeași deturnare din 2008, redată din datele înregistrate atunci, istoricul fiecărui prefix urmărit și o verificare a oricărui prefix real de pe Internet.</p>
   <ol class="contents">
     <li><a href="#s1">1. Internetul își spune singur pe unde să trimită traficul</a></li>
     <li><a href="#s2">2. Ce a văzut detectorul</a></li>
@@ -26,48 +26,20 @@
 <section class="col">
   <h2 id="s1">1. Internetul își spune singur pe unde să trimită traficul</h2>
   <p>Internetul este o sumă de rețele independente, <dfn class="term" data-term="as" tabindex="0" role="button">sisteme autonome</dfn>, fiecare cu un număr. Fiecare își <dfn class="term" data-term="announcement" tabindex="0" role="button">anunță</dfn> vecinilor, prin <dfn class="term" data-term="bgp" tabindex="0" role="button">BGP</dfn>, <dfn class="term" data-term="prefix" tabindex="0" role="button">prefixele</dfn> pe care le deține, iar vecinii transmit anunțul mai departe, adăugându-și numărul în <dfn class="term" data-term="as_path" tabindex="0" role="button">calea AS</dfn>. Ultimul număr din cale este <dfn class="term" data-term="origin" tabindex="0" role="button">originea</dfn>, rețeaua care pretinde că deține prefixul.</p>
-  <p>În laborator sunt trei astfel de rețele. <b class="victim">Victima</b> (AS65001) deține prefixul <code>203.0.113.0/24</code> și îl anunță. <b class="transit">Tranzitul</b> (AS65000) este furnizorul care transmite mai departe tot ce primește, exact ca un furnizor real. <b class="attacker">Atacatorul</b> (AS65003) are o sesiune cu tranzitul și, la început, nu anunță nimic. Un <dfn class="term" data-term="collector" tabindex="0" role="button">colector</dfn> ascultă toate cele trei rutere și îi dă detectorului fiecare mesaj.</p>
+  <p>În simulator sunt trei astfel de rețele. <b class="victim">Victima</b> (AS65001) deține prefixul <code>203.0.113.0/24</code> și îl anunță. <b class="transit">Tranzitul</b> (AS65000) este furnizorul care transmite mai departe tot ce primește, exact ca un furnizor real. <b class="attacker">Atacatorul</b> (AS65003) are o sesiune cu tranzitul și, la început, nu anunță nimic. Un <dfn class="term" data-term="collector" tabindex="0" role="button">colector</dfn> ascultă toate cele trei rutere și îi dă detectorului fiecare mesaj.</p>
 </section>
 
-<div class="figure" id="fig-lab">
+<div class="figure wide" id="fig-lab">
   <div class="frame">
-    <div class="frame-head"><h3>Figura 1. Laboratorul, în direct</h3><span class="note">citit din ruterele FRR la fiecare două secunde</span></div>
-    <div id="graph"></div>
-    <div class="frame-body tight">
-      <div class="ribs" id="ribs"><div class="empty">Se citesc tabelele...</div></div>
-    </div>
-    <div class="controls">
-      <label>Scenariu
-        <select id="scenario">
-          <option value="both">prefixul exact și sub-prefixul</option>
-          <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
-          <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
-        </select>
-      </label>
-      <button id="btn-hijack" class="btn red">Simulează deturnarea</button>
-      <button id="btn-reset" class="btn outline">Resetează</button>
-      <span id="action-msg" class="msg"></span>
-    </div>
-    <div class="controls">
-      <span>Unde ar ajunge un pachet?</span>
-      <label>de la <select id="walk-from"></select></label>
-      <label>către <select id="walk-to"></select></label>
-      <button id="btn-send" class="btn">Trimite pachetul</button>
-      <button id="btn-step" class="btn outline">Pas cu pas</button>
-      <button id="btn-walk" class="btn outline">Întreabă nucleele</button>
-    </div>
-    <div class="frame-body results">
-      <div id="sim-result"><p class="caption">„Trimite pachetul” urmărește pachetul pe hartă, după tabelele BGP de mai sus, salt cu salt. „Pas cu pas” face câte un salt la fiecare apăsare.</p></div>
-      <div id="walk-result"><p class="caption">„Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare. Niciun pachet nu este trimis.</p></div>
-    </div>
-    <details class="raw"><summary>Date brute: starea ruterelor, așa cum o dă vtysh</summary><pre id="raw-lab"></pre></details>
+    <div class="frame-head"><h3>Figura 1. Simulatorul, în direct</h3><span class="note">trei rutere FRR reale, citite la fiecare două secunde</span></div>
+    @await Html.PartialAsync("_Simulator")
   </div>
 </div>
 
 <section class="col">
-  <p>Fiecare ruter alege o singură rută pentru un prefix. Când primește două anunțuri pentru același prefix, preferă calea cu mai puține sisteme autonome, iar la egalitate o păstrează pe cea mai veche. Când două prefixe se suprapun, pachetele urmează prefixul mai specific, <dfn class="term" data-term="subprefix" tabindex="0" role="button">sub-prefixul</dfn>. Apasă „Simulează deturnarea” și urmărește tabelele: anunțul fals pentru <code>/24</code> rămâne rută de rezervă pe tranzit, dar <code>/25</code> nu are concurent și este ales peste tot.</p>
-  <p>Harta arată cele trei sisteme autonome, sesiunile BGP dintre rutere și colectorul. Când o tabelă se schimbă, mesajele UPDATE pornesc de la origine și trec din ruter în ruter, apoi fiecare ruter îi spune colectorului ce a ales. „Trimite pachetul” urmărește un pachet către adresa aleasă: la fiecare ruter câștigă ruta cu prefixul cel mai specific, iar <dfn class="term" data-term="next_hop" tabindex="0" role="button">următorul salt</dfn> al ei spune încotro merge pachetul. Adresa <code>203.0.113.1</code> este în sub-prefixul anunțat de atacator; <code>203.0.113.129</code> nu este. În timpul deturnării, prima ajunge la atacator și este aruncată pe o <dfn class="term" data-term="blackhole" tabindex="0" role="button">rută blackhole</dfn>, a doua ajunge în continuare la victimă.</p>
-  <p>Simularea citește tabelele BGP; „Întreabă nucleele” verifică: fiecare ruter răspunde cu decizia sa reală de rutare pentru aceeași adresă, salt cu salt. Pe segmentul partajat al laboratorului următorul salt al unei rute poate fi direct ruterul de origine, deci atacatorul trimite pachetele victimei fără să treacă prin tranzit, iar nucleele confirmă.</p>
+  <p>Fiecare ruter alege o singură rută pentru un prefix. Când primește două anunțuri pentru același prefix, preferă calea cu mai puține sisteme autonome, iar la egalitate o păstrează pe cea mai veche. Când două prefixe se suprapun, pachetele urmează prefixul mai specific, <dfn class="term" data-term="subprefix" tabindex="0" role="button">sub-prefixul</dfn>. Apasă „Deturnează” și urmărește tabelele din inspector: anunțul fals pentru <code>/24</code> rămâne rută de rezervă pe tranzit, dar <code>/25</code> nu are concurent și este ales peste tot.</p>
+  <p>Harta arată cele trei sisteme autonome, sesiunile BGP dintre rutere și colectorul. Când o tabelă se schimbă, mesajele UPDATE pornesc de la origine și trec din ruter în ruter, apoi fiecare ruter îi spune colectorului ce a ales. Fiecare salt este un eveniment în lista de sub hartă: bara de redare le rulează la viteza aleasă, „Pas” face un salt, „Înapoi” îl întoarce, iar un clic pe un eveniment sare la el. „Trimite pachetul” urmărește un pachet către adresa aleasă: la fiecare ruter câștigă ruta cu prefixul cel mai specific, iar <dfn class="term" data-term="next_hop" tabindex="0" role="button">următorul salt</dfn> al ei spune încotro merge pachetul. Adresa <code>203.0.113.1</code> este în sub-prefixul anunțat de atacator; <code>203.0.113.129</code> nu este. În timpul deturnării, prima ajunge la atacator și este aruncată pe o <dfn class="term" data-term="blackhole" tabindex="0" role="button">rută blackhole</dfn>, a doua ajunge în continuare la victimă.</p>
+  <p>Pachetul simulat citește tabelele BGP; „Întreabă nucleele” verifică: fiecare ruter răspunde cu decizia sa reală de rutare pentru aceeași adresă, salt cu salt. Pe segmentul partajat al laboratorului următorul salt al unei rute poate fi direct ruterul de origine, deci atacatorul trimite pachetele victimei fără să treacă prin tranzit, iar nucleele confirmă.</p>
 </section>
 
 <section class="col">
@@ -132,7 +104,7 @@
 
 <section class="col">
   <h2 id="s5">5. Verifică un prefix real</h2>
-  <p><dfn class="term" data-term="rpki" tabindex="0" role="button">RPKI</dfn> este răspunsul Internetului la problema de mai sus: deținătorul unui bloc de adrese semnează o autorizație (ROA) care spune ce AS poate anunța prefixul și până la ce lungime. Un ruter care validează respinge, de regulă, un anunț invalid. În laborator, autorizația spune că doar AS65001 poate anunța <code>203.0.113.0/24</code>, cu lungimea maximă 24, de aceea și <code>/25</code>-ul atacatorului este invalid. Datele de mai jos vin la cerere de la RIPEstat, serviciul public de date al RIPE NCC.</p>
+  <p><dfn class="term" data-term="rpki" tabindex="0" role="button">RPKI</dfn> este răspunsul Internetului la problema de mai sus: deținătorul unui bloc de adrese semnează o autorizație (ROA) care spune ce AS poate anunța prefixul și până la ce lungime. Un ruter care validează respinge, de regulă, un anunț invalid. În simulator, autorizația spune că doar AS65001 poate anunța <code>203.0.113.0/24</code>, cu lungimea maximă 24, de aceea și <code>/25</code>-ul atacatorului este invalid. Datele de mai jos vin la cerere de la RIPEstat, serviciul public de date al RIPE NCC.</p>
 </section>
 
 <div class="figure" id="fig-lookup">
@@ -153,8 +125,7 @@
   <h2 id="s6">6. Glosar și lecturi</h2>
   <dl class="glossary" id="glossary"></dl>
   <p style="margin-top: 24px">Mai departe: referatul proiectului, <code>referat/referat.md</code>, cu patru incidente documentate, mitigările și arhitectura detectorului; lista de lecturi <code>docs/lecturi-bgp.md</code>, 25 de surse în 8 etape; și studiul de caz RIPE NCC din 2008, sursa cronologiei din Figura 3.</p>
-  <p>Laboratorul este o rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul. Deturnarea este un test, redat la cerere. Verificarea din Figura 5 este singura cerere către Internet și doar citește.</p>
-  <p><button id="btn-clear" class="btn outline red small">Golește istoricul laboratorului</button> <span id="clear-msg" class="msg"></span></p>
+  <p>Simulatorul este o rețea închisă, fără uplink: numere AS private, prefixul de documentație 203.0.113.0/24 (RFC 5737), nimic nu părăsește calculatorul. Deturnarea este un test, redat la cerere. Verificarea din Figura 5 este singura cerere către Internet și doar citește.</p>
 </section>
 </main>
 

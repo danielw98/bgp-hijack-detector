@@ -1,29 +1,36 @@
-/* The application: a top bar, one view at a time, the live map first. */
+/* The application: a top bar and one view at a time. The simulator fills the window;
+   the other views scroll inside it. Below 1000px the page scrolls instead. */
 
-body.app { background: var(--paper); }
+body.app { background: var(--paper); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
 .topbar {
+  flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 22px;
-  padding: 12px 20px;
+  gap: 6px 20px;
+  padding: 7px 16px;
   background: var(--ink);
   color: #fff;
 }
-.topbar .brand { color: #fff; text-decoration: none; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+.topbar .brand { color: #fff; text-decoration: none; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .topbar nav { display: flex; flex-wrap: wrap; gap: 4px; }
-.topbar nav a { color: #fff; text-decoration: none; padding: 7px 12px; border-radius: 4px; font-size: 17px; font-weight: 700; }
+.topbar nav a { color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 17px; font-weight: 700; }
 .topbar nav a:hover { background: #333; }
 .topbar nav a.current { background: #fff; color: var(--ink); }
-.topbar nav a.guide { border: 2px solid #fff; padding: 5px 12px; }
-.topbar .status { margin: 0 0 0 auto; color: #d6d9d4; font-size: 16px; }
-.topbar .status .dot { background: #777; }
+.topbar nav a.guide { border: 2px solid #fff; padding: 4px 12px; }
+.topbar .status { margin: 0 0 0 auto; color: #e3e6e1; font-size: 16px; }
+.topbar .status .dot { background: #8a8f99; }
 .topbar .status .dot.up { background: #4cc46d; }
 .topbar .status .dot.down { background: #ff6b7a; }
 
-.workspace { max-width: 1440px; margin: 0 auto; padding: 16px 16px 40px; }
-.view[hidden] { display: none; }
+.workspace { flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); }
+.view { min-height: 0; min-width: 0; }
+.workspace > .view[hidden] { display: none; }
+.view.sim-view { display: grid; grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+.view.scroll { overflow: auto; padding: 16px 16px 40px; }
+.view.scroll > .inner { max-width: 1440px; margin: 0 auto; }
+
 .view-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin: 4px 0 12px; }
 .view-head h2 { margin: 0; font-size: 24px; }
 .view-head .note { color: var(--muted); font-size: 16px; }
@@ -33,33 +40,22 @@ body.app { background: var(--paper); }
 .panel > h3 { font-size: 18px; margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; }
 .panel > h3 .note { font-weight: 400; font-size: 15px; color: var(--muted); }
 .panel .body { padding: 14px 16px; }
-.panel .feed { overflow-y: auto; max-height: 560px; }
 .panel .controls { border-top: 1px solid var(--line); }
 .panel .controls:first-of-type { border-top: none; }
-
-.hero { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: 16px; align-items: start; }
-.hero .map { margin-bottom: 0; }
-.hero .map #graph { border-bottom: 1px solid var(--line); }
-.hero .side { margin-bottom: 0; }
-.app .results { margin: 16px 0; }
-.app .results > div { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; }
-.app .ribs { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
 .app details.raw { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; margin-top: 12px; }
-.guide-row { color: var(--muted); font-size: 16px; margin: 14px 0 0; }
-
 .app .events { padding: 0 16px; }
-.appfoot { max-width: 1440px; margin: 0 auto; padding: 8px 16px 48px; color: var(--muted); font-size: 16px; }
-.appfoot p { margin: 0 0 10px; }
+.appfoot { color: var(--muted); font-size: 16px; padding: 8px 0 0; }
 
-@media (max-width: 1100px) {
-  .hero { grid-template-columns: minmax(0, 1fr); }
-  .panel .feed { max-height: 360px; }
+@media (max-width: 999px) {
+  body.app { height: auto; overflow: visible; }
+  .workspace { display: block; }
+  .view.sim-view { display: block; overflow: visible; }
 }
 @media (max-width: 600px) {
-  .topbar { padding: 10px 14px; }
-  .topbar .brand { font-size: 21px; }
-  .topbar nav a { font-size: 16px; padding: 6px 9px; }
+  .topbar { padding: 8px 12px; }
+  .topbar .brand { font-size: 20px; }
+  .topbar nav a { font-size: 16px; padding: 5px 9px; }
   .topbar .status { margin-left: 0; }
-  .workspace { padding: 12px 12px 32px; }
+  .view.scroll { padding: 12px 12px 32px; }
   .view-head h2 { font-size: 21px; }
 }
