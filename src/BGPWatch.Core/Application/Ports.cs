@@ -18,7 +18,8 @@ public interface IRouteLog
 
     Task<SourceCounts> CountAsync(string source, CancellationToken cancel);
 
-    Task DeleteAsync(string source, CancellationToken cancel);
+    /// <summary>Replaces every row of the source with the updates and their alerts, in one transaction.</summary>
+    Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel);
 }
 
 public sealed record SourceCounts(long Updates, long Alerts);

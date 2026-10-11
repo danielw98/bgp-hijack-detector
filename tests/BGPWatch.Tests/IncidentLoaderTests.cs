@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BGPWatch.Tests;
 
-/// <summary>The loader stores an incident once, a file per transaction, under its source name, and replaces it only when forced.</summary>
+/// <summary>The loader stores an incident once, in one transaction, under its source name, and replaces it only when forced.</summary>
 public class IncidentLoaderTests
 {
     private const string Source = "youtube-2008";
@@ -17,7 +17,7 @@ public class IncidentLoaderTests
     {
         public List<(IReadOnlyList<Announcement> Updates, IReadOnlyList<Alert> Alerts, string Source)> Appended { get; } = [];
 
-        public List<string> Deleted { get; } = [];
+        public List<(IReadOnlyList<Announcement> Updates, IReadOnlyList<Alert> Alerts, string Source)> Replaced { get; } = [];
 
         public List<MonitoredPrefix> Synced { get; } = [];
 
@@ -38,9 +38,9 @@ public class IncidentLoaderTests
             return Task.FromResult(stored);
         }
 
-        public Task DeleteAsync(string source, CancellationToken cancel)
+        public Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
         {
-            Deleted.Add(source);
+            Replaced.Add((updates, alerts, source));
             return Task.CompletedTask;
         }
     }
@@ -67,8 +67,7 @@ public class IncidentLoaderTests
         var log = new FakeLog(new SourceCounts(3258, 27));
         var summary = await LoadAsync(log, ["x.gz"], force: false);
         Assert.Equal(new LoadSummary(Source, 3258, 27, true), summary);
-        Assert.Empty(log.Appended);
-        Assert.Empty(log.Deleted);
+        Assert.Empty(log.Replaced);
     }
 
     [Fact]
@@ -76,18 +75,37 @@ public class IncidentLoaderTests
     {
         var log = new FakeLog(new SourceCounts(3258, 27));
         var summary = await LoadAsync(log, ["x.gz"], force: true);
-        Assert.Equal([Source], log.Deleted);
+        Assert.Equal(Source, Assert.Single(log.Replaced).Source);
         Assert.Equal(new LoadSummary(Source, 3, 1, false), summary);
     }
 
     [Fact]
-    public async Task AnEmptySourceIsLoadedOneFilePerBatchTaggedWithTheSource()
+    public async Task EveryFileOfAnEmptySourceIsStoredInOneReplacementTaggedWithTheSource()
     {
         var log = new FakeLog(new SourceCounts(0, 0));
         var summary = await LoadAsync(log, ["a.gz", "b.gz"], force: false, routesPerFile: 1005);
-        Assert.Equal([(1005, 1), (1005, 1)], log.Appended.Select(a => (a.Updates.Count, a.Alerts.Count)));
-        Assert.All(log.Appended, a => Assert.Equal(Source, a.Source));
+        var replaced = Assert.Single(log.Replaced);
+        Assert.Equal((2010, 2, Source), (replaced.Updates.Count, replaced.Alerts.Count, replaced.Source));
+        Assert.Empty(log.Appended);
         Assert.Equal(new LoadSummary(Source, 2010, 2, false), summary);
+    }
+
+    private sealed class FailingArchive : IUpdateArchive
+    {
+        public ArchiveFile Read(string path)
+        {
+            return path == "a.gz" ? new FakeArchive(3).Read(path) : throw new IOException($"cannot read {path}");
+        }
+    }
+
+    [Fact]
+    public async Task ALoadThatFailsLeavesTheStoredSourceAsItWas()
+    {
+        var log = new FakeLog(new SourceCounts(3258, 27));
+        var loader = new IncidentLoader(log, new FailingArchive(), NullLogger.Instance);
+        await Assert.ThrowsAsync<IOException>(() => loader.LoadAsync(Config, Source, ["a.gz", "b.gz"], force: true, CancellationToken.None));
+        Assert.Empty(log.Replaced);
+        Assert.Empty(log.Appended);
     }
 
     [Fact]
@@ -109,7 +127,7 @@ public class IncidentLoaderTests
 
         public Task AppendAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
         {
-            return release.Task;
+            return Task.CompletedTask;
         }
 
         public Task<SourceCounts> CountAsync(string source, CancellationToken cancel)
@@ -118,9 +136,9 @@ public class IncidentLoaderTests
             return Task.FromResult(new SourceCounts(0, 0));
         }
 
-        public Task DeleteAsync(string source, CancellationToken cancel)
+        public Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
         {
-            return Task.CompletedTask;
+            return release.Task;
         }
     }
 
@@ -143,7 +161,7 @@ public class IncidentLoaderTests
     {
         var log = new FakeLog(new SourceCounts(0, 0));
         await LoadAsync(log, ["a.gz"], force: false, routesPerFile: 1);
-        var alert = Assert.Single(log.Appended[0].Alerts);
+        var alert = Assert.Single(Assert.Single(log.Replaced).Alerts);
         Assert.Equal((AlertType.SubprefixHijack, "208.65.153.0/24", "208.65.152.0/22"), (alert.Type, alert.Prefix.ToString(), alert.CoveringPrefix.ToString()));
         Assert.Equal([3333, 3491, 17557], alert.AsPath);
     }

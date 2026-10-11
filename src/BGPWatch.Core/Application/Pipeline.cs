@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 namespace BGPWatch.Core.Application;
 
 /// <summary>
-/// The path every observed announcement takes: into route history, through the
-/// detector, and its alerts into the log. Shared by the live station and the loader.
+/// The path every announcement the live station observes takes: into route history,
+/// through the detector, and its alerts into the log, one batch at a time.
 /// </summary>
 public sealed class Pipeline(DetectorConfig config, IRouteLog log, ILogger logger, string source)
 {

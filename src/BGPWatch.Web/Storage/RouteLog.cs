@@ -46,11 +46,21 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
     {
         await using var connection = await database.OpenConnectionAsync(cancel);
         await using var transaction = await connection.BeginTransactionAsync(cancel);
-        await WriteUpdatesAsync(connection, updates, source, cancel);
-        if (alerts.Count > 0)
+        await WriteAsync(connection, updates, alerts, source, cancel);
+        await transaction.CommitAsync(cancel);
+    }
+
+    public async Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
+    {
+        await using var connection = await database.OpenConnectionAsync(cancel);
+        await using var transaction = await connection.BeginTransactionAsync(cancel);
+        await using (var delete = new NpgsqlBatch(connection, transaction))
         {
-            await WriteAlertsAsync(connection, alerts, source, cancel);
+            delete.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM alerts WHERE source = $1") { Parameters = { new() { Value = source } } });
+            delete.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM route_updates WHERE source = $1") { Parameters = { new() { Value = source } } });
+            await delete.ExecuteNonQueryAsync(cancel);
         }
+        await WriteAsync(connection, updates, alerts, source, cancel);
         await transaction.CommitAsync(cancel);
     }
 
@@ -66,12 +76,14 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
         return new SourceCounts(reader.GetInt64(0), reader.GetInt64(1));
     }
 
-    public async Task DeleteAsync(string source, CancellationToken cancel)
+    private static async Task WriteAsync(NpgsqlConnection connection, IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts,
+        string source, CancellationToken cancel)
     {
-        await using var batch = database.CreateBatch();
-        batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM alerts WHERE source = $1") { Parameters = { new() { Value = source } } });
-        batch.BatchCommands.Add(new NpgsqlBatchCommand("DELETE FROM route_updates WHERE source = $1") { Parameters = { new() { Value = source } } });
-        await batch.ExecuteNonQueryAsync(cancel);
+        await WriteUpdatesAsync(connection, updates, source, cancel);
+        if (alerts.Count > 0)
+        {
+            await WriteAlertsAsync(connection, alerts, source, cancel);
+        }
     }
 
     private static async Task WriteUpdatesAsync(NpgsqlConnection connection, IReadOnlyList<Announcement> updates, string source, CancellationToken cancel)
