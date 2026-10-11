@@ -44,19 +44,15 @@ public static class LabView
     ];
 
     /// <summary>
-    /// The state of every lab router. <paramref name="run"/> executes a command in a
+    /// The state of every lab router, all asked at once. <paramref name="run"/> executes a command in a
     /// container and returns its stdout; <paramref name="reporting"/> names the routers
     /// whose BMP session is up.
     /// </summary>
     public static async Task<List<RouterState>> SnapshotAsync(Func<string, IReadOnlyList<string>, Task<string>> run,
         IReadOnlyCollection<string> reporting)
     {
-        var states = new List<RouterState>();
-        foreach (var router in Routers)
-        {
-            states.Add(await StateAsync(router, run, reporting.Contains(router.Address)));
-        }
-        return states;
+        var states = await Task.WhenAll(Routers.Select(router => StateAsync(router, run, reporting.Contains(router.Address))));
+        return [.. states];
     }
 
     /// <summary>The two JSON documents ShowCommand prints back to back: summary, then table.</summary>

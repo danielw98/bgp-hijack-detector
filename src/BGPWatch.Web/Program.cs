@@ -41,6 +41,8 @@ builder.Services.AddSingleton<BmpStation>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<BmpStation>());
 builder.Services.AddHostedService<IncidentStartup>();
 builder.Services.AddSingleton(new DockerEngine(DockerEngine.Client()));
+builder.Services.AddSingleton(sp => LabSnapshots.Over(
+    sp.GetRequiredService<DockerEngine>(), sp.GetRequiredService<BmpStation>(), () => Stopwatch.GetElapsedTime(started)));
 builder.Services.AddSingleton(new RipeStat(RipeStat.Over(new HttpClient()), () => Stopwatch.GetElapsedTime(started)));
 builder.Services.AddSingleton(ReadingList.Embedded());
 builder.Services.AddRazorPages();

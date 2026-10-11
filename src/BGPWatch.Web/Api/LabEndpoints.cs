@@ -32,31 +32,30 @@ public static class LabEndpoints
     {
         app.MapGet("/api/lab", LabAsync);
         app.MapPost("/api/lab/trigger", TriggerAsync);
-        app.MapPost("/api/lab/reset", (Settings s, DockerEngine d, CancellationToken c) => ActAsync("reset", Scenarios["both"], s, d, c));
+        app.MapPost("/api/lab/reset", (Settings s, DockerEngine d, LabSnapshots l, CancellationToken c) => ActAsync("reset", Scenarios["both"], s, d, l, c));
         app.MapPost("/api/lab/trace", TraceAsync);
         app.MapPost("/api/lab/replay", ReplayAsync);
         app.MapPost("/api/history/clear", ClearAsync);
     }
 
-    private static async Task<IResult> LabAsync(Settings settings, DockerEngine docker, BmpStation station, CancellationToken c)
+    private static async Task<IResult> LabAsync(Settings settings, LabSnapshots snapshots, CancellationToken c)
     {
         if (!settings.LabControl)
         {
             return Disabled();
         }
-        var routers = await LabView.SnapshotAsync(async (container, command) => (await docker.ExecAsync(container, command, c)).Stdout,
-            station.Reporting);
+        var routers = await snapshots.CurrentAsync(c);
         return Results.Ok(new { ok = true, collector = LabView.Station, routers });
     }
 
-    private static async Task<IResult> TriggerAsync(HttpRequest request, Settings settings, DockerEngine docker, CancellationToken c)
+    private static async Task<IResult> TriggerAsync(HttpRequest request, Settings settings, DockerEngine docker, LabSnapshots snapshots, CancellationToken c)
     {
         var scenario = (await BodyAsync(request, c))["scenario"]?.ToString() ?? "both";
         if (!Scenarios.TryGetValue(scenario, out var prefixes))
         {
             return Failure(StatusCodes.Status400BadRequest, "unknown scenario");
         }
-        return await ActAsync("trigger", prefixes, settings, docker, c);
+        return await ActAsync("trigger", prefixes, settings, docker, snapshots, c);
     }
 
     /// <summary>
@@ -129,7 +128,7 @@ public static class LabEndpoints
     /// Empties the lab's history (the recorded incident stays) and drops the BMP sessions,
     /// so the routers report their tables again.
     /// </summary>
-    private static async Task<IResult> ClearAsync(Settings settings, Storage.Queries queries, BmpStation station, CancellationToken c)
+    private static async Task<IResult> ClearAsync(Settings settings, Storage.Queries queries, BmpStation station, LabSnapshots snapshots, CancellationToken c)
     {
         if (!settings.LabControl)
         {
@@ -137,10 +136,12 @@ public static class LabEndpoints
         }
         var deleted = await queries.DeleteSourceAsync(LabPipeline.Source, c);
         station.DropSessions();
+        snapshots.Expire();
         return Results.Ok(new { ok = true, alerts = deleted.Alerts, routes = deleted.Routes });
     }
 
-    private static async Task<IResult> ActAsync(string action, string[] prefixes, Settings settings, DockerEngine docker, CancellationToken c)
+    private static async Task<IResult> ActAsync(string action, string[] prefixes, Settings settings, DockerEngine docker, LabSnapshots snapshots,
+        CancellationToken c)
     {
         if (!settings.LabControl)
         {
@@ -160,6 +161,10 @@ public static class LabEndpoints
         catch (DockerException e)
         {
             return Failure(StatusCodes.Status502BadGateway, e.Message);
+        }
+        finally
+        {
+            snapshots.Expire();
         }
         // vtysh returns non-zero for benign cases (removing absent config, saving to the
         // read-only mounted frr.conf), so success is "the commands ran": the live route and
