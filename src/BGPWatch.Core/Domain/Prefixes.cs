@@ -19,6 +19,13 @@ public static class Prefixes
         return a.BaseAddress.AddressFamily == b.BaseAddress.AddressFamily;
     }
 
+    /// <summary>The longest of <paramref name="networks"/> covering <paramref name="prefix"/>, or null when none covers it.</summary>
+    public static IPNetwork? MostSpecific(this IEnumerable<IPNetwork> networks, IPNetwork prefix)
+    {
+        var covering = networks.Where(n => n.Covers(prefix)).ToList();
+        return covering.Count == 0 ? null : covering.MaxBy(n => n.PrefixLength);
+    }
+
     /// <summary>A prefix from text whose host bits may be set; they are cleared.</summary>
     public static IPNetwork ParseLoose(string text)
     {

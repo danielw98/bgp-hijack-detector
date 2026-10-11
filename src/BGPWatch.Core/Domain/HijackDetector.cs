@@ -4,11 +4,12 @@ namespace BGPWatch.Core.Domain;
 
 /// <summary>
 /// The detection core: classifies each observed announcement against the known-good
-/// origins and the RPKI payloads, and raises an alert when it does not match.
+/// origins of the most specific monitored prefix covering it and against the RPKI
+/// payloads, and raises an alert when it does not match.
 /// </summary>
 public sealed class HijackDetector(IEnumerable<MonitoredPrefix> monitored, IEnumerable<Roa> vrps)
 {
-    private readonly IReadOnlyList<MonitoredPrefix> monitored = monitored.ToList();
+    private readonly Dictionary<IPNetwork, MonitoredPrefix> monitored = monitored.ToDictionary(m => m.Prefix);
     private readonly IReadOnlyList<Roa> vrps = vrps.ToList();
 
     /// <summary>Every alert the announcement warrants: none, one, or several.</summary>
@@ -18,7 +19,7 @@ public sealed class HijackDetector(IEnumerable<MonitoredPrefix> monitored, IEnum
         {
             return [];
         }
-        return [.. OriginAndSubprefix(announcement), .. Rpki(announcement)];
+        return [.. OriginOrSubprefix(announcement), .. Rpki(announcement)];
     }
 
     /// <summary>RFC 6811 origin validation of one announcement against a set of VRPs.</summary>
@@ -34,27 +35,24 @@ public sealed class HijackDetector(IEnumerable<MonitoredPrefix> monitored, IEnum
         return authorized ? RpkiState.Valid : RpkiState.Invalid;
     }
 
-    private IEnumerable<Alert> OriginAndSubprefix(Announcement ann)
+    /// <summary>The alert of the most specific monitored prefix covering the announcement, when that prefix does not expect its origin.</summary>
+    private IEnumerable<Alert> OriginOrSubprefix(Announcement ann)
     {
-        foreach (var watched in monitored.Where(m => Prefixes.SameFamily(m.Prefix, ann.Prefix)))
+        if (monitored.Keys.MostSpecific(ann.Prefix) is not { } governing)
         {
-            var unexpected = ann.OriginAs is not { } origin || !watched.ExpectedOrigins.Contains(origin);
-            if (!unexpected)
-            {
-                continue;
-            }
-            var expected = FormatOrigins(watched.ExpectedOrigins);
-            if (ann.Prefix == watched.Prefix)
-            {
-                yield return Raise(ann, AlertType.OriginHijack, watched, null,
-                    $"{ann.Prefix} announced by AS{FormatAsn(ann.OriginAs)}, expected {expected}");
-            }
-            else if (watched.Prefix.Covers(ann.Prefix))
-            {
-                yield return Raise(ann, AlertType.SubprefixHijack, watched, watched.Prefix,
-                    $"more-specific {ann.Prefix} of monitored {watched.Prefix} announced by AS{FormatAsn(ann.OriginAs)}, expected {expected}");
-            }
+            yield break;
         }
+        var watched = monitored[governing];
+        if (ann.OriginAs is { } origin && watched.ExpectedOrigins.Contains(origin))
+        {
+            yield break;
+        }
+        var expected = FormatOrigins(watched.ExpectedOrigins);
+        yield return ann.Prefix == watched.Prefix
+            ? Raise(ann, AlertType.OriginHijack, watched, null,
+                $"{ann.Prefix} announced by AS{FormatAsn(ann.OriginAs)}, expected {expected}")
+            : Raise(ann, AlertType.SubprefixHijack, watched, watched.Prefix,
+                $"more-specific {ann.Prefix} of monitored {watched.Prefix} announced by AS{FormatAsn(ann.OriginAs)}, expected {expected}");
     }
 
     private IEnumerable<Alert> Rpki(Announcement ann)

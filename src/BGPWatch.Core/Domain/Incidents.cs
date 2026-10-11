@@ -61,9 +61,7 @@ public static class Incidents
         {
             return alert.CoveringPrefix;
         }
-        var prefix = IPNetwork.Parse(alert.Prefix);
-        var covering = networks.Where(n => n.Covers(prefix)).ToList();
-        return covering.Count == 0 ? alert.Prefix : covering.MaxBy(n => n.PrefixLength).ToString();
+        return networks.MostSpecific(IPNetwork.Parse(alert.Prefix))?.ToString() ?? alert.Prefix;
     }
 
     private sealed class Builder((string Source, string Prefix, int? Origin) key, DateTime firstSeen)

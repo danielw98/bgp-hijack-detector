@@ -7,6 +7,13 @@ public class DetectTests
 {
     private static readonly MonitoredPrefix[] Monitored = [new(IPNetwork.Parse("203.0.113.0/24"), new HashSet<int> { 65001 }, "lab victim")];
     private static readonly Roa[] Vrps = [new(IPNetwork.Parse("203.0.113.0/24"), 24, 65001)];
+
+    /// <summary>A customer /24 originated by its own AS inside its provider's /22.</summary>
+    private static readonly MonitoredPrefix[] Nested =
+    [
+        new(IPNetwork.Parse("208.65.152.0/22"), new HashSet<int> { 36561 }, "provider aggregate"),
+        new(IPNetwork.Parse("208.65.153.0/24"), new HashSet<int> { 17557 }, "customer"),
+    ];
     private static readonly DateTime Now = new(2026, 10, 9, 18, 0, 0, DateTimeKind.Utc);
 
     private static Announcement Seen(string prefix, int origin, DateTime? at = null)
@@ -73,6 +80,28 @@ public class DetectTests
         var local = Announcement.Of(IPNetwork.Parse("203.0.113.0/24"), [], "transit", null, Now);
         var alert = Assert.Single(new HijackDetector(Monitored, []).Inspect(local));
         Assert.Equal("203.0.113.0/24 announced by ASNone, expected AS65001", alert.Detail);
+    }
+
+    [Fact]
+    public void AMoreSpecificMonitoredPrefixDecidesItsOwnOrigin()
+    {
+        var detector = new HijackDetector(Nested, []);
+        Assert.Empty(detector.Inspect(Seen("208.65.153.0/24", 17557)));
+        Assert.Empty(detector.Inspect(Seen("208.65.153.128/25", 17557)));
+    }
+
+    [Fact]
+    public void AnUnexpectedOriginIsJudgedOnlyByTheMostSpecificMonitoredPrefix()
+    {
+        var alert = Assert.Single(new HijackDetector(Nested, []).Inspect(Seen("208.65.153.0/24", 64999)));
+        Assert.Equal((AlertType.OriginHijack, (IPNetwork?)null), (alert.Type, alert.CoveringPrefix));
+    }
+
+    [Fact]
+    public void TheOuterMonitoredPrefixStillGovernsTheRestOfItsSpace()
+    {
+        var alert = Assert.Single(new HijackDetector(Nested, []).Inspect(Seen("208.65.154.0/24", 17557)));
+        Assert.Equal((AlertType.SubprefixHijack, IPNetwork.Parse("208.65.152.0/22")), (alert.Type, alert.CoveringPrefix));
     }
 
     [Fact]
