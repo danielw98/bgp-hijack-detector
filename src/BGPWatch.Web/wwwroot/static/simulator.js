@@ -137,7 +137,7 @@ export function mountSimulator(root) {
 
   function renderTables(routers) {
     const attackerAs = (routers.find((r) => r.role === "attacker") || {}).asn;
-    $("tables").innerHTML = routers.map((r) => {
+    const bodies = routers.map((r) => {
       const perPrefix = {};
       r.paths.forEach((p) => { perPrefix[p.prefix] = (perPrefix[p.prefix] || 0) + 1; });
       const rows = r.paths.map((p) => {
@@ -149,11 +149,12 @@ export function mountSimulator(root) {
         </tr>`;
       }).join("");
       const empty = `<tr><td colspan="3" class="empty">${r.reachable ? "Nicio rută." : "Ruter oprit."}</td></tr>`;
-      return `<section class="rib ${r.role}">
-        <h4><span class="${r.role}">${ROLE_NAME[r.role]}</span> <span class="addr">AS${esc(r.asn)}, ${esc(r.address)}</span></h4>
-        <table class="data"><thead><tr><th>Prefix</th><th>Calea AS</th><th>Stare</th></tr></thead><tbody>${rows || empty}</tbody></table>
-      </section>`;
+      return `<tbody class="${r.role}">
+        <tr><th colspan="3" class="router"><span class="${r.role}">${ROLE_NAME[r.role]}</span> <span class="addr">AS${esc(r.asn)}, ${esc(r.address)}</span></th></tr>
+        ${rows || empty}
+      </tbody>`;
     }).join("");
+    $("tables").innerHTML = `<table class="data rib"><thead><tr><th>Prefix</th><th>Calea AS</th><th>Stare</th></tr></thead>${bodies}</table>`;
   }
 
   function highlightRow(ev) {
