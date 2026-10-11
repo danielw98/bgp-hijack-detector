@@ -12,9 +12,15 @@ public class UpdateDecoderTests
 {
     private static readonly string Incident = Path.Combine(AppContext.BaseDirectory, "Fixtures");
 
-    private static List<Announcement> Parse(byte[] data)
+    private static IReadOnlyList<Announcement> Parse(byte[] data)
     {
-        return UpdateDecoder.ReadMrt(data);
+        return UpdateDecoder.ReadMrt(data).Routes;
+    }
+
+    private static (int Routes, int Malformed) Counts(byte[] data)
+    {
+        var file = UpdateDecoder.ReadMrt(data);
+        return (file.Routes.Count, file.MalformedRecords);
     }
 
     [Fact]
@@ -144,23 +150,36 @@ public class UpdateDecoderTests
     }
 
     [Fact]
-    public void TruncatedRecordIsAnError()
+    public void ATruncatedRecordIsDroppedAndCounted()
     {
-        Assert.Throws<MalformedUpdateException>(() => Parse(Record(Announce)[..^1]));
+        Assert.Equal((0, 1), Counts(Record(Announce)[..^1]));
     }
 
     [Fact]
-    public void PrefixLongerThanItsFamilyIsAnError()
+    public void APrefixLongerThanItsFamilyDropsItsRecord()
     {
-        Assert.Throws<MalformedUpdateException>(() => Parse(Record(UpdateMessage(nlri: [33, 203, 0, 113, 0, 0]))));
+        Assert.Equal((0, 1), Counts(Record(UpdateMessage(nlri: [33, 203, 0, 113, 0, 0]))));
     }
 
     [Fact]
-    public void AsPathRunningPastItsAttributeIsAnError()
+    public void AnAsPathRunningPastItsAttributeDropsItsRecord()
     {
         byte[] shortPath = [AsSequence, 3, .. BigEndian(64500, 2)];
         var message = UpdateMessage(attributes: Attribute(2, shortPath), nlri: Prefix("203.0.113.0/24"));
-        Assert.Throws<MalformedUpdateException>(() => Parse(Record(message)));
+        Assert.Equal((0, 1), Counts(Record(message)));
+    }
+
+    [Fact]
+    public void AMalformedRecordDropsOnlyItself()
+    {
+        var malformed = Record(UpdateMessage(nlri: [33, 203, 0, 113, 0, 0]));
+        Assert.Equal((4, 1), Counts([.. Record(Announce), .. malformed, .. Record(Announce)]));
+    }
+
+    [Fact]
+    public void ATruncatedLastRecordKeepsTheRecordsBeforeIt()
+    {
+        Assert.Equal((2, 1), Counts([.. Record(Announce), .. Record(Announce)[..^1]]));
     }
 
     [Fact]
@@ -189,7 +208,7 @@ public class UpdateDecoderTests
     public void IncidentFileShowsTheHijackAtTheDocumentedMinute()
     {
         var hijacked = IPNetwork.Parse("208.65.153.0/24");
-        var first = new MrtArchive().Read(Path.Combine(Incident, "updates.20080224.1845.gz")).First(r => r.Prefix == hijacked);
+        var first = new MrtArchive().Read(Path.Combine(Incident, "updates.20080224.1845.gz")).Routes.First(r => r.Prefix == hijacked);
         Assert.Equal("2008-02-24 18:47", first.SeenAt.ToString("yyyy-MM-dd HH:mm"));
         Assert.Equal([3491, 17557], first.AsPath.TakeLast(2));
     }
@@ -199,7 +218,7 @@ public class UpdateDecoderTests
     {
         var config = TomlFiles.LoadDetector(Path.Combine(Incident, "youtube-2008.toml"));
         var detector = new HijackDetector(config.Monitored, config.Vrps);
-        var alerts = new MrtArchive().Read(Path.Combine(Incident, "updates.20080224.1845.gz")).SelectMany(detector.Inspect).ToList();
+        var alerts = new MrtArchive().Read(Path.Combine(Incident, "updates.20080224.1845.gz")).Routes.SelectMany(detector.Inspect).ToList();
         Assert.Equal(27, alerts.Count);
         Assert.All(alerts, a =>
         {

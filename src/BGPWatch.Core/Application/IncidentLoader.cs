@@ -43,7 +43,12 @@ public sealed class IncidentLoader(IRouteLog log, IUpdateArchive archive, ILogge
         }
         foreach (var file in files)
         {
-            await pipeline.ProcessAsync(archive.Read(file), cancel);
+            var recorded = archive.Read(file);
+            if (recorded.MalformedRecords > 0)
+            {
+                logger.LogWarning("{Source}: {File} has {Count} malformed records, dropped", source, file, recorded.MalformedRecords);
+            }
+            await pipeline.ProcessAsync(recorded.Routes, cancel);
         }
         return new LoadSummary(source, pipeline.UpdateCount, pipeline.AlertCount, false);
     }

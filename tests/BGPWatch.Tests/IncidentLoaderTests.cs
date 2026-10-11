@@ -47,11 +47,11 @@ public class IncidentLoaderTests
 
     private sealed class FakeArchive(int routesPerFile) : IUpdateArchive
     {
-        public IReadOnlyList<Announcement> Read(string path)
+        public ArchiveFile Read(string path)
         {
             var legit = Announcement.Of(IPNetwork.Parse("208.65.152.0/22"), [3333, 36561], "193.0.0.56", null, Seen);
             var hijack = Announcement.Of(IPNetwork.Parse("208.65.153.0/24"), [3333, 3491, 17557], "193.0.0.56", null, Seen);
-            return [.. Enumerable.Range(0, routesPerFile).Select(i => i == 0 ? hijack : legit)];
+            return new ArchiveFile([.. Enumerable.Range(0, routesPerFile).Select(i => i == 0 ? hijack : legit)], 0);
         }
     }
 

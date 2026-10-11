@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using BGPWatch.Core.Application;
-using BGPWatch.Core.Domain;
 using ICSharpCode.SharpZipLib.BZip2;
 
 namespace BGPWatch.Web.Native;
@@ -8,7 +7,7 @@ namespace BGPWatch.Web.Native;
 /// <summary>Recorded MRT updates files (RFC 6396), plain, .gz (RIPE RIS) or .bz2 (RouteViews).</summary>
 public sealed class MrtArchive : IUpdateArchive
 {
-    public IReadOnlyList<Announcement> Read(string path)
+    public ArchiveFile Read(string path)
     {
         return UpdateDecoder.ReadMrt(Bytes(path));
     }

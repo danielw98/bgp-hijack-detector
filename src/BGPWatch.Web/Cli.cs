@@ -9,7 +9,8 @@ namespace BGPWatch.Web;
 
 /// <summary>
 /// The verbs the author's scripts call, with no database:
-/// <c>dump &lt;updates.mrt[.gz]&gt;</c> prints every route of the file as one JSON line;
+/// <c>dump &lt;updates.mrt[.gz]&gt;</c> prints every route of the file as one JSON line, and on
+/// stderr how many malformed records it dropped;
 /// <c>measure &lt;config.toml&gt; &lt;updates.mrt[.gz]&gt;</c> prints what the detector raises
 /// on the file, which peers carried the alerted routes, and how long it takes.
 /// </summary>
@@ -23,11 +24,18 @@ public static class Cli
 
     public static int Dump(string path)
     {
-        using var output = new StreamWriter(Console.OpenStandardOutput());
-        foreach (var route in new MrtArchive().Read(path))
+        var file = new MrtArchive().Read(path);
+        using (var output = new StreamWriter(Console.OpenStandardOutput()))
         {
-            output.WriteLine(JsonSerializer.Serialize(new DumpedRoute(route.SeenAt, route.Peer, route.Prefix.ToString(),
-                route.Withdrawn, route.AsPath, route.NextHop), Json));
+            foreach (var route in file.Routes)
+            {
+                output.WriteLine(JsonSerializer.Serialize(new DumpedRoute(route.SeenAt, route.Peer, route.Prefix.ToString(),
+                    route.Withdrawn, route.AsPath, route.NextHop), Json));
+            }
+        }
+        if (file.MalformedRecords > 0)
+        {
+            Console.Error.WriteLine($"malformed records dropped: {file.MalformedRecords}");
         }
         return 0;
     }
@@ -37,7 +45,8 @@ public static class Cli
         var config = TomlFiles.LoadDetector(configPath);
         var detector = new HijackDetector(config.Monitored, config.Vrps);
         var clock = Stopwatch.StartNew();
-        var routes = new MrtArchive().Read(path);
+        var file = new MrtArchive().Read(path);
+        var routes = file.Routes;
         var parsed = clock.Elapsed;
         var alerts = routes.SelectMany(detector.Inspect).ToList();
         var detected = clock.Elapsed;
@@ -49,6 +58,7 @@ public static class Cli
         var measurement = new Measurement(
             routes.Count,
             routes.Count(r => r.Withdrawn),
+            file.MalformedRecords,
             routes.Select(r => r.Peer).Distinct().Count(),
             alerts.Count,
             alerts.GroupBy(a => a.Type.Name()).ToDictionary(g => g.Key, g => g.Count()),
@@ -68,6 +78,7 @@ public static class Cli
     private sealed record Measurement(
         int Updates,
         int Withdrawals,
+        int MalformedRecords,
         int PeersInFile,
         int Alerts,
         Dictionary<string, int> AlertsByType,

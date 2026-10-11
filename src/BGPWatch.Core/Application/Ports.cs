@@ -23,8 +23,11 @@ public interface IRouteLog
 
 public sealed record SourceCounts(long Updates, long Alerts);
 
+/// <summary>The routes of a recorded file, and how many of its records were malformed and dropped.</summary>
+public sealed record ArchiveFile(IReadOnlyList<Announcement> Routes, int MalformedRecords);
+
 /// <summary>The routes of a recorded file of BGP updates.</summary>
 public interface IUpdateArchive
 {
-    IReadOnlyList<Announcement> Read(string path);
+    ArchiveFile Read(string path);
 }

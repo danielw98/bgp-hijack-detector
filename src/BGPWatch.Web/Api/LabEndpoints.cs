@@ -118,7 +118,7 @@ public static class LabEndpoints
             var summary = await IncidentFiles.LoadAsync(loader, settings, ReloadedIncident, force: true, c);
             return Results.Ok(new { ok = true, summary.Source, summary.Updates, summary.Alerts, summary.Skipped });
         }
-        catch (Exception e) when (e is IOException or Native.MalformedUpdateException or Npgsql.NpgsqlException)
+        catch (Exception e) when (e is IOException or Npgsql.NpgsqlException)
         {
             logger.LogError(e, "reloading {Incident} failed", ReloadedIncident);
             return Failure(StatusCodes.Status502BadGateway, e.Message);
