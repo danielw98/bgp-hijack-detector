@@ -11,23 +11,29 @@ prefix = "208.65.152.0/22"
 expected_origins = [36561]
 description = "YouTube, 2008 incident replay"
 
-# The documented timeline (UTC), from the RIPE NCC case study cited above.
+# The documented timeline (UTC), from the RIPE NCC case study cited above; label in
+# English, label_ro in Romanian.
 [[events]]
 at = 2008-02-24T18:47:00Z
-label = "AS17557 (Pakistan Telecom) anunță 208.65.153.0/24; AS3491 (PCCW Global) propagă anunțul în tot Internetul"
+label = "AS17557 (Pakistan Telecom) announces 208.65.153.0/24; AS3491 (PCCW Global) propagates the announcement across the Internet"
+label_ro = "AS17557 (Pakistan Telecom) anunță 208.65.153.0/24; AS3491 (PCCW Global) propagă anunțul în tot Internetul"
 
 [[events]]
 at = 2008-02-24T20:07:00Z
-label = "AS36561 (YouTube) anunță la rândul său 208.65.153.0/24; cu două anunțuri identice, ruterele aleg după politică și după lungimea căii"
+label = "AS36561 (YouTube) announces 208.65.153.0/24 too; with two identical announcements, routers choose by policy and by path length"
+label_ro = "AS36561 (YouTube) anunță la rândul său 208.65.153.0/24; cu două anunțuri identice, ruterele aleg după politică și după lungimea căii"
 
 [[events]]
 at = 2008-02-24T20:18:00Z
-label = "AS36561 (YouTube) anunță 208.65.153.0/25 și 208.65.153.128/25; prefixele mai specifice aduc traficul înapoi"
+label = "AS36561 (YouTube) announces 208.65.153.0/25 and 208.65.153.128/25; the more specific prefixes bring the traffic back"
+label_ro = "AS36561 (YouTube) anunță 208.65.153.0/25 și 208.65.153.128/25; prefixele mai specifice aduc traficul înapoi"
 
 [[events]]
 at = 2008-02-24T20:51:00Z
-label = "Anunțurile AS17557 apar cu calea prelungită (17557 17557), deci mai multe rutere preferă ruta YouTube"
+label = "The AS17557 announcements appear with a prepended path (17557 17557), so more routers prefer the YouTube route"
+label_ro = "Anunțurile AS17557 apar cu calea prelungită (17557 17557), deci mai multe rutere preferă ruta YouTube"
 
 [[events]]
 at = 2008-02-24T21:01:00Z
-label = "AS3491 (PCCW Global) retrage toate prefixele originate de AS17557; deturnarea se încheie"
+label = "AS3491 (PCCW Global) withdraws every prefix originated by AS17557; the hijack ends"
+label_ro = "AS3491 (PCCW Global) retrage toate prefixele originate de AS17557; deturnarea se încheie"

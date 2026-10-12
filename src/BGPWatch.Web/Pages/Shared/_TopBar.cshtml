@@ -1,0 +1,26 @@
+@{
+    var onApp = (string?)ViewData["Page"] == "app";
+    var view = (string name) => onApp ? $"#{name}" : Url.Content($"~/#{name}");
+}
+<header class="topbar">
+  <a class="brand" href="~/">@T["brand"]</a>
+  <nav class="views" aria-label="@T["nav.views"]">
+    <a href="@view("simulator")" data-view="simulator"><span class="num">1</span>@T["nav.simulator"]</a>
+    <a href="@view("2008")" data-view="2008"><span class="num">2</span>@T["nav.2008"]</a>
+    <a href="@view("prefixes")" data-view="prefixes"><span class="num">3</span>@T["nav.prefixes"]</a>
+    <a href="@view("lookup")" data-view="lookup"><span class="num">4</span>@T["nav.lookup"]</a>
+  </nav>
+  @if (onApp)
+  {
+    <p class="status">
+      <span class="status-item"><span id="dot-lab" class="dot"></span><span id="lab-state">@T["status.lab.checking"]</span></span>
+      <span class="status-item"><span id="dot-data" class="dot"></span><span id="data-state">@T["status.data.checking"]</span></span>
+      <span id="updated" class="updated"></span>
+    </p>
+  }
+  <nav class="pages" aria-label="@T["nav.pages"]">
+    <a class="guide" href="~/guide">@T["nav.guide"]</a>
+    <a class="guide @(onApp ? "" : "current")" href="~/references" aria-current="@(onApp ? null : "page")">@T["nav.references"]</a>
+    @await Html.PartialAsync("_Language")
+  </nav>
+</header>

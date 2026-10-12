@@ -1,63 +1,63 @@
 <div class="sim" data-simulator>
   <div class="sim-toolbar">
-    <button data-sim="hijack" class="btn red"><span class="step">1</span>Deturnează</button>
-    <button data-sim="send" class="btn"><span class="step">2</span>Trimite pachetul</button>
-    <button data-sim="ask" class="btn outline"><span class="step">3</span>Întreabă nucleele</button>
-    <button data-sim="reset" class="btn outline"><span class="step">4</span>Retrage anunțurile</button>
+    <button data-sim="hijack" class="btn red"><span class="step">1</span>@T["sim.hijack"]</button>
+    <button data-sim="send" class="btn"><span class="step">2</span>@T["sim.send"]</button>
+    <button data-sim="ask" class="btn outline"><span class="step">3</span>@T["sim.ask"]</button>
+    <button data-sim="reset" class="btn outline"><span class="step">4</span>@T["sim.reset"]</button>
     <div class="options">
-      <button data-sim="options" class="btn outline blue" aria-expanded="false">Opțiuni</button>
+      <button data-sim="options" class="btn outline blue" aria-expanded="false">@T["sim.options"]</button>
       <div class="options-panel" data-sim="options-panel" hidden>
-        <h4>Opțiuni</h4>
-        <label>Pasul 1, ce anunță atacatorul
+        <h4>@T["sim.options"]</h4>
+        <label>@T["sim.options.scenario"]
           <select data-sim="scenario">
-            <option value="both">prefixul exact și sub-prefixul</option>
-            <option value="exact">doar prefixul exact, 203.0.113.0/24</option>
-            <option value="subprefix">doar sub-prefixul, 203.0.113.0/25</option>
+            <option value="both">@T["sim.scenario.both"]</option>
+            <option value="exact">@T["sim.scenario.exact"]</option>
+            <option value="subprefix">@T["sim.scenario.subprefix"]</option>
           </select>
         </label>
-        <label>Pasul 2, pachetul pleacă de la <select data-sim="from"></select></label>
-        <label>către <select data-sim="to"></select></label>
+        <label>@T["sim.options.from"] <select data-sim="from"></select></label>
+        <label>@T["sim.options.to"] <select data-sim="to"></select></label>
       </div>
     </div>
   </div>
 
   <div class="sim-stage">
     <div class="sim-canvas" data-sim="canvas"></div>
-    <p class="sim-note">rețea închisă: AS private, 203.0.113.0/24 (RFC 5737)</p>
+    <p class="sim-note">@T["sim.note"]</p>
     <dl class="sim-legend">
-      <div><dt><span class="swatch session"></span></dt><dd>sesiune BGP</dd></div>
-      <div><dt><span class="swatch report"></span></dt><dd>raportare BMP</dd></div>
-      <div><dt><span class="swatch token update">UPDATE</span></dt><dd>mesaj BGP</dd></div>
-      <div><dt><span class="swatch token packet">pachet</span></dt><dd>pachet simulat</dd></div>
+      <div><dt><span class="swatch session"></span></dt><dd>@T["sim.legend.session"]</dd></div>
+      <div><dt><span class="swatch report"></span></dt><dd>@T["sim.legend.report"]</dd></div>
+      <div><dt><span class="swatch token update">UPDATE</span></dt><dd>@T["sim.legend.update"]</dd></div>
+      <div><dt><span class="swatch token packet">@T["sim.legend.packet.token"]</span></dt><dd>@T["sim.legend.packet"]</dd></div>
     </dl>
   </div>
 
   <div class="sim-transport">
-    <button data-sim="back" class="btn outline">Înapoi</button>
-    <button data-sim="play" class="btn">Pauză</button>
-    <button data-sim="step" class="btn outline">Pas</button>
-    <label class="speed">viteză <input type="range" data-sim="speed" min="0" max="4" step="1" value="2" aria-label="viteza redării"> <b data-sim="speed-label">1x</b></label>
+    <button data-sim="back" class="btn outline">@T["sim.back"]</button>
+    <button data-sim="play" class="btn">@T["sim.pause"]</button>
+    <button data-sim="step" class="btn outline">@T["sim.step"]</button>
+    <label class="speed">@T["sim.speed"] <input type="range" data-sim="speed" min="0" max="4" step="1" value="2" aria-label="@T["sim.speed.label"]"> <b data-sim="speed-label">1x</b></label>
     <p class="now" data-sim="now" aria-live="polite"></p>
   </div>
 
   <aside class="sim-inspector">
     <div class="tabs" role="tablist">
-      <button class="tab current" role="tab" aria-selected="true" data-tab="tables">Tabele BGP</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="events">Evenimente <span class="count" data-sim="count"></span></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="incidents">Incidente <span class="count" id="incident-count"></span></button>
+      <button class="tab current" role="tab" aria-selected="true" data-tab="tables">@T["sim.tab.tables"]</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="events">@T["sim.tab.events"] <span class="count" data-sim="count"></span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="incidents">@T["sim.tab.incidents"] <span class="count" id="incident-count"></span></button>
     </div>
     <div class="panel" data-panel="tables">
-      <div class="ribs" data-sim="tables"><div class="empty">Se citesc tabelele...</div></div>
-      <details class="raw"><summary>Date brute</summary><pre id="raw-lab"></pre></details>
+      <div class="ribs" data-sim="tables"><div class="empty">@T["sim.tables.loading"]</div></div>
+      <details class="raw"><summary>@T["raw"]</summary><pre id="raw-lab"></pre></details>
     </div>
     <div class="panel" data-panel="events" hidden>
       <ol class="evlist" data-sim="events"></ol>
-      <p class="panel-foot"><button data-sim="clear" class="btn outline small">Șterge evenimentele</button></p>
+      <p class="panel-foot"><button data-sim="clear" class="btn outline small">@T["sim.events.clear"]</button></p>
     </div>
     <div class="panel" data-panel="incidents" hidden>
-      <div class="feed" data-incidents><div class="empty">Se încarcă...</div></div>
-      <p class="panel-foot"><button id="btn-clear" class="btn outline red small">Golește istoricul simulatorului</button> <span id="clear-msg" class="msg"></span></p>
-      <details class="raw"><summary>Date brute</summary><pre data-raw-incidents></pre></details>
+      <div class="feed" data-incidents><div class="empty">@T["loading"]</div></div>
+      <p class="panel-foot"><button id="btn-clear" class="btn outline red small">@T["sim.history.clear"]</button> <span id="clear-msg" class="msg"></span></p>
+      <details class="raw"><summary>@T["raw"]</summary><pre data-raw-incidents></pre></details>
     </div>
   </aside>
 </div>

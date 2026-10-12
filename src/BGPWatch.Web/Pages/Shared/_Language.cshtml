@@ -1,0 +1,7 @@
+<span class="lang" role="group" aria-label="@T["lang.label"]">
+@foreach (var language in BGPWatch.Web.Localization.Languages.All)
+{
+  var current = language == T.Language;
+  <a href="?lang=@language.Code()" hreflang="@language.Code()" lang="@language.Code()" data-lang class="@(current ? "current" : null)" aria-current="@(current ? "true" : null)">@language.Code().ToUpperInvariant()</a>
+}
+</span>

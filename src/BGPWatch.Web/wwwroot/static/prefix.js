@@ -5,6 +5,7 @@
 import { every, get } from "./api.js";
 import { ALERT_NAME, esc, fmtTime, nameOf, pathChain, peerMarkup, peerName, registerLab, roleOf } from "./format.js";
 import { prefixLength } from "./simulate.js";
+import { LOCALE, count, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const ROLE_ORDER = ["victim", "transit", "attacker"];
@@ -44,13 +45,13 @@ async function loadMonitored() {
     current = monitored.length ? monitored[0].prefix : "";
     $("prefix-choice").innerHTML = monitored.map((m, i) => `<button type="button" data-prefix="${esc(m.prefix)}" aria-pressed="${i === 0}"><span class="mono">${esc(m.prefix)}</span> <span class="note">${esc(shortDescription(m.description))}</span></button>`).join("");
   } catch (e) {
-    $("prefix-verdict").textContent = "Eroare: " + e.message;
+    $("prefix-verdict").textContent = t("error", { message: e.message });
   }
 }
 
-// "lab victim network" -> "laborator"; "YouTube, 2008 incident replay" -> "YouTube 2008".
+// "lab victim network" -> "lab"; "YouTube, 2008 incident replay" -> "YouTube 2008".
 function shortDescription(text) {
-  if (/^lab\b/i.test(text || "")) return "laborator";
+  if (/^lab\b/i.test(text || "")) return t("prefix.lab");
   if (/youtube/i.test(text || "")) return "YouTube 2008";
   return text || "";
 }
@@ -62,7 +63,7 @@ async function refresh() {
     render();
     $("raw-prefix").textContent = JSON.stringify(data, null, 2);
   } catch (e) {
-    $("prefix-verdict").textContent = "Eroare: " + e.message;
+    $("prefix-verdict").textContent = t("error", { message: e.message });
   }
 }
 
@@ -95,20 +96,20 @@ function renderVerdict(view) {
   const wrongRouters = [...new Set(wrong.map((s) => s.peer))];
   const origins = view.expected.map((a) => `AS${a}`).join(", ");
   const inWindow = data.alerts.filter((a) => Date.parse(a.raised_at) >= view.start).length;
-  const counts = `${inWindow} ${inWindow === 1 ? "alertă" : "alerte"} în fereastră · ${data.alerts.length} în total${data.truncated ? " (istoric trunchiat)" : ""}`;
-  const noun = view.recorded ? { one: "vecin RIS", many: "vecini RIS", all: "toți cei" } : { one: "ruter", many: "rutere", all: "toate cele" };
+  const counts = t("prefix.counts", { window: count(inWindow, "prefix.alerts.count"), total: data.alerts.length }) + (data.truncated ? t("prefix.truncated") : "");
+  const noun = view.recorded ? "peer" : "router";
   const box = $("prefix-verdict");
   if (!live.length) {
     box.className = "verdict";
-    box.innerHTML = `<span class="label">Nicio rută observată pentru ${esc(data.prefix)}.</span><span class="counts">${counts}</span>`;
+    box.innerHTML = `<span class="label">${esc(t("prefix.none", { prefix: data.prefix }))}</span><span class="counts">${counts}</span>`;
     return;
   }
   const hijacked = wrongRouters.length > 0;
   box.className = `verdict ${hijacked ? "hijacked" : "legit"}`;
   const text = hijacked
-    ? `Acum ${wrongRouters.length} din ${routers.length} ${routers.length === 1 ? `${noun.one} are` : `${noun.many} au`} o rută cu altă origine decât ${origins}: ${wrong.map((s) => `${esc(peerName(s.peer))} (${esc(s.prefix)} de la AS${esc(s.origin_as)})`).join(", ")}.`
-    : `Acum ${routers.length === 1 ? `singurul ${noun.one} trimite` : `${noun.all} ${routers.length} ${noun.many} trimit`} ${esc(data.prefix)} la ${origins}, originea așteptată.`;
-  box.innerHTML = `<span class="badge">${hijacked ? "deturnat" : "legitim"}</span><span class="label">${text}</span><span class="counts">${counts}</span>`;
+    ? t(`prefix.hijacked.${noun}.${routers.length === 1 ? "one" : "many"}`, { wrong: wrongRouters.length, total: routers.length, origins, list: wrong.map((s) => t("prefix.wrong", { who: esc(peerName(s.peer)), prefix: esc(s.prefix), asn: esc(s.origin_as) })).join(", ") })
+    : t(`prefix.legit.${noun}.${routers.length === 1 ? "one" : "many"}`, { total: routers.length, prefix: esc(data.prefix), origins });
+  box.innerHTML = `<span class="badge">${hijacked ? t("prefix.badge.hijacked") : t("prefix.badge.legit")}</span><span class="label">${text}</span><span class="counts">${counts}</span>`;
 }
 
 // Routers in story order (lab roles), then by address; prefixes from the widest.
@@ -156,10 +157,10 @@ function pct(t, view) {
 
 function nowCell(peer, prefix, view) {
   const s = data.current.find((c) => c.peer === peer && c.prefix === prefix);
-  if (!s) return '<span class="assumed">nicio rută</span>';
-  if (s.withdrawn) return `<span class="assumed">nicio rută (retrasă la ${esc(fmtTime(s.seen_at, view.recorded))})</span>`;
+  if (!s) return `<span class="assumed">${t("prefix.noroute")}</span>`;
+  if (s.withdrawn) return `<span class="assumed">${t("prefix.withdrawn.at", { time: esc(fmtTime(s.seen_at, view.recorded)) })}</span>`;
   const role = legit(s, view.expected) ? "victim" : "attacker";
-  if (!s.as_path.length) return `${pathChain([s.origin_as], role)} <span class="assumed">(proprie)</span>`;
+  if (!s.as_path.length) return `${pathChain([s.origin_as], role)} <span class="assumed">${esc(t("path.own"))}</span>`;
   return pathChain(s.as_path, role);
 }
 
@@ -171,7 +172,7 @@ function tickStepMs(span) {
 function clock(t, view) {
   const iso = new Date(t).toISOString();
   if (view.recorded) return iso.slice(11, 16);
-  return new Date(t).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
+  return new Date(t).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
 }
 
 function renderLanes(view) {
@@ -184,7 +185,7 @@ function renderLanes(view) {
       const rects = segmentsOf(peer, prefix, view).map(([a, b, c]) => c === "none"
         ? `<rect class="seg none" x="${x(a, view)}" y="4.6" width="${Math.max(1, x(b, view) - x(a, view))}" height="0.8"></rect>`
         : `<rect class="seg ${c}" x="${x(a, view)}" y="2" width="${Math.max(c === "red" ? MIN_RED_WIDTH : 1, x(b, view) - x(a, view))}" height="6"></rect>`).join("");
-      const sub = prefix !== data.prefix ? ' <span class="note">sub-prefix</span>' : "";
+      const sub = prefix !== data.prefix ? ` <span class="note">${t("alert.subprefix_hijack")}</span>` : "";
       return `<div class="lane-row"><span class="c-peer indent">${esc(prefix)}${sub}</span><span class="c-lane"><svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">${rects}<line class="cursor" x1="1000" x2="1000" y1="0" y2="10" vector-effect="non-scaling-stroke"></line></svg></span><span class="c-path">${nowCell(peer, prefix, view)}</span></div>`;
     }).join("");
     return head + lines;
@@ -192,13 +193,13 @@ function renderLanes(view) {
   const step = tickStepMs(view.end - view.start);
   const ticks = [];
   for (let t = Math.ceil(view.start / step) * step; t < view.end - step * END_LABEL_GAP; t += step) ticks.push(`<span class="tick" style="left:${pct(t, view)}">${clock(t, view)}</span>`);
-  ticks.push(`<span class="tick end" style="left:100%">${view.recorded ? clock(view.end, view) : "acum"}</span>`);
-  const legend = `Banda: verde = spre ${view.expected.map((a) => `AS${a}`).join(", ")}, roșu = spre alt AS, linie = nicio rută`;
-  const pathHead = view.recorded ? `Calea AS la ${clock(view.end, view)} UTC, spre origine` : "Calea AS acum, spre origine";
+  ticks.push(`<span class="tick end" style="left:100%">${view.recorded ? clock(view.end, view) : t("prefix.now")}</span>`);
+  const legend = t("prefix.legend", { origins: view.expected.map((a) => `AS${a}`).join(", ") });
+  const pathHead = view.recorded ? t("prefix.path.at", { time: clock(view.end, view) }) : t("prefix.path.now");
   $("prefix-lanes").innerHTML = rows
-    ? `<div class="lane-row head"><span class="c-peer">${view.recorded ? "Vecin RIS" : "Ruter"}, prefix</span><span class="c-lane legend">${legend}</span><span class="c-path">${pathHead}</span></div>${rows}
+    ? `<div class="lane-row head"><span class="c-peer">${view.recorded ? t("col.peer") : t("col.router")}, ${t("col.prefix").toLowerCase()}</span><span class="c-lane legend">${legend}</span><span class="c-path">${pathHead}</span></div>${rows}
        <div class="lane-row axis"><span class="c-peer"></span><span class="c-lane"><span class="track">${ticks.join("")}</span></span><span class="c-path"></span></div>`
-    : '<div class="empty">Nicio rută observată pentru acest prefix.</div>';
+    : `<div class="empty">${t("prefix.none.this")}</div>`;
 }
 
 function shortHolder(asn) {
@@ -206,14 +207,14 @@ function shortHolder(asn) {
 }
 
 function stateText(s) {
-  if (!s) return '<span class="assumed">prima observare</span>';
-  if (s.withdrawn) return '<b class="attacker">retras</b>';
+  if (!s) return `<span class="assumed">${t("prefix.first")}</span>`;
+  if (s.withdrawn) return `<b class="attacker">${t("prefix.withdrawn")}</b>`;
   return pathChain(s.as_path.length ? s.as_path : [s.origin_as], "");
 }
 
 function renderChanges(view) {
   const list = [...view.changes].reverse();
-  $("prefix-changes-summary").textContent = `Schimbările (${list.length})`;
+  $("prefix-changes-summary").textContent = t("prefix.changes.count", { n: list.length });
   const rows = list.slice(0, LIST_LIMIT).map((c) => `
     <tr class="${colorOf(c.after, view.expected) === "red" ? "bad" : ""}">
       <td class="time">${fmtTime(c.seen_at, view.recorded)}</td>
@@ -222,15 +223,15 @@ function renderChanges(view) {
       <td>${stateText(c.before)}</td>
       <td>${stateText(c.after)}</td>
     </tr>`).join("");
-  const more = list.length > LIST_LIMIT ? `<p class="caption">Ultimele ${LIST_LIMIT} din ${list.length}; toate sunt în „Date brute”.</p>` : "";
+  const more = list.length > LIST_LIMIT ? `<p class="caption">${esc(t("prefix.more", { shown: LIST_LIMIT, total: list.length }))}</p>` : "";
   $("prefix-changes").innerHTML = rows
-    ? `<table class="data"><thead><tr><th>Când</th><th>Ruter</th><th>Prefix</th><th>Înainte</th><th>După</th></tr></thead><tbody>${rows}</tbody></table>${more}`
-    : '<div class="empty">Nicio schimbare.</div>';
+    ? `<table class="data"><thead><tr><th>${t("col.when")}</th><th>${t("col.router")}</th><th>${t("col.prefix")}</th><th>${t("col.before")}</th><th>${t("col.after")}</th></tr></thead><tbody>${rows}</tbody></table>${more}`
+    : `<div class="empty">${t("prefix.changes.none")}</div>`;
 }
 
 function renderAlerts(view) {
   const list = data.alerts;
-  $("prefix-alerts-summary").textContent = `Alertele (${list.length})`;
+  $("prefix-alerts-summary").textContent = t("prefix.alerts.summary", { n: list.length });
   const rows = list.slice(0, LIST_LIMIT).map((a) => `
     <tr>
       <td class="time">${fmtTime(a.raised_at, view.recorded)}</td>
@@ -239,8 +240,8 @@ function renderAlerts(view) {
       <td>${peerMarkup(a.peer)}</td>
       <td class="mono">AS${esc(a.observed_origin)}</td>
     </tr>`).join("");
-  const more = list.length > LIST_LIMIT ? `<p class="caption">Ultimele ${LIST_LIMIT} din ${list.length}; toate sunt în „Date brute”.</p>` : "";
+  const more = list.length > LIST_LIMIT ? `<p class="caption">${esc(t("prefix.more", { shown: LIST_LIMIT, total: list.length }))}</p>` : "";
   $("prefix-alerts").innerHTML = rows
-    ? `<table class="data"><thead><tr><th>Când</th><th>Tip</th><th>Prefix</th><th>Ruter</th><th>Origine văzută</th></tr></thead><tbody>${rows}</tbody></table>${more}`
-    : '<div class="empty">Nicio alertă.</div>';
+    ? `<table class="data"><thead><tr><th>${t("col.when")}</th><th>${t("col.type")}</th><th>${t("col.prefix")}</th><th>${t("col.router")}</th><th>${t("col.seen.origin")}</th></tr></thead><tbody>${rows}</tbody></table>${more}`
+    : `<div class="empty">${t("prefix.alerts.none")}</div>`;
 }

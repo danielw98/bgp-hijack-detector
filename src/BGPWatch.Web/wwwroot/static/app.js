@@ -3,6 +3,7 @@
 
 const views = [...document.querySelectorAll(".view")];
 const links = [...document.querySelectorAll("nav.views a[data-view]")];
+const OLD_NAMES = { lab: "simulator", prefixe: "prefixes", verifica: "lookup" };
 
 function show(name) {
   views.forEach((view) => { view.hidden = view.id !== `view-${name}`; });
@@ -14,7 +15,8 @@ function show(name) {
 }
 
 function fromHash() {
-  const name = location.hash.replace("#", "").replace(/^lab$/, "simulator") || "simulator";
+  const hash = location.hash.replace("#", "");
+  const name = OLD_NAMES[hash] || hash || "simulator";
   show(views.some((view) => view.id === `view-${name}`) ? name : "simulator");
 }
 

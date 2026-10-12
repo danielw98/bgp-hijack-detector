@@ -1,17 +1,13 @@
 @page
 @using BGPWatch.Web.Reading
-@inject ReadingList Reading
+@inject IReadOnlyDictionary<Language, ReadingList> Readings
 @{
-    ViewData["Title"] = "Rute furate, referințele";
+    ViewData["Title"] = T["refs.title"];
     ViewData["BodyClass"] = "app";
+    ViewData["Page"] = "references";
+    var Reading = Readings[T.Language];
     var versions = Reading.Lineage.Specs;
     var updates = Reading.Updates.Specs;
-}
-@functions {
-    static string Surse(int count)
-    {
-        return count == 1 ? "o sursă" : count % 100 is >= 1 and <= 19 ? $"{count} surse" : $"{count} de surse";
-    }
 }
 @section Styles {
 <link rel="stylesheet" href="~/static/app.css">
@@ -40,7 +36,7 @@
 
     void Lineage()
     {
-        <details class="refs-stage refs-lineage" id="genealogia">
+        <details class="refs-stage refs-lineage" id="lineage">
             <summary>
                 <span class="refs-num">@versions[0].Year-@versions[^1].Year</span>
                 <span class="refs-name">@Reading.Lineage.Title</span>
@@ -57,8 +53,8 @@
                     <p class="refs-intro">@ReadingList.Markup(paragraph)</p>
                 }
                 @{ Specs(versions, "refs-major"); }
-                <details class="refs-updates" id="actualizari">
-                    <summary><span>@Reading.Updates.Title</span> <span class="refs-count">@updates.Count RFC-uri, @updates[0].Year-@updates[^1].Year</span></summary>
+                <details class="refs-updates" id="updates">
+                    <summary><span>@Reading.Updates.Title</span> <span class="refs-count">@T.Format("refs.updates.count", ("count", updates.Count), ("from", updates[0].Year), ("to", updates[^1].Year))</span></summary>
                     @foreach (var paragraph in Reading.Updates.Intro)
                     {
                         <p class="refs-intro">@ReadingList.Markup(paragraph)</p>
@@ -69,42 +65,33 @@
         </details>
     }
 }
-<header class="topbar">
-  <a class="brand" href="~/">Rute furate</a>
-  <nav class="views" aria-label="vederile aplicației">
-    <a href="~/#simulator"><span class="num">1</span>Simulator</a>
-    <a href="~/#2008"><span class="num">2</span>YouTube 2008</a>
-    <a href="~/#prefixe"><span class="num">3</span>Prefixe</a>
-    <a href="~/#verifica"><span class="num">4</span>Verifică</a>
-  </nav>
-  <nav class="pages" aria-label="paginile proiectului"><a class="guide" href="~/ghid">Ghid</a><a class="guide current" href="~/referinte" aria-current="page">Referințe</a></nav>
-</header>
+@await Html.PartialAsync("_TopBar")
 
 <main class="workspace">
 <section class="view">
-<div class="view-head"><h2>Referințe</h2><span class="note">lecturi pentru a învăța BGP și securitatea lui, în ordinea în care merită citite</span><a class="guide-link" href="~/ghid#s6">În ghid, §6</a></div>
+<div class="view-head"><h2>@T["nav.references"]</h2><span class="note">@T["refs.note"]</span><a class="guide-link" href="~/guide#s6">@T["view.guide.s6"]</a></div>
 <div class="view-body">
 <div class="refs">
-  <nav class="refs-index" aria-label="cuprinsul referințelor">
-    <p class="refs-index-title">Cuprins</p>
+  <nav class="refs-index" aria-label="@T["refs.index.label"]">
+    <p class="refs-index-title">@T["refs.index"]</p>
     <ol>
-      <li><a href="#incepe">Începe de aici</a></li>
+      <li><a href="#start">@T["refs.start"]</a></li>
       @foreach (var stage in Reading.Stages)
       {
-        <li><a href="#etapa-@stage.Number"><span class="num">@stage.Number</span>@stage.Title</a></li>
+        <li><a href="#stage-@stage.Number"><span class="num">@stage.Number</span>@stage.Title</a></li>
         @if (stage.Number == Reading.LineageAfterStage)
         {
-          <li><a href="#genealogia"><span class="num">RFC</span>@Reading.Lineage.Title</a></li>
+          <li><a href="#lineage"><span class="num">RFC</span>@Reading.Lineage.Title</a></li>
         }
       }
     </ol>
   </nav>
 
   <div class="refs-main">
-    <p class="refs-lede">@Surse(Reading.Sources.Count()) în @Reading.Stages.Count etape, fiecare sprijinită pe cea dinainte, și genealogia specificației BGP. Deschide o etapă ca să vezi sursele: titlul duce la text, anul spune când a apărut, rândul de sub el spune de ce merită citit.</p>
+    <p class="refs-lede">@T.Format("refs.lede", ("sources", T.Count(Reading.Sources.Count(), "refs.sources")), ("stages", Reading.Stages.Count))</p>
 
-    <section class="refs-start" id="incepe">
-      <h3>Începe de aici</h3>
+    <section class="refs-start" id="start">
+      <h3>@T["refs.start"]</h3>
       @foreach (var paragraph in Reading.StartHereIntro)
       {
         <p>@ReadingList.Markup(paragraph)</p>
@@ -112,7 +99,7 @@
       <ol>
       @foreach (var pick in Reading.Picks)
       {
-        <li><a href="#sursa-@pick.Source">@pick.Label</a>: @ReadingList.Markup(pick.Note)</li>
+        <li><a href="#source-@pick.Source">@pick.Label</a>: @ReadingList.Markup(pick.Note)</li>
       }
       </ol>
     </section>
@@ -123,11 +110,11 @@
     }
     @foreach (var stage in Reading.Stages)
     {
-      <details class="refs-stage" id="etapa-@stage.Number">
+      <details class="refs-stage" id="stage-@stage.Number">
         <summary>
-          <span class="refs-num">Etapa @stage.Number</span>
+          <span class="refs-num">@T.Format("refs.stage", ("n", stage.Number))</span>
           <span class="refs-name">@stage.Title</span>
-          <span class="refs-count">@Surse(stage.Sources.Count)</span>
+          <span class="refs-count">@T.Count(stage.Sources.Count, "refs.sources")</span>
         </summary>
         <div class="refs-body">
           @foreach (var paragraph in stage.Intro)
@@ -137,7 +124,7 @@
           <ol class="refs-sources">
           @foreach (var source in stage.Sources)
           {
-            <li id="sursa-@source.Number">
+            <li id="source-@source.Number">
               <span class="refs-n">@source.Number</span>
               <div>
                 <p class="refs-head"><a href="@source.Link">@source.Title</a> <span class="refs-year">@source.Year</span></p>
@@ -154,7 +141,7 @@
         Lineage();
       }
     }
-    <p class="appfoot">Lista completă, cu citările, conținutul, timpul de citire și secțiunile recomandate pentru fiecare sursă, este <code>src/BGPWatch.Web/Reading/lecturi-bgp.md</code> din depozitul proiectului; pagina se generează din ea.</p>
+    <p class="appfoot">@T.Html("refs.foot")</p>
   </div>
 </div>
 </div>

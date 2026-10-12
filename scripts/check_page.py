@@ -1,11 +1,13 @@
-"""Gate for the page. Loads the application and the guide at phone, laptop and desktop
-sizes in Chromium and fails on: horizontal page overflow or an element wider than the
+"""Gate for the page. Loads the application, the guide and the references page in every
+language (English and Romanian, chosen with ?lang=) at phone, laptop and desktop sizes
+in Chromium and fails on: horizontal page overflow or an element wider than the
 viewport outside an inner scroller; vertical page scroll of the application at laptop
 and desktop sizes (the simulator fills the window); any text of the simulator's map
 rendered under MIN_FONT px; any map text crossed by a line, a path or the edge of a box
 (a label on a white halo may cover a line). On the references page, with every block
 closed and with every block open: no horizontal overflow, also inside its scroller, and
-every in-page link has its target. Also checks the colour tokens of page.css
+every in-page link has its target. Fails on a script error, a console error, or an
+error message a module shows after catching a failure. Also checks the colour tokens of page.css
 for 4.5:1 contrast, refuses emoji in every tracked text file and non-ASCII in code
 comments, and writes one full-page screenshot per size into .playwright-mcp/ (the
 references page open at its full height).
@@ -28,8 +30,9 @@ STATIC = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static"
 SHOTS = ROOT / ".playwright-mcp"
 VIEWPORTS = ((390, 844), (1366, 768), (1920, 1080))
 WORKSPACE_FROM = 1000
-ONE_SCREEN_VIEWS = ("2008", "prefixe", "verifica")  # views that fit one screen from WORKSPACE_FROM up
-VIEWS = ("simulator", "2008", "prefixe", "verifica")
+ONE_SCREEN_VIEWS = ("2008", "prefixes", "lookup")  # views that fit one screen from WORKSPACE_FROM up
+VIEWS = ("simulator", "2008", "prefixes", "lookup")
+LANGUAGES = ("en", "ro")
 SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view-body, .sim-canvas"
 MIN_CONTRAST = 4.5
 MIN_FONT = 15.0
@@ -42,6 +45,14 @@ EMOJI = re.compile(
     "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F900-\U0001F9FF\U0001FA70-\U0001FAFF\uFE0F\u2B50\u2B55]"
 )
 COMMENT = re.compile(r"^\s*(//|#(?!!)|/\*|\*)")
+
+# Every message a module wrote after catching a failure ("Error: ..." in English,
+# "Eroare: ..." in Romanian), in any drawer, open or closed.
+SHOWN_ERRORS_JS = """
+() => [...document.querySelectorAll('body *')]
+  .filter((el) => el.children.length === 0 && /^(Error|Eroare): /.test(el.textContent.trim()))
+  .map((el) => (el.id ? '#' + el.id + ' ' : '') + el.textContent.trim().slice(0, 120))
+"""
 
 OVERFLOW_JS = """
 (scrollers) => {
@@ -131,9 +142,11 @@ def main() -> int:
     parser.add_argument("--url", default="http://localhost:8080/")
     args = parser.parse_args()
     findings = check_tokens() + check_text()
-    for name, path in (("app", ""), ("ghid", "ghid")):
-        findings += check_layout(args.url.rstrip("/") + "/" + path, name)
-    findings += check_references(args.url.rstrip("/") + "/referinte")
+    base = args.url.rstrip("/") + "/"
+    for lang in LANGUAGES:
+        for name, path in (("app", ""), ("guide", "guide")):
+            findings += check_layout(f"{base}{path}?lang={lang}", f"{name}-{lang}")
+        findings += check_references(f"{base}references?lang={lang}", f"references-{lang}")
     for finding in findings:
         print("FAIL", finding)
     print("ok" if not findings else f"{len(findings)} findings")
@@ -205,17 +218,24 @@ def check_layout(url: str, name: str) -> list[str]:
         browser = p.chromium.launch()
         for width, height in VIEWPORTS:
             page = browser.new_page(viewport={"width": width, "height": height})
+            errors = []
+            page.on("pageerror", lambda e: errors.append(f"script error: {e}"))
+            page.on("console", lambda m: errors.append(f"console {m.type}: {m.text}") if m.type == "error" else None)
             page.goto(url, wait_until="load")
             page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
             page.wait_for_selector("svg.map", state="attached", timeout=15000)
-            if name == "ghid":
+            if name.startswith("guide"):
                 page.wait_for_selector(".lane-row svg", state="attached", timeout=15000)
             page.wait_for_timeout(800)
-            for view in (VIEWS if name == "app" else ("",)):
+            for view in (VIEWS if name.startswith("app") else ("",)):
                 if view:
                     page.evaluate("(hash) => { location.hash = hash; }", view)
                     page.wait_for_timeout(600)
                 label = f"{name}{' #' + view if view else ''} {width}px"
+                for text in page.evaluate(SHOWN_ERRORS_JS):
+                    out.append(f"{label}: the page shows an error: {text}")
+                out += [f"{label}: {e}" for e in errors]
+                errors.clear()
                 result = page.evaluate(OVERFLOW_JS, SCROLLERS)
                 if result["scrollWidth"] > result["innerWidth"]:
                     out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
@@ -236,7 +256,7 @@ def check_layout(url: str, name: str) -> list[str]:
     return out
 
 
-def check_references(url: str) -> list[str]:
+def check_references(url: str, name: str) -> list[str]:
     from playwright.sync_api import sync_playwright
 
     SHOTS.mkdir(exist_ok=True)
@@ -248,7 +268,7 @@ def check_references(url: str) -> list[str]:
             page.goto(url, wait_until="load")
             page.wait_for_selector(".refs-stage", state="attached", timeout=15000)
             for state in ("closed", "open"):
-                label = f"referinte {state} {width}px"
+                label = f"{name} {state} {width}px"
                 if state == "open":
                     opened = page.evaluate(REFERENCES_JS)
                     out += [f"{label}: link #{target} has no target" for target in opened["missing"]]
@@ -261,7 +281,7 @@ def check_references(url: str) -> list[str]:
                     out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
                 for element in result["wide"]:
                     out.append(f"{label}: {element} is wider than the viewport")
-                page.screenshot(path=str(SHOTS / f"check-referinte-{state}-{width}.png"), full_page=True)
+                page.screenshot(path=str(SHOTS / f"check-{name}-{state}-{width}.png"), full_page=True)
             page.close()
         browser.close()
     return out

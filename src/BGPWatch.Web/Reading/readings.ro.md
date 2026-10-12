@@ -7,13 +7,11 @@ lang: ro
 
 # Cum se folosește lista
 
-Lista are 44 de surse grupate în nouă etape, în ordinea în care merită citite, plus genealogia specificației BGP: cele șase RFC-uri prin care protocolul a ajuns la versiunea de azi și cele douăsprezece care o actualizează. Fiecare etapă se sprijină pe cea dinainte. Pentru fiecare sursă găsești anul, ideea pe scurt, citarea completă, un link gratuit și legal și, la cele mai multe, ce conține, de ce e aici, cât durează și ce secțiuni să citești. Sursele au fost deschise și citite sau parcurse atent pe 5 și 11 octombrie 2026, iar linkurile au fost verificate pe 11 octombrie 2026, cu excepția ACM Queue (sursa 14), care refuză clienții automați și a fost deschis în browser pe 5 octombrie 2026. Detaliile verificării sunt în fișierul `lecturi-bgp-verificare.tsv` din același director.
+Lista are 44 de surse grupate în nouă etape, în ordinea în care merită citite, plus genealogia specificației BGP: cele șase RFC-uri prin care protocolul a ajuns la versiunea de azi și cele douăsprezece care o actualizează. Fiecare etapă se sprijină pe cea dinainte. Fiecare sursă are anul, ideea pe scurt, citarea completă, un link gratuit și legal și, la cele mai multe, conținutul, motivul pentru care e în listă, durata și secțiunile care merită citite. Sursele au fost deschise și citite sau parcurse atent pe 5 și 11 octombrie 2026, iar linkurile au fost verificate pe 11 octombrie 2026, cu excepția ACM Queue (sursa 14), care refuză clienții automați și a fost deschis în browser pe 5 octombrie 2026.
 
 Timpii sunt estimări pentru o citire atentă, cu notițe.
 
-Pagina „Referințe” a aplicației (`/referinte`) se generează din acest fișier. Păstrează forma: etapele ca `# Etapa N. Titlu`, sursele ca `## N. Titlu`, apoi câmpuri `- Cheie: valoare`, cu `An`, `Pe scurt` și `Link` la fiecare sursă.
-
-# Începe de aici
+# Pentru început
 
 Aceste cinci surse dau cea mai multă înțelegere pe oră investită. Împreună durează în jur de cinci ore și acoperă mecanismul protocolului, politicile care îl guvernează, motivul pentru care e nesigur și un incident real văzut în datele de rutare.
 
@@ -32,9 +30,9 @@ Aceste cinci surse dau cea mai multă înțelegere pe oră investită. Împreun�
 - Citare: L. Peterson, B. Davie, *Computer Networks: A Systems Approach*, ediția a 6-a, ediție online deschisă (licență CC BY 4.0, versiunea 6.2-dev, © 2024), secțiunea 4.1.2 „Interdomain Routing (BGP)”.
 - Link: [book.systemsapproach.org/scaling/global.html](https://book.systemsapproach.org/scaling/global.html)
 - Conținut: problemele rutării între domenii, tipurile de AS (stub, multihomed, transit), ideea de path vector și detecția buclelor, relațiile customer, provider și peer cu politicile de export aferente, apoi integrarea cu rutarea internă prin iBGP.
-- De ce: e o introducere scurtă și clară, care îți dă vocabularul și modelul mental pe care se sprijină restul listei, fără detaliile de format ale RFC-ului.
+- De ce: e o introducere scurtă și clară, care oferă vocabularul și modelul mental pe care se sprijină restul listei, fără detaliile de format ale RFC-ului.
 - Timp: 45 de minute.
-- Ce citești: toată secțiunea 4.1.2. Secțiunea 4.1.1 (Routing Areas, despre OSPF) poate fi sărită.
+- De citit: toată secțiunea 4.1.2. Secțiunea 4.1.1 (Routing Areas, despre OSPF) poate fi sărită.
 
 ## 2. RFC 4271, A Border Gateway Protocol 4 (BGP-4)
 
@@ -44,10 +42,10 @@ Aceste cinci surse dau cea mai multă înțelegere pe oră investită. Împreun�
 - Link: [rfc-editor.org/rfc/rfc4271](https://www.rfc-editor.org/rfc/rfc4271)
 - Relația: înlocuiește RFC 1771; douăsprezece RFC-uri îl actualizează, toate în secțiunea „Actualizările RFC 4271”.
 - Conținut: specificația protocolului: mesajele OPEN, UPDATE, KEEPALIVE și NOTIFICATION, atributele de cale, mașina de stări a sesiunii și procesul de decizie. Versiunile anterioare sunt în genealogia de mai jos.
-- De ce: detectorul tău citește exact câmpurile descrise aici. Originea unei rute este ultimul AS din AS_PATH, iar un UPDATE poate conține simultan prefixe retrase și prefixe anunțate, ceea ce contează când parsezi MRT.
+- De ce: detectorul citește exact câmpurile descrise aici. Originea unei rute este ultimul AS din AS_PATH, iar un UPDATE poate conține simultan prefixe retrase și prefixe anunțate, ceea ce contează la parsarea MRT.
 - Timp: 2 până la 3 ore pentru secțiunile recomandate.
-- Ce citești atent: 1.1 (termeni), 3 și 3.1 până la 3.2 (Summary of Operation, Adj-RIB-In, Loc-RIB, Adj-RIB-Out), 4.3 (formatul UPDATE), 5 și 5.1.1 până la 5.1.5 (ORIGIN, AS_PATH, NEXT_HOP, MULTI_EXIT_DISC, LOCAL_PREF), 9.1 cu 9.1.2.2 (procesul de decizie și regulile de departajare), 9.1.4 (rute suprapuse, adică prefixe mai specifice), 9.2.1.1 (MinRouteAdvertisementIntervalTimer, util pentru sursa 11) și Security Considerations.
-- Ce sari: 6 (tratarea erorilor), 7, 8 (mașina de stări, peste 35 de pagini), 10 și anexele A până la F. Revii la 8 doar dacă ai de depanat o sesiune care nu se stabilește în laborator.
+- De citit atent: 1.1 (termeni), 3 și 3.1 până la 3.2 (Summary of Operation, Adj-RIB-In, Loc-RIB, Adj-RIB-Out), 4.3 (formatul UPDATE), 5 și 5.1.1 până la 5.1.5 (ORIGIN, AS_PATH, NEXT_HOP, MULTI_EXIT_DISC, LOCAL_PREF), 9.1 cu 9.1.2.2 (procesul de decizie și regulile de departajare), 9.1.4 (rute suprapuse, adică prefixe mai specifice), 9.2.1.1 (MinRouteAdvertisementIntervalTimer, util pentru sursa 11) și Security Considerations.
+- De sărit: 6 (tratarea erorilor), 7, 8 (mașina de stări, peste 35 de pagini), 10 și anexele A până la F. Secțiunea 8 devine utilă doar la depanarea unei sesiuni care nu se stabilește în laborator.
 
 # Genealogia specificației BGP
 
@@ -218,11 +216,11 @@ Douăsprezece RFC-uri modifică RFC 4271 fără să-l înlocuiască (relația �
 - Conținut: procesul de decizie ca tabel ordonat (LocalPref, lungimea AS_PATH, ORIGIN, MED, eBGP peste iBGP, cost IGP, router ID), cele trei „butoane” de politică (preferință, filtrare, etichetare prin communities), relațiile de afaceri și felul în care se traduc în LocalPref și filtre de export, ingineria traficului, scalabilitatea și politicile de securitate.
 - De ce: explică de ce un AS preferă ruta prin client chiar dacă e mai lungă și de ce nu re-exportă rutele primite de la un peer către alt peer. Fără asta, nici route leak-urile, nici felul în care se propagă o deturnare nu au sens.
 - Timp: o oră.
-- Ce citești: secțiunile 2 până la 6. Secțiunea 7 (direcții de cercetare din 2005) e opțională.
+- De citit: secțiunile 2 până la 6. Secțiunea 7 (direcții de cercetare din 2005) e opțională.
 
 # Etapa 3. Extensiile care fac BGP-ul de azi
 
-RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul de azi adaugă capabilități negociate, alte familii de adrese, etichete pe rute și scalarea în interiorul AS-ului. Sunt texte de referință: citești secțiunile indicate și revii la ele când un câmp îți apare în date. Trei extensii la fel de importante actualizează direct RFC 4271 și sunt în secțiunea „Actualizările RFC 4271”: 4724 (graceful restart), 6793 (AS pe 4 octeți) și 7606 (tratarea erorilor).
+RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul de azi adaugă capabilități negociate, alte familii de adrese, etichete pe rute și scalarea în interiorul AS-ului. Sunt texte de referință: la prima lectură ajung secțiunile indicate, iar la text se revine când un câmp anume apare în date. Trei extensii la fel de importante actualizează direct RFC 4271 și sunt în secțiunea „Actualizările RFC 4271”: 4724 (graceful restart), 6793 (AS pe 4 octeți) și 7606 (tratarea erorilor).
 
 ## 4. RFC 5492, Capabilities Advertisement with BGP-4
 
@@ -232,7 +230,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Link: [rfc-editor.org/rfc/rfc5492](https://www.rfc-editor.org/rfc/rfc5492)
 - Relația: înlocuiește RFC 3392; actualizat de RFC 8810.
 - Timp: 20 de minute.
-- Ce citești: 3 și 4 (parametrul opțional Capabilities, tipul 2).
+- De citit: 3 și 4 (parametrul opțional Capabilities, tipul 2).
 
 ## 5. RFC 4760, Multiprotocol Extensions for BGP-4
 
@@ -243,7 +241,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Relația: înlocuiește RFC 2858; actualizat de RFC 7606.
 - De ce: parserul C citește prefixele IPv6 din exact aceste două atribute.
 - Timp: 45 de minute.
-- Ce citești: 3, 4, 5 și 8.
+- De citit: 3, 4, 5 și 8.
 
 ## 6. RFC 1997, BGP Communities Attribute
 
@@ -253,7 +251,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Link: [rfc-editor.org/rfc/rfc1997](https://www.rfc-editor.org/rfc/rfc1997)
 - Relația: actualizat de RFC 7606 și RFC 8642.
 - Timp: 20 de minute.
-- Ce citești: tot textul (cinci pagini).
+- De citit: tot textul (cinci pagini).
 
 ## 7. RFC 8092, BGP Large Communities Attribute
 
@@ -262,7 +260,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Citare: J. Heitz (ed.), J. Snijders (ed.), K. Patel, I. Bagdonas, N. Hilliard, „BGP Large Communities Attribute”, RFC 8092, IETF, februarie 2017, DOI 10.17487/RFC8092.
 - Link: [rfc-editor.org/rfc/rfc8092](https://www.rfc-editor.org/rfc/rfc8092)
 - Timp: 20 de minute.
-- Ce citești: 1, 3 și 5.
+- De citit: 1, 3 și 5.
 
 ## 8. RFC 4456, BGP Route Reflection
 
@@ -272,7 +270,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Link: [rfc-editor.org/rfc/rfc4456](https://www.rfc-editor.org/rfc/rfc4456)
 - Relația: înlocuiește RFC 2796 și RFC 1966; actualizat de RFC 7606.
 - Timp: 45 de minute.
-- Ce citești: 4 până la 9.
+- De citit: 4 până la 9.
 
 ## 9. RFC 5065, Autonomous System Confederations for BGP
 
@@ -282,7 +280,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Link: [rfc-editor.org/rfc/rfc5065](https://www.rfc-editor.org/rfc/rfc5065)
 - Relația: înlocuiește RFC 3065; actualizat de RFC 9774.
 - Timp: 30 de minute.
-- Ce citești: 2, 3 și 4.
+- De citit: 2, 3 și 4.
 
 ## 10. RFC 7911, Advertisement of Multiple Paths in BGP
 
@@ -291,7 +289,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Citare: D. Walton, A. Retana, E. Chen, J. Scudder, „Advertisement of Multiple Paths in BGP”, RFC 7911, IETF, iulie 2016, DOI 10.17487/RFC7911.
 - Link: [rfc-editor.org/rfc/rfc7911](https://www.rfc-editor.org/rfc/rfc7911)
 - Timp: 30 de minute.
-- Ce citești: 2 până la 5.
+- De citit: 2 până la 5.
 
 # Etapa 4. Cum se comportă BGP în operare
 
@@ -304,7 +302,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Conținut: un studiu de doi ani în care autorii au injectat sute de mii de defecte de rutare de la puncte de schimb de trafic și au măsurat cât durează până când routerele ajung la o imagine consistentă. Rezultatul e de ordinul zecilor de minute, din cauza explorării căilor alternative în procesul de selecție și a temporizatoarelor. Articolul dă și un model al limitelor de convergență.
 - De ce: un detector vede fluxul de UPDATE-uri în timp real. După o retragere sau o schimbare de rută urmează o rafală de anunțuri tranzitorii, iar acestea nu trebuie confundate cu o deturnare.
 - Timp: 1,5 ore.
-- Ce citești: rezumatul, 1, 2, 3, 4 și 7. Secțiunea 5 (modelul formal de convergență) e opțională.
+- De citit: rezumatul, 1, 2, 3, 4 și 7. Secțiunea 5 (modelul formal de convergență) e opțională.
 
 ## 12. BGP in 2025
 
@@ -313,9 +311,9 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Citare: G. Huston, „BGP in 2025”, APNIC Blog, 8 ianuarie 2026.
 - Link: [blog.apnic.net/2026/01/08/bgp-in-2025](https://blog.apnic.net/2026/01/08/bgp-in-2025/)
 - Conținut: raportul anual al lui Huston despre tabela de rutare, pe baza datelor de la AS131072, RouteViews și RIPE RIS. La sfârșitul lui 2025 tabela IPv4 avea în jur de 1.050.000 de intrări (peste jumătate prefixe mai specifice), iar tabela IPv6 în jur de 241.800. Textul analizează creșterea și face prognoze până în 2030.
-- De ce: îți dă ordinul de mărime al datelor pe care le procesează parserul MRT și arată cât de comune sunt prefixele mai specifice legitime, ceea ce explică de ce „a apărut un sub-prefix” nu este, singur, o dovadă de deturnare.
+- De ce: dă ordinul de mărime al datelor pe care le procesează parserul MRT și arată cât de comune sunt prefixele mai specifice legitime, ceea ce explică de ce „a apărut un sub-prefix” nu este, singur, o dovadă de deturnare.
 - Timp: o oră.
-- Ce citești: „The BGP measurement environment”, „The IPv4 routing table data” și „Conclusion”. Partea de prognoză e opțională. Articolul pereche, „BGP Updates in 2025” (9 ianuarie 2026, același blog), tratează volumul de UPDATE-uri.
+- De citit: „The BGP measurement environment”, „The IPv4 routing table data” și „Conclusion”. Partea de prognoză e opțională. Articolul pereche, „BGP Updates in 2025” (9 ianuarie 2026, același blog), tratează volumul de UPDATE-uri.
 
 ## 13. RFC 7454, BGP Operations and Security
 
@@ -326,7 +324,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Conținut: practica operațională recomandată: protecția sesiunii (TCP-AO, GTSM), filtrarea prefixelor (prefixe speciale, nealocate, prea specifice, filtre generate din IRR), limita maximă de prefixe, filtrarea AS_PATH, route flap dampening și curățarea communities.
 - De ce: e lista de filtre pe care un operator ar trebui să le aibă înainte să ajungă la RPKI. Majoritatea incidentelor din etapa 6 ar fi fost oprite de regulile din secțiunea 6.
 - Timp: o oră.
-- Ce citești: 4, 5, 6, 8 și 9. Tabelele cu prefixe speciale din 6.1 le poți consulta doar la nevoie.
+- De citit: 4, 5, 6, 8 și 9. Tabelele cu prefixe speciale din 6.1 se consultă doar la nevoie.
 
 # Etapa 5. De ce BGP e nesigur
 
@@ -337,9 +335,9 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Citare: S. Goldberg, „Why is it taking so long to secure internet routing?”, *Communications of the ACM*, vol. 57, nr. 10, 2014, pp. 56-63, DOI 10.1145/2659899. Același text a apărut în *ACM Queue*, vol. 12, nr. 8, 2014, DOI 10.1145/2668152.2668966.
 - Link: [queue.acm.org/detail.cfm?id=2668966](https://queue.acm.org/detail.cfm?id=2668966) (text integral gratuit în browser; serverul refuză clienții automați)
 - Conținut: deturnări de prefix și de sub-prefix, route leak-uri, atacuri de scurtare a căii, diferența dintre blackhole și interceptare, apoi trei apărări (filtrarea prefixelor, RPKI, BGPsec) cu beneficiile și problemele de adoptare ale fiecăreia.
-- De ce: e cea mai bună explicație scurtă a modelului de încredere. Arată limpede ce prinde RPKI (origine neautorizată) și ce îi scapă (route leak, cale falsificată cu origine corectă), adică exact granița dintre ce verifică detectorul tău prin RPKI și ce trebuie verificat altfel.
+- De ce: e cea mai bună explicație scurtă a modelului de încredere. Arată limpede ce prinde RPKI (origine neautorizată) și ce îi scapă (route leak, cale falsificată cu origine corectă), adică exact granița dintre ce verifică detectorul prin RPKI și ce trebuie verificat altfel.
 - Timp: 45 de minute.
-- Ce citești: tot articolul. Atenție la două detalii factuale: incidentul YouTube a avut loc în februarie 2008, iar prefixul YouTube era 208.65.152.0/22. Ambele sunt date corect în sursa 17.
+- De citit: tot articolul. Atenție la două detalii factuale: incidentul YouTube a avut loc în februarie 2008, iar prefixul YouTube era 208.65.152.0/22. Ambele sunt date corect în sursa 17.
 
 ## 15. RFC 4272, BGP Security Vulnerabilities Analysis
 
@@ -349,7 +347,7 @@ RFC 4271 descrie IPv4 unicast între AS-uri cu numere pe 2 octeți. Protocolul d
 - Link: [rfc-editor.org/rfc/rfc4272](https://www.rfc-editor.org/rfc/rfc4272)
 - De ce: Goldberg explică modelul; RFC 4272 arată în ce câmp al UPDATE-ului stă fiecare atac, inclusiv AS_PATH și NLRI, pe care le citește detectorul.
 - Timp: o oră.
-- Ce citești: 2, 3.1.5 (UPDATE) și 4.1 (riscul rezidual).
+- De citit: 2, 3.1.5 (UPDATE) și 4.1 (riscul rezidual).
 
 # Etapa 6. Incidente documentate
 
@@ -362,9 +360,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: K. Sriram, D. Montgomery, D. McPherson, E. Osterweil, B. Dickson, „Problem Definition and Classification of BGP Route Leaks”, RFC 7908, IETF, iunie 2016, DOI 10.17487/RFC7908.
 - Link: [rfc-editor.org/rfc/rfc7908](https://www.rfc-editor.org/rfc/rfc7908)
 - Conținut: definiția de lucru a route leak-ului (propagarea unui anunț dincolo de scopul intenționat, în contradicție cu politicile celor implicați) și o clasificare în șase tipuri, fiecare cu incidente reale citate.
-- De ce: îți dă vocabularul exact pentru referat, ca să deosebești o deturnare (origine falsă) de un leak (rută reală, propagată unde nu trebuia).
+- De ce: oferă vocabularul exact pentru referat, care deosebește o deturnare (origine falsă) de un leak (rută reală, propagată unde nu trebuia).
 - Timp: 30 de minute.
-- Ce citești: secțiunile 2 și 3.
+- De citit: secțiunile 2 și 3.
 
 ## 17. YouTube Hijacking: A RIPE NCC RIS case study
 
@@ -375,7 +373,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: pe 24 februarie 2008, la 18:47 UTC, Pakistan Telecom (AS17557) a început să anunțe 208.65.153.0/24, un sub-prefix al lui 208.65.152.0/22 anunțat de YouTube (AS36561). Anunțul a fost propagat global de PCCW Global (AS3491). YouTube a anunțat același /24 la 20:07 și două /25 la 20:18, iar PCCW a retras rutele originate de Pakistan Telecom la 21:01. Analiza folosește RIS, RISwhois și BGPlay.
 - De ce: e cazul-școală de deturnare de sub-prefix, exact ce semnalează detectorul ca `subprefix_hijack` (`HijackDetector`, în `src/BGPWatch.Core/Domain/`). Goldberg (sursa 14, secțiunea despre filtrarea prefixelor) arată că filtrele de prefix ale PCCW pe sesiunea cu clientul ar fi oprit incidentul.
 - Timp: 20 de minute.
-- Ce citești: tot textul.
+- De citit: tot textul.
 
 ## 18. Characterizing Large-scale Routing Anomalies: A Case Study of the China Telecom Incident
 
@@ -386,7 +384,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: pe 8 aprilie 2010, AS23724 (China Telecom) a anunțat aproximativ 50.000 de prefixe ale altor AS-uri. Peste 99% dintre ele coincideau cu prefixe existente în tabela globală, ceea ce susține ipoteza unei scurgeri a propriei tabele de rutare. O parte din trafic a fost interceptat și a ajuns totuși la destinație, pentru că unii furnizori preferau ruta prin client în locul celei prin China Telecom.
 - De ce: arată ce se poate și ce nu se poate afla din datele publice (intenția nu poate fi dovedită tehnic) și de ce interceptarea e mai greu de observat decât un blackhole. Goldberg (sursa 14) explică de ce filtrarea prefixelor nu ar fi ajutat aici: anunțul a venit pe o legătură de peering, iar filtrele de prefix se aplică de obicei doar sesiunilor cu clienții.
 - Timp: o oră.
-- Ce citești: 1, 4, 5 și 6. Metodologia din 3 e opțională.
+- De citit: 1, 4, 5 și 6. Metodologia din 3 e opțională.
 
 ## 19. BGP leaks and cryptocurrencies
 
@@ -397,7 +395,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: între aproximativ 11:05 și 12:55 UTC, AS10297 (eNet) a anunțat cinci prefixe /24 mai specifice din blocurile /23 ale serverelor DNS Amazon Route 53 (AS16509), propagate prin Hurricane Electric (AS6939). Serverele de pe adresele deturnate răspundeau doar pentru myetherwallet.com. Rezolvatoarele DNS care au urmat ruta falsă au primit răspunsuri false, inclusiv 1.1.1.1 în unele locații.
 - De ce: e incidentul în care traficul unui serviciu anume a fost redirecționat, și arată că o deturnare de sub-prefix poate ținti un nivel superior (DNS). Postarea recomandă ROA-uri și validare RPKI, DNSSEC și filtrare la furnizorii de tranzit.
 - Timp: 20 de minute.
-- Ce citești: tot textul.
+- De citit: tot textul.
 
 ## 20. How Verizon and a BGP Optimizer Knocked Large Parts of the Internet Offline Today
 
@@ -408,7 +406,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: de la 10:30 UTC, DQE Communications (AS33154) folosea un optimizator BGP care spărgea prefixe în bucăți mai specifice (de exemplu 104.20.0.0/20 al Cloudflare în două /21). DQE le-a trimis clientului Allegheny Technologies (AS396531), care le-a trimis mai departe celuilalt furnizor, Verizon (AS701), iar Verizon le-a propagat în tot Internetul.
 - De ce: e un route leak de tip 1 în clasificarea din RFC 7908, agravat de prefixe mai specifice cu origine corectă. Regulile `origin_hijack` și `subprefix_hijack` ale detectorului nu îl semnalează, pentru că originea e cea așteptată. Îl prinde regula `rpki_invalid`, pentru că ROA-urile Cloudflare au maxLength /20 și un /21 devine invalid. Postarea enumeră ce l-ar fi oprit: filtre de prefix și limite de prefixe pe sesiunea cu clientul, filtre din IRR, validare RPKI și MANRS.
 - Timp: 20 de minute.
-- Ce citești: tot textul.
+- De citit: tot textul.
 
 ## 21. Profiling BGP Serial Hijackers
 
@@ -419,7 +417,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: pornind de la cinci ani de discuții pe listele operatorilor, autorii construiesc un set de AS-uri care deturnează în mod repetat și le compară cu AS-uri legitime: prezență intermitentă, prefixe de scurtă durată, spațiu de adrese fragmentat între registre, multe conflicte MOAS. Un clasificator antrenat pe aceste trăsături găsește în jur de 900 de AS-uri cu comportament similar în tabela IPv4.
 - De ce: arată că deturnările se repetă adesea la aceleași AS-uri, timp de luni sau ani. Trăsăturile din secțiunea 5 sunt idei bune pentru a prioritiza alertele detectorului.
 - Timp: 1,5 ore.
-- Ce citești: 1, 2.1, 5 și 7. Partea de învățare automată din 6 e opțională.
+- De citit: 1, 2.1, 5 și 7. Partea de învățare automată din 6 e opțională.
 
 # Etapa 7. Mitigări
 
@@ -430,9 +428,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: K. Sriram, D. Montgomery, *Border Gateway Protocol Security and Resilience*, NIST Special Publication 800-189 Rev. 1, ciornă publică inițială, 3 ianuarie 2025. Versiunea finală în vigoare este NIST SP 800-189, „Resilient Interdomain Traffic Exchange: BGP Security and DDoS Mitigation”, decembrie 2019, DOI 10.6028/NIST.SP.800-189.
 - Link: [csrc.nist.gov/pubs/sp/800/189/r1/ipd](https://csrc.nist.gov/pubs/sp/800/189/r1/ipd)
 - Conținut: catalogul actual al mitigărilor, cu recomandări numerotate: înregistrarea în IRR, certificarea resurselor în RPKI, validarea originii pe bază de ROA, categoriile de filtre de prefix pe tipuri de vecini, verificarea AS_PATH (BGPsec, ASPA, roluri BGP și OTC) și GTSM.
-- De ce: e cea mai completă imagine la zi a mitigărilor, într-un singur document. Secțiunea 2 îți dă și taxonomia amenințărilor (deturnări de prefix, deturnări de cale, route leak-uri) pe care o poți folosi în referat.
+- De ce: e cea mai completă imagine la zi a mitigărilor, într-un singur document. Secțiunea 2 oferă și taxonomia amenințărilor (deturnări de prefix, deturnări de cale, route leak-uri), utilă în referat.
 - Timp: 3 ore pentru secțiunile recomandate.
-- Ce citești: 2, 4.1 până la 4.3 (inclusiv 4.3.1 despre deturnările cu origine falsificată), 4.4 până la 4.7. Secțiunea 5 (validarea adresei sursă și DDoS) iese din tema ta.
+- De citit: 2, 4.1 până la 4.3 (inclusiv 4.3.1 despre deturnările cu origine falsificată), 4.4 până la 4.7. Secțiunea 5 (validarea adresei sursă și DDoS) iese din tema proiectului.
 
 ## 23. RFC 6480, An Infrastructure to Support Secure Internet Routing
 
@@ -443,7 +441,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: arhitectura RPKI: certificatele de resurse care urmează ierarhia de alocare, ROA-urile, depozitele și cache-ul local din care routerele își iau datele.
 - De ce: e fundația pe care stau sursele 24 până la 27.
 - Timp: 45 de minute.
-- Ce citești: secțiunile 1 până la 3. Sari 4 până la 7 (depozite, manifeste, rotirea cheilor) dacă nu rulezi un validator.
+- De citit: secțiunile 1 până la 3. Secțiunile 4 până la 7 (depozite, manifeste, rotirea cheilor) contează doar pentru rularea unui validator.
 
 ## 24. RFC 9582, A Profile for Route Origin Authorizations (ROAs)
 
@@ -453,7 +451,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Link: [rfc-editor.org/rfc/rfc9582](https://www.rfc-editor.org/rfc/rfc9582)
 - Relația: înlocuiește RFC 6482.
 - Timp: 30 de minute.
-- Ce citești: 1, 1.2, 4 (în special 4.3.2.2, maxLength) și 5.
+- De citit: 1, 1.2, 4 (în special 4.3.2.2, maxLength) și 5.
 
 ## 25. RFC 6811, BGP Prefix Origin Validation
 
@@ -463,9 +461,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Link: [rfc-editor.org/rfc/rfc6811](https://www.rfc-editor.org/rfc/rfc6811)
 - Relația: actualizat de RFC 8481 și RFC 8893.
 - Conținut: algoritmul care dă unei rute starea Valid, Invalid sau NotFound pe baza VRP-urilor.
-- De ce: funcția `RpkiValidity` din `HijackDetector` implementează secțiunea 2. Merită să o compari rând cu rând cu pseudo-codul din 2.1.
+- De ce: funcția `RpkiValidity` din `HijackDetector` implementează secțiunea 2 și merită comparată rând cu rând cu pseudo-codul din 2.1.
 - Timp: 45 de minute.
-- Ce citești: integral (10 pagini).
+- De citit: integral (10 pagini).
 
 ## 26. RFC 9319, The Use of maxLength in the Resource Public Key Infrastructure (RPKI)
 
@@ -475,7 +473,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Link: [rfc-editor.org/rfc/rfc9319](https://www.rfc-editor.org/rfc/rfc9319)
 - De ce: arată atacul pe care validarea originii nu îl prinde: un atacator care pune AS-ul victimei la capătul căii și anunță un sub-prefix acoperit de un maxLength prea larg primește starea Valid. ROA-ul din laborator are maxLength 24, deci orice `/25` e invalid.
 - Timp: 30 de minute.
-- Ce citești: 1, 3 și 5.
+- De citit: 1, 3 și 5.
 
 ## 27. RFC 8210, The Resource Public Key Infrastructure (RPKI) to Router Protocol, Version 1
 
@@ -484,9 +482,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: R. Bush, R. Austein, „The Resource Public Key Infrastructure (RPKI) to Router Protocol, Version 1”, RFC 8210, IETF, septembrie 2017, DOI 10.17487/RFC8210.
 - Link: [rfc-editor.org/rfc/rfc8210](https://www.rfc-editor.org/rfc/rfc8210)
 - Relația: actualizează RFC 6810 (versiunea 0).
-- De ce: e legătura dintre validator și ruter pe care o configurezi în FRR (sursa 42).
+- De ce: e legătura dintre validator și ruter, cea configurată în FRR (sursa 42).
 - Timp: 45 de minute.
-- Ce citești: 1.2, 3, 4, 5.6 până la 5.8 și 8.
+- De citit: 1.2, 3, 4, 5.6 până la 5.8 și 8.
 
 ## 28. RPKI is Coming of Age
 
@@ -497,7 +495,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: studiu longitudinal al tuturor ROA-urilor de la începutul RPKI, combinat cu anunțuri BGP de la peste 3.300 de colectoare. Autorii clasifică anunțurile invalide în tipuri de configurare greșită (de exemplu anunțuri prea specifice față de maxLength) și separă un rest de anunțuri potențial malițioase.
 - De ce: concluzia lor e direct relevantă pentru detector. RPKI e bun pentru a filtra, dar o rută invalidă nu e automat o deturnare, pentru că multe invalide provin din greșeli ale propriului deținător. O alertă `rpki_invalid` are nevoie de context.
 - Timp: 1,5 ore.
-- Ce citești: 1, 2.3, 2.4, 5 și 8.
+- De citit: 1, 2.3, 2.4, 5 și 8.
 
 ## 29. RFC 9234, Route Leak Prevention and Detection Using Roles in UPDATE and OPEN Messages
 
@@ -506,9 +504,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: A. Azimov, E. Bogomazov, R. Bush, K. Patel, K. Sriram, „Route Leak Prevention and Detection Using Roles in UPDATE and OPEN Messages”, RFC 9234, IETF, mai 2022, DOI 10.17487/RFC9234.
 - Link: [rfc-editor.org/rfc/rfc9234](https://www.rfc-editor.org/rfc/rfc9234)
 - Conținut: capabilitatea BGP Role din mesajul OPEN (provider, customer, peer, route server) obligă cele două capete să fie de acord asupra relației, iar atributul OTC (Only to Customer) marchează rutele care nu mai au voie să urce spre un provider sau un peer.
-- De ce: e răspunsul la clasa de incidente din sursa 20. FRRouting implementează rolurile (sursa 42), deci le poți încerca în laborator.
+- De ce: e răspunsul la clasa de incidente din sursa 20. FRRouting implementează rolurile (sursa 42), deci pot fi încercate în laborator.
 - Timp: 45 de minute.
-- Ce citești: secțiunile 1, 3.1, 4 și 5.
+- De citit: secțiunile 1, 3.1, 4 și 5.
 
 ## 30. ASPA, BGP AS_PATH Verification Based on Autonomous System Provider Authorization Objects
 
@@ -519,7 +517,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: fiecare AS publică în RPKI lista furnizorilor săi, iar ruterul care primește un anunț verifică dacă fiecare pas din AS_PATH respectă relațiile declarate.
 - De ce: detectează route leak-urile și manipulările de AS_PATH, unde RFC 6811 nu ajută.
 - Timp: 45 de minute.
-- Ce citești: 1 și 5.1 până la 5.2, plus 8 (relația cu ROA, BGPsec și OTC).
+- De citit: 1 și 5.1 până la 5.2, plus 8 (relația cu ROA, BGPsec și OTC).
 
 ## 31. RFC 8205, BGPsec Protocol Specification
 
@@ -530,7 +528,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Relația: actualizat de RFC 8206.
 - De ce: e apărarea standardizată împotriva căilor falsificate cu origine corectă. Goldberg (sursa 14) explică de ce adoptarea ei e grea.
 - Timp: o oră.
-- Ce citești: 1, 2, 3 și 5.1.
+- De citit: 1, 2, 3 și 5.1.
 
 ## 32. MANRS Implementation Guide for Network Operators
 
@@ -541,7 +539,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: cele patru acțiuni MANRS pentru operatori (filtrare, anti-spoofing, coordonare, publicarea informațiilor de rutare), cu ghid de implementare: obiecte route în IRR, ROA-uri, filtre generate cu unelte ca bgpq4 și validatoare RPKI ca Routinator sau rpki-client, plus exemple de configurare pentru mai mulți furnizori de echipamente.
 - De ce: arată cum se traduc recomandările din sursele 22, 23 și 25 în practica unui operator și cum se măsoară conformitatea. E și un argument bun pentru secțiunea de mitigări din referat.
 - Timp: o oră.
-- Ce citești: 3.2, 4.2 și 4.4. Exemplele de configurare doar pentru furnizorul care te interesează.
+- De citit: 3.2, 4.2 și 4.4. Dintre exemplele de configurare, doar cele pentru furnizorul de echipamente relevant.
 
 # Etapa 8. Detecție și monitorizare
 
@@ -552,9 +550,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: P. Sermpezis, V. Kotronis, P. Gigis, X. Dimitropoulos, D. Cicalese, A. King, A. Dainotti, „ARTEMIS: Neutralizing BGP Hijacking Within a Minute”, *IEEE/ACM Transactions on Networking*, vol. 26, nr. 6, 2018, pp. 2471-2486, DOI 10.1109/TNET.2018.2869798.
 - Link: [arxiv.org/abs/1801.01085](https://arxiv.org/abs/1801.01085) (versiunea v4, iunie 2018) și [codul sursă, FORTH-ICS-INSPIRE/artemis](https://github.com/FORTH-ICS-INSPIRE/artemis)
 - Conținut: o taxonomie a deturnărilor după AS_PATH-ul anunțat (Type-0 pentru origine falsă, Type-N pentru căi falsificate, Type-U) și după prefixul afectat (exact, sub-prefix, squatting), o analiză a vizibilității lor în colectoarele publice și un sistem rulat de AS-ul victimă, care compară fluxurile în timp real cu o configurație locală a prefixelor și originilor proprii.
-- De ce: e sistemul după care e modelat proiectul tău. Taxonomia din secțiunea 2 îți permite să spui exact ce tipuri acoperă detectorul (Type-0 exact și sub-prefix) și ce tipuri rămân în afara lui (Type-N, de exemplu).
+- De ce: e sistemul după care e modelat proiectul. Cu taxonomia din secțiunea 2 se poate spune exact ce tipuri acoperă detectorul (Type-0 exact și sub-prefix) și ce tipuri rămân în afara lui (Type-N, de exemplu).
 - Timp: 2 ore.
-- Ce citești: 1, 2, 4.2 și 5. Secțiunile 6 și 7 (mitigarea prin anunțuri mai specifice și experimentele reale) sunt opționale.
+- De citit: 1, 2, 4.2 și 5. Secțiunile 6 și 7 (mitigarea prin anunțuri mai specifice și experimentele reale) sunt opționale.
 
 ## 34. BGPalerter, documentația
 
@@ -563,9 +561,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: NTT, *BGPalerter*, software open source (licență BSD-3-Clause), versiunea 2.0.1, august 2025, documentația din directorul `docs` al depozitului.
 - Link: [github.com/nttgin/BGPalerter](https://github.com/nttgin/BGPalerter) și [docs/configuration.md](https://github.com/nttgin/BGPalerter/blob/main/docs/configuration.md)
 - Conținut: un monitor care se conectează la RIS Live și verifică prefixele declarate în `prefixes.yml`. Arhitectura are trei componente (conectori, monitoare, rapoarte). Monitoarele acoperă originea greșită și sub-prefixele cu altă origine (`monitorHijack`), pierderea vizibilității, prefixe noi mai specifice cu aceeași origine (`monitorNewPrefix`), anunțuri RPKI invalide, modificări de ROA și vecini neașteptați pe cale.
-- De ce: e al doilea sistem de referință al proiectului. Regulile din `monitorHijack` sunt aproape identice cu regulile `origin_hijack` și `subprefix_hijack` ale detectorului, iar `monitorNewPrefix` acoperă exact cazul din sursa 20, pe care detectorul tău îl prinde doar prin RPKI. Parametrul `thresholdMinPeers` arată cum se evită alertele dintr-un singur punct de vedere.
+- De ce: e al doilea sistem de referință al proiectului. Regulile din `monitorHijack` sunt aproape identice cu regulile `origin_hijack` și `subprefix_hijack` ale detectorului, iar `monitorNewPrefix` acoperă exact cazul din sursa 20, pe care detectorul îl prinde doar prin RPKI. Parametrul `thresholdMinPeers` arată cum se evită alertele dintr-un singur punct de vedere.
 - Timp: o oră.
-- Ce citești: README, apoi din `configuration.md` secțiunile Connectors (connectorRIS) și Monitors, apoi `prefixes.md`.
+- De citit: README, apoi din `configuration.md` secțiunile Connectors (connectorRIS) și Monitors, apoi `prefixes.md`.
 
 ## 35. RFC 6396, Multi-Threaded Routing Toolkit (MRT) Routing Information Export Format
 
@@ -574,20 +572,20 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: L. Blunk, M. Karir, C. Labovitz, „Multi-Threaded Routing Toolkit (MRT) Routing Information Export Format”, RFC 6396, IETF, noiembrie 2011, DOI 10.17487/RFC6396.
 - Link: [rfc-editor.org/rfc/rfc6396](https://www.rfc-editor.org/rfc/rfc6396)
 - Conținut: formatul binar al fișierelor de rutare: TABLE_DUMP_V2 pentru instantanee, BGP4MP pentru UPDATE-uri.
-- De ce: parserul tău în C citește exact acest format.
+- De ce: parserul C al proiectului citește exact acest format.
 - Timp: o oră.
-- Ce citești: secțiunile 2, 3, 4.3 (TABLE_DUMP_V2) și 4.4 (BGP4MP).
+- De citit: secțiunile 2, 3, 4.3 (TABLE_DUMP_V2) și 4.4 (BGP4MP).
 
 ## 36. Route Collection Raw Data: MRT Files
 
 - An: 2024
-- Pe scurt: Schema de nume și frecvența fișierelor RIS, plus uneltele de parsare cu care poți compara ieșirea parserului.
+- Pe scurt: Schema de nume și frecvența fișierelor RIS, plus uneltele de parsare cu care se poate compara ieșirea parserului.
 - Citare: RIPE NCC, „Route Collection Raw Data: MRT Files”, RIPE RIS Docs, actualizată în martie 2024.
 - Link: [ris.ripe.net/docs/mrt](https://ris.ripe.net/docs/mrt/)
 - Conținut: schema de nume a fișierelor, frecvența lor (instantanee la 8 ore, update-uri la 5 minute), colectoarele multi-hop și uneltele de parsare existente.
-- De ce: lista de unelte (bgpdump, bgpscanner, BGPKit) îți dă implementări de referință cu care să compari ieșirea parserului. Pentru RouteViews, arhiva e la [archive.routeviews.org](https://archive.routeviews.org/), cu date publicate sub licența CC BY 4.0.
+- De ce: lista de unelte (bgpdump, bgpscanner, BGPKit) oferă implementări de referință cu care se compară ieșirea parserului. Pentru RouteViews, arhiva e la [archive.routeviews.org](https://archive.routeviews.org/), cu date publicate sub licența CC BY 4.0.
 - Timp: 30 de minute.
-- Ce citești: pagina integral.
+- De citit: pagina integral.
 
 ## 37. RIPE RIS: colectoarele și RIS Live
 
@@ -598,7 +596,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: RIS primește datele prin sesiuni BGP, ca AS12654. Cele mai multe colectoare stau în rețelele de peering ale unor IXP-uri, iar cele multi-hop, ca RRC00 din Amsterdam, acceptă sesiuni de oriunde. RIS Live dă mesajele BGP ca JSON, printr-un WebSocket filtrabil (`wss://ris-live.ripe.net/v1/ws/`) sau ca flux complet („firehose”), fără autentificare.
 - De ce: datele incidentului din 2008 pe care le redă aplicația vin de la colectorul rrc00. RIS Live e sursa în timp real a BGPalerter (sursa 34).
 - Timp: 30 de minute.
-- Ce citești: pagina colectoarelor, apoi din manual „WebSocket interface” și „ris_subscribe”.
+- De citit: pagina colectoarelor, apoi din manual „WebSocket interface” și „ris_subscribe”.
 
 ## 38. RFC 7854, BGP Monitoring Protocol (BMP)
 
@@ -609,7 +607,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Relația: actualizat de RFC 8671 (Adj-RIB-Out), RFC 9069 (Loc-RIB), RFC 9515 și RFC 9736.
 - De ce: stația BMP a aplicației (`src/BGPWatch.Web/Bmp/`) citește exact mesajele din secțiunea 4.
 - Timp: o oră.
-- Ce citești: 3, 4.1 până la 4.6, 4.9, 4.10 și 5.
+- De citit: 3, 4.1 până la 4.6, 4.9, 4.10 și 5.
 
 ## 39. RFC 9069, Support for Local RIB in the BGP Monitoring Protocol (BMP)
 
@@ -620,7 +618,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Relația: actualizează RFC 7854; actualizat de RFC 9736.
 - De ce: ruterele din laborator raportează cu `bmp monitor ipv4 unicast loc-rib`; stația aplicației păstrează doar rutele cu tipul de peer Loc-RIB Instance (3).
 - Timp: 30 de minute.
-- Ce citești: 1, 3, 4.1 și 5.
+- De citit: 1, 3, 4.1 și 5.
 
 ## 40. BGPStream: A Software Framework for Live and Historical BGP Data Analysis
 
@@ -629,9 +627,9 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: C. Orsini, A. King, D. Giordano, V. Giotsas, A. Dainotti, „BGPStream: A Software Framework for Live and Historical BGP Data Analysis”, *Proceedings of the Internet Measurement Conference (IMC 2016)*, ACM, 2016, pp. 429-444, DOI 10.1145/2987443.2987482.
 - Link: [caida.org, PDF-ul articolului](https://www-old.caida.org/publications/papers/2016/bgpstream/bgpstream.pdf) și [bgpstream.caida.org](https://bgpstream.caida.org/)
 - Conținut: arhitectura unui cadru care unifică RIS și RouteViews într-un singur flux ordonat în timp, cu unealtă în linie de comandă, bibliotecă C și legături Python, plus aplicații de monitorizare construite pe el.
-- De ce: e alternativa matură la combinația ta de parser C și aplicație C#. Secțiunea 3 explică problemele pe care le-ai întâlnit sau le vei întâlni (sortarea înregistrărilor din colectoare diferite, date întârziate).
+- De ce: e alternativa matură la combinația de parser C și aplicație C# a proiectului. Secțiunea 3 explică problemele pe care le întâlnește orice astfel de sistem (sortarea înregistrărilor din colectoare diferite, date întârziate).
 - Timp: 1,5 ore.
-- Ce citești: 1, 3 și 4.2 (legăturile Python), apoi tutorialul PyBGPStream de pe site.
+- De citit: 1, 3 și 4.2 (legăturile Python), apoi tutorialul PyBGPStream de pe site.
 
 # Etapa 9. Practică
 
@@ -642,31 +640,31 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Citare: I. Pepelnjak, *BGP Labs*, ipSpace.net, proiect online de exerciții, consultat la 5 octombrie 2026.
 - Link: [bgplabs.net](https://bgplabs.net/)
 - Conținut: exerciții de configurare orchestrate cu netlab, rulabile în containere sau în GitHub Codespaces, cu FRRouting printre platformele suportate. Sunt grupate în sesiuni de bază, politici (LocalPref, MED, prepending, communities, filtrarea rutelor de tranzit) și scenarii mai complexe.
-- De ce: rulezi deja FRRouting în Docker, deci exercițiile se potrivesc direct. Ce ai citit în etapa 2 devine configurație pe care o vezi funcționând.
+- De ce: laboratorul proiectului rulează deja FRRouting în Docker, deci exercițiile se potrivesc direct. Politicile din etapa 2 devin configurații care pot fi văzute funcționând.
 - Timp: 30 până la 60 de minute pe exercițiu.
-- Ce faci: „Configuring BGP on FRRouting”, apoi exercițiile de sesiune de bază, „Filter Transit Routes”, „Filter Advertised Prefixes”, „Select Preferred Uplink with BGP Local Preference”, „Use AS-Path Prepending to Influence Incoming Traffic Flow” și cele două despre communities.
+- De făcut: „Configuring BGP on FRRouting”, apoi exercițiile de sesiune de bază, „Filter Transit Routes”, „Filter Advertised Prefixes”, „Select Preferred Uplink with BGP Local Preference”, „Use AS-Path Prepending to Influence Incoming Traffic Flow” și cele două despre communities.
 
 ## 42. FRRouting User Guide, capitolul BGP
 
 - An: online
-- Pe scurt: Cum pornești validarea originii prin RTR și rolurile BGP pe un ruter FRR, ca în laboratorul proiectului.
+- Pe scurt: Cum se pornesc validarea originii prin RTR și rolurile BGP pe un ruter FRR, ca în laboratorul proiectului.
 - Citare: FRRouting Project, *FRRouting User Guide*, capitolul „BGP”, secțiunile „Prefix Origin Validation Using RPKI” și „BGP Roles and Only to Customers”, documentația versiunii curente, consultată la 5 octombrie 2026.
 - Link: [docs.frrouting.org, RPKI în bgpd](https://docs.frrouting.org/en/latest/bgp.html#prefix-origin-validation-using-rpki) și [rolurile BGP](https://docs.frrouting.org/en/latest/bgp.html#bgp-roles-and-only-to-customers)
 - Conținut: conectarea bgpd la un cache RPKI prin protocolul RTR, potrivirea stării de validare în route-map-uri (`match rpki valid|invalid|notfound`), comenzile `show rpki` și configurarea `local-role` din RFC 9234, cu modul strict și atributul OTC.
-- De ce: îți permite să adaugi în laboratorul izolat un router care aplică ROV sau roluri BGP și să verifici că detectorul vede ce vede și routerul. Cache-ul RTR are nevoie de o sursă de VRP-uri. În rețeaua izolată, aceasta trebuie să fie locală, de exemplu un server RTR ca StayRTR, care acceptă și aserțiuni locale prin SLURM (RFC 8416).
+- De ce: permite adăugarea în laboratorul izolat a unui router care aplică ROV sau roluri BGP și verificarea faptului că detectorul vede ce vede și routerul. Cache-ul RTR are nevoie de o sursă de VRP-uri. În rețeaua izolată, aceasta trebuie să fie locală, de exemplu un server RTR ca StayRTR, care acceptă și aserțiuni locale prin SLURM (RFC 8416).
 - Timp: 2 ore, cu configurarea.
-- Ce citești: cele două secțiuni numite, inclusiv exemplul de configurare RPKI de la finalul primei.
+- De citit: cele două secțiuni numite, inclusiv exemplul de configurare RPKI de la finalul primei.
 
 ## 43. RIPEstat Data API
 
 - An: online
-- Pe scurt: API-ul JSON peste datele RIS și RPKI: verifici pe date reale ce ai citit, fără să anunți nimic.
+- Pe scurt: API-ul JSON peste datele RIS și RPKI: verificarea pe date reale a celor citite, fără niciun anunț BGP.
 - Citare: RIPE NCC, *RIPEstat Data API*, documentație online, consultată la 5 octombrie 2026.
 - Link: [stat.ripe.net/docs/02.data-api](https://stat.ripe.net/docs/02.data-api/)
 - Conținut: interfața JSON peste datele RIS și RPKI: `routing-status`, `rpki-validation`, `bgp-updates`, `bgplay`, `looking-glass`, `routing-history`. Pentru utilizare regulată de peste 1.000 de cereri pe zi se cere parametrul `sourceapp`, iar limita e de 8 cereri simultane de pe aceeași adresă IP.
-- De ce: e cel mai rapid mod de a verifica pe date reale ce ai citit, fără să anunți nimic. Exercițiile de mai jos au fost rulate pe 5 octombrie 2026.
+- De ce: e cel mai rapid mod de a verifica pe date reale cele citite, fără a anunța nimic. Exercițiile de mai jos au fost rulate pe 5 octombrie 2026.
 - Timp: o oră.
-- Ce faci: cere `rpki-validation` pentru AS13335 și 104.20.0.0/20 (rezultat valid, maxLength 20), apoi pentru 104.20.0.0/21 (rezultat `invalid_length`), ca să vezi de ce leak-ul din sursa 20 e invalid RPKI. Cere `routing-status` pentru 208.65.152.0/22 ca să vezi cine originează azi prefixul YouTube din sursa 17 și câți peeri RIS îl văd. Pentru incidentul însuși, `bgplay` nu întoarce date din 2008, așa că folosește arhiva RIS: fișierul `rrc00/2008.02/updates.20080224.1845.gz` de pe [data.ris.ripe.net](https://data.ris.ripe.net/rrc00/2008.02/) conține anunțurile pentru 208.65.153.0/24 cu AS17557 în cale. Rulează pe el parserul tău MRT și compară ieșirea cu cronologia din sursa 17.
+- De făcut: o cerere `rpki-validation` pentru AS13335 și 104.20.0.0/20 (rezultat valid, maxLength 20), apoi una pentru 104.20.0.0/21 (rezultat `invalid_length`), care arată de ce leak-ul din sursa 20 e invalid RPKI. O cerere `routing-status` pentru 208.65.152.0/22 arată cine originează azi prefixul YouTube din sursa 17 și câți peeri RIS îl văd. Pentru incidentul însuși, `bgplay` nu întoarce date din 2008, deci sursa e arhiva RIS: fișierul `rrc00/2008.02/updates.20080224.1845.gz` de pe [data.ris.ripe.net](https://data.ris.ripe.net/rrc00/2008.02/) conține anunțurile pentru 208.65.153.0/24 cu AS17557 în cale. Ieșirea parserului MRT al proiectului, rulat pe acest fișier, se compară apoi cu cronologia din sursa 17.
 
 ## 44. bgp.tools
 
@@ -677,4 +675,4 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 - Conținut: căutare după AS, prefix sau nume DNS. Pagina unui prefix dă originea și numele AS-ului, registrul și data înregistrării, furnizorii și vecinii din graful de conectivitate, whois, DNS și validarea; site-ul are și un looking glass. Datele sunt aproape în timp real și gratuite; monitorizarea și API-ul sunt pentru utilizatorii plătitori.
 - De ce: e modelul vederii „Prefixe” a aplicației: prefixul ca obiect, cu originea ca prim fapt. Pe 11 octombrie 2026, pagina lui 208.65.152.0/22 arăta originea AS43515 (Google Ireland) și nota că blocul YouTube din 2008 nu e vizibil acum în tabela globală.
 - Timp: 20 de minute.
-- Ce faci: deschide pagina lui AS13335 și pe cea a prefixului 208.65.152.0/22, apoi compară-le cu `routing-status` din RIPEstat (sursa 43).
+- De făcut: pagina lui AS13335 și cea a prefixului 208.65.152.0/22, comparate cu `routing-status` din RIPEstat (sursa 43).

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json.Nodes;
 using BGPWatch.Core.Domain;
 using BGPWatch.Web.Config;
+using BGPWatch.Web.Localization;
 using BGPWatch.Web.Lookup;
 using BGPWatch.Web.Storage;
 
@@ -45,7 +46,7 @@ public static class ReadEndpoints
     }
 
     /// <summary>The recorded incident's ground truth, documented timeline and AS names.</summary>
-    private static IResult Incident(string name, Settings settings)
+    private static IResult Incident(string name, Settings settings, HttpContext http)
     {
         if (settings.IncidentDir(name) is not { } folder)
         {
@@ -58,7 +59,7 @@ public static class ReadEndpoints
         {
             name,
             monitored = file.Monitored,
-            events = file.Events,
+            events = file.Events.Select(e => new { e.At, Label = e.LabelIn(LanguageChoice.Of(http)) }),
             as_names = names?["names"] ?? new JsonObject(),
             as_names_fetched = names?["fetched"],
         });

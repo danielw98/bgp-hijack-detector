@@ -8,6 +8,7 @@ using BGPWatch.Web.Api;
 using BGPWatch.Web.Bmp;
 using BGPWatch.Web.Config;
 using BGPWatch.Web.Lab;
+using BGPWatch.Web.Localization;
 using BGPWatch.Web.Lookup;
 using BGPWatch.Web.Native;
 using BGPWatch.Web.Reading;
@@ -44,7 +45,18 @@ builder.Services.AddSingleton(new DockerEngine(DockerEngine.Client()));
 builder.Services.AddSingleton(sp => LabSnapshots.Over(
     sp.GetRequiredService<DockerEngine>(), sp.GetRequiredService<BmpStation>(), () => Stopwatch.GetElapsedTime(started)));
 builder.Services.AddSingleton(new RipeStat(RipeStat.Over(new HttpClient()), () => Stopwatch.GetElapsedTime(started)));
-builder.Services.AddSingleton(ReadingList.Embedded());
+builder.Services.AddSingleton<IReadOnlyDictionary<Language, ReadingList>>(new Dictionary<Language, ReadingList>
+{
+    [Language.En] = ReadingList.EmbeddedEnglish(),
+    [Language.Ro] = ReadingList.EmbeddedRomanian(),
+});
+builder.Services.AddSingleton(Translations.Embedded());
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped(sp =>
+{
+    var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+    return new Translator(sp.GetRequiredService<Translations>(), LanguageChoice.Of(http), http?.Request.PathBase.Value ?? "");
+});
 builder.Services.AddRazorPages();
 builder.Services.Configure<WebEncoderOptions>(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 builder.Services.ConfigureHttpJsonOptions(o =>
@@ -69,7 +81,10 @@ app.UseStaticFiles(new StaticFileOptions
         context.Context.Response.Headers.CacheControl = fonts ? "public, max-age=31536000, immutable" : "no-cache";
     },
 });
+app.Use(LanguageChoice.Middleware);
 app.MapRazorPages();
+app.MapGet("/ghid", (HttpContext http) => Results.Redirect($"{http.Request.PathBase}/guide{http.Request.QueryString}", permanent: true));
+app.MapGet("/referinte", (HttpContext http) => Results.Redirect($"{http.Request.PathBase}/references{http.Request.QueryString}", permanent: true));
 ReadEndpoints.Map(app);
 LabEndpoints.Map(app);
 await app.RunAsync();

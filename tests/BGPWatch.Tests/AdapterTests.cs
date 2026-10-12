@@ -32,7 +32,10 @@ public class AdapterTests
         Assert.Equal(5, incident.Events.Count);
         Assert.Equal(new DateTime(2008, 2, 24, 18, 47, 0, DateTimeKind.Utc), incident.Events[0].At);
         Assert.Equal(DateTimeKind.Utc, incident.Events[0].At.Kind);
-        Assert.StartsWith("AS17557 (Pakistan Telecom) anunță", incident.Events[0].Label);
+        Assert.StartsWith("AS17557 (Pakistan Telecom) announces", incident.Events[0].Label);
+        Assert.StartsWith("AS17557 (Pakistan Telecom) anunță", incident.Events[0].LabelRo);
+        Assert.Equal(incident.Events[0].LabelRo, incident.Events[0].LabelIn(BGPWatch.Web.Localization.Language.Ro));
+        Assert.Equal(incident.Events[0].Label, incident.Events[0].LabelIn(BGPWatch.Web.Localization.Language.En));
     }
 
     [Fact]

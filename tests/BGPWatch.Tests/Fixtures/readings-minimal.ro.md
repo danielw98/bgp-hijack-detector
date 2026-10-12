@@ -6,7 +6,7 @@ title: "t"
 
 Ignored.
 
-# Începe de aici
+# Pentru început
 
 Two picks.
 

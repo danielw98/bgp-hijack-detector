@@ -8,6 +8,7 @@
 import { get, post } from "./api.js";
 import { esc, fmtUtc, pathChain, registerNames } from "./format.js";
 import { contains, prefixLength } from "./simulate.js";
+import { count, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const INCIDENT = "youtube-2008";
@@ -59,10 +60,10 @@ async function load() {
     setTime(current);
     $("raw-2008").textContent = JSON.stringify({ meta, updates }, null, 2);
     $("msg-2008").textContent = updates.length
-      ? `${updates.length} actualizări ale prefixelor YouTube, de la ${incident.peers.length} vecini ai colectorului rrc00.`
-      : "Incidentul nu este încărcat încă; apasă „Reîncarcă incidentul”.";
+      ? t("i2008.loaded", { updates: count(updates.length, "i2008.updates"), peers: count(incident.peers.length, "i2008.peers") })
+      : t("i2008.empty");
   } catch (e) {
-    $("msg-2008").textContent = "Eroare: " + e.message;
+    $("msg-2008").textContent = t("error", { message: e.message });
   }
 }
 
@@ -176,14 +177,14 @@ function renderRows() {
   const ticks = events.map((t) => `<span class="tick" style="left:${pct(t)}">${fmtUtc(new Date(t).toISOString(), false)}</span>`);
   $("lanes").innerHTML = `
     <div class="lane-row head">
-      <span class="c-peer">Vecin RIS</span>
+      <span class="c-peer">${t("col.peer")}</span>
       <span class="c-lane"><span class="track">${marks}<span class="handle"></span></span></span>
       <span class="c-path" id="path-head"></span>
     </div>
     ${rows}
     <div class="lane-row axis">
       <span class="c-peer"></span>
-      <span class="c-lane"><span class="track">${ticks.join("")}</span><input type="range" id="scrub" min="0" max="${SCRUB_STEPS}" step="1" aria-label="momentul din incident"></span>
+      <span class="c-lane"><span class="track">${ticks.join("")}</span><input type="range" id="scrub" min="0" max="${SCRUB_STEPS}" step="1" aria-label="${esc(t("i2008.scrub"))}"></span>
       <span class="c-path"></span>
     </div>`;
   $("scrub").addEventListener("input", () => { stop(); setTime(timeAt(Number($("scrub").value) / SCRUB_STEPS)); });
@@ -214,18 +215,18 @@ function scrubFrom(down) {
 }
 
 function pathMarkup(path, origin) {
-  if (!path) return `<span class="assumed">ruta /22 a YouTube, anunțată înainte</span>`;
+  if (!path) return `<span class="assumed">${t("i2008.assumed")}</span>`;
   return pathChain(path, (ORIGIN[origin] || { role: "" }).role);
 }
 
-function setTime(t) {
-  current = Math.max(T0, Math.min(T1, t));
+function setTime(time) {
+  current = Math.max(T0, Math.min(T1, time));
   const state = stateAt(current);
   const clock = fmtUtc(new Date(current).toISOString());
   $("scrub").value = Math.round((x(current) / 1000) * SCRUB_STEPS);
-  $("speed-2008").textContent = `viteză ${Math.round(rateAt(current))}x`;
+  $("speed-2008").textContent = t("i2008.speed", { rate: Math.round(rateAt(current)) });
   $("scrub-time").textContent = `${clock} UTC`;
-  $("path-head").textContent = `Calea AS la ${clock.slice(0, 5)}, spre origine`;
+  $("path-head").textContent = t("i2008.path.head", { time: clock.slice(0, 5) });
   $("lanes").querySelector(".handle").style.left = pct(current);
   $("lanes").querySelectorAll("line.cursor").forEach((line) => { line.setAttribute("x1", x(current)); line.setAttribute("x2", x(current)); });
   state.forEach((s) => {
@@ -239,7 +240,7 @@ function setTime(t) {
 
 function renderCount(id, state, origin) {
   const n = state.filter((s) => s.origin === origin).length;
-  $(id).innerHTML = `<span class="swatch"></span><b>${n} ${n === 1 ? "vecin" : "vecini"}</b><span class="to">&rarr; AS${origin} ${esc(ORIGIN[origin].name)}</span>`;
+  $(id).innerHTML = `<span class="swatch"></span><b>${count(n, "i2008.peers.short")}</b><span class="to">&rarr; AS${origin} ${esc(ORIGIN[origin].name)}</span>`;
 }
 
 function renderCurrentEvent() {
@@ -252,7 +253,7 @@ function renderCurrentEvent() {
     : `<button class="btn outline small" disabled>${k < 0 ? "&lsaquo;" : "&rsaquo;"}</button>`;
   const body = i >= 0
     ? `<span class="badge">${i + 1}</span><span class="t">${fmtUtc(events[i].at, false)}</span><span class="label">${esc(events[i].label)}.</span>`
-    : `<span class="label">Niciun eveniment documentat încă: toți vecinii au ruta /22 a YouTube, anunțată înainte de fereastra înregistrată.</span>`;
+    : `<span class="label">${t("i2008.before")}</span>`;
   $("event-card").innerHTML = `${body}<span class="jumps">${jump(i - 1, `&lsaquo; ${i}`)}${jump(i + 1, `${i + 2} &rsaquo;`)}</span>`;
 }
 
@@ -261,7 +262,7 @@ function renderCurrentEvent() {
 function togglePlay() {
   if (timer) { stop(); return; }
   if (current >= T1) current = T0;
-  $("btn-play").textContent = "Pauză";
+  $("btn-play").textContent = t("pause");
   timer = setInterval(() => {
     setTime(timeAt(Math.min(1, x(current) / 1000 + TICK_MS / PLAY_MS)));
     if (current >= T1) stop();
@@ -277,7 +278,7 @@ function rateAt(t) {
 function stop() {
   if (timer) clearInterval(timer);
   timer = null;
-  $("btn-play").textContent = "Redă";
+  $("btn-play").textContent = t("play");
 }
 
 function renderEvents(events) {
@@ -296,20 +297,20 @@ function renderFirstSeen(updates) {
       <td>${pathMarkup(u.as_path, HIJACKER)}</td>
     </tr>`).join("");
   $("peers-2008").innerHTML = rows
-    ? `<table class="data"><thead><tr><th>Prima observare (UTC)</th><th>Vecin RIS</th><th>Calea AS către AS17557</th></tr></thead><tbody>${rows}</tbody></table>`
-    : '<div class="empty">Nicio observare a sub-prefixului deturnat.</div>';
+    ? `<table class="data"><thead><tr><th>${t("i2008.first.when")}</th><th>${t("col.peer")}</th><th>${t("i2008.first.path")}</th></tr></thead><tbody>${rows}</tbody></table>`
+    : `<div class="empty">${t("i2008.first.none")}</div>`;
 }
 
 async function reload() {
   const btn = $("btn-reload");
   btn.disabled = true;
-  $("msg-2008").textContent = "se reîncarcă din fișiere...";
+  $("msg-2008").textContent = t("i2008.reloading");
   try {
     const res = await post("/api/lab/replay");
-    $("msg-2008").textContent = `Reîncărcat: ${res.updates} actualizări, ${res.alerts} alerte.`;
+    $("msg-2008").textContent = t("i2008.reloaded", { updates: res.updates, alerts: res.alerts });
     await load();
   } catch (e) {
-    $("msg-2008").textContent = "Eroare: " + e.message;
+    $("msg-2008").textContent = t("error", { message: e.message });
   } finally {
     btn.disabled = false;
   }

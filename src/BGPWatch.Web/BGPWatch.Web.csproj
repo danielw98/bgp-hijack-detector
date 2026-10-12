@@ -7,7 +7,12 @@
     <InternalsVisibleTo Include="BGPWatch.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Reading\lecturi-bgp.md" LogicalName="lecturi-bgp.md" />
+    <EmbeddedResource Include="Reading\readings.ro.md" LogicalName="readings.ro.md" WithCulture="false" />
+    <EmbeddedResource Include="Reading\readings.en.md" LogicalName="readings.en.md" WithCulture="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Localization\strings.*.json" />
+    <EmbeddedResource Include="Localization\strings.*.json" LogicalName="%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BGPWatch.Core\BGPWatch.Core.csproj" />

@@ -62,6 +62,10 @@ small, .small { font-size: 16px; }
 .status .dot.down { background: var(--red); }
 .status .updated { display: inline-block; }
 .status .updated::first-letter { text-transform: uppercase; }
+.lang { display: inline-flex; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; }
+.lang a { padding: 4px 10px; font-size: 17px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.lang a.current { background: var(--ink); color: var(--surface); }
+.lang-row { margin: 0 0 12px; display: flex; justify-content: flex-end; }
 
 a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {

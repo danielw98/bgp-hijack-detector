@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ro" data-base="@Context.Request.PathBase">
+<html lang="@T.Code" data-base="@Context.Request.PathBase">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="~/static/page.css">
 <link rel="stylesheet" href="~/static/sim.css">
 @await RenderSectionAsync("Styles", required: false)
+<script type="application/json" id="strings">@Html.Raw(T.ClientJson())</script>
 </head>
 <body class="@ViewData["BodyClass"]">
 @RenderBody()

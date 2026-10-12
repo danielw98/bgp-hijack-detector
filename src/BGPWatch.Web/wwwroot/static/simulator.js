@@ -11,35 +11,36 @@ import { createTransport } from "./transport.js";
 import { contains, prefixLength, simulate } from "./simulate.js";
 import { createPopover } from "./popover.js";
 import { setLab } from "./status.js";
+import { and, t } from "./i18n.js";
 
 const DESTINATIONS = [
-  ["203.0.113.1", "203.0.113.1, în sub-prefixul /25"],
-  ["203.0.113.129", "203.0.113.129, în afara lui"],
+  ["203.0.113.1", t("sim.dest.inside")],
+  ["203.0.113.129", t("sim.dest.outside")],
 ];
 const SCENARIO_TEXT = {
-  exact: "anunță prefixul exact 203.0.113.0/24",
-  subprefix: "anunță sub-prefixul 203.0.113.0/25",
-  both: "anunță prefixul exact și sub-prefixul",
+  exact: t("sim.scenario.done.exact"),
+  subprefix: t("sim.scenario.done.subprefix"),
+  both: t("sim.scenario.done.both"),
 };
 const OUTCOME = {
-  delivered: "Pachetul ajunge la destinație.",
-  dropped: "Pachetul dispare: a fost atras de un ruter care îl aruncă.",
-  unreachable: "Pachetul nu poate fi trimis: ruterul nu are nicio rută.",
-  lost: "Pachetul pleacă spre un ruter care nu este în simulator.",
-  loop: "Pachetul se învârte în buclă.",
-  unknown: "Răspuns pe care pagina nu îl înțelege.",
+  delivered: t("outcome.delivered"),
+  dropped: t("outcome.dropped"),
+  unreachable: t("outcome.unreachable"),
+  lost: t("outcome.lost"),
+  loop: t("outcome.loop"),
+  unknown: t("outcome.unknown"),
 };
-const POPOVER_TITLE = { update: "UPDATE", withdraw: "RETRAS", packet: "pachet", kernel: "nucleu" };
+const POPOVER_TITLE = { update: "UPDATE", withdraw: t("token.withdraw"), packet: t("token.packet"), kernel: t("token.kernel") };
 const ALERTS_LOOKED_AT = 200;
 const STEP_VERDICT = { delivered: "delivered", blackhole: "dropped", unreachable: "unreachable" };
 const KERNEL_VERDICT = { local: "delivered", direct: "delivered", blackhole: "dropped", unreachable: "unreachable" };
 const KERNEL_TEXT = {
-  via: (h, name) => `trimite pachetul către <b>${esc(name)}</b> <span class="mono">(${esc(h.next_hop)})</span>`,
-  local: () => "livrează pachetul local: adresa este a lui",
-  direct: () => "livrează pachetul direct pe legătură",
-  blackhole: () => "aruncă pachetul: ruta sa este un blackhole",
-  unreachable: () => "nu are nicio rută",
-  unknown: () => "răspuns necunoscut",
+  via: (h, name) => t("kernel.via", { name: `<b>${esc(name)}</b>`, hop: `<span class="mono">(${esc(h.next_hop)})</span>` }),
+  local: () => t("kernel.local"),
+  direct: () => t("kernel.direct"),
+  blackhole: () => t("kernel.blackhole"),
+  unreachable: () => t("kernel.unreachable"),
+  unknown: () => t("kernel.unknown"),
 };
 
 export const lab = { routers: [], collector: null, byAddress: new Map(), byRole: new Map() };
@@ -69,7 +70,7 @@ export function mountSimulator(root) {
 
   wireTabs(root);
   wireOptions($("options"), $("options-panel"));
-  fillSelect($("from"), [["transit", "Tranzit"], ["victim", "Victimă"], ["attacker", "Atacator"]]);
+  fillSelect($("from"), [["transit", ROLE_NAME.transit], ["victim", ROLE_NAME.victim], ["attacker", ROLE_NAME.attacker]]);
   fillSelect($("to"), DESTINATIONS);
   $("hijack").addEventListener("click", () => act("trigger"));
   $("reset").addEventListener("click", () => act("reset"));
@@ -122,7 +123,7 @@ export function mountSimulator(root) {
       announceChanges(data.routers);
     } catch (e) {
       setLab(false);
-      $("tables").innerHTML = `<div class="empty">Ruterele nu răspund: ${esc(e.message)}</div>`;
+      $("tables").innerHTML = `<div class="empty">${esc(t("sim.tables.down", { message: e.message }))}</div>`;
     }
   }
 
@@ -159,11 +160,9 @@ export function mountSimulator(root) {
   }
 
   function hopEvent({ kind, from, to, prefix, path }) {
-    const verb = kind === "update" ? "anunță" : "retrage";
+    const values = { from: ROLE_NAME[from], to: ROLE_NAME[to], prefix: `<span class="mono">${esc(prefix)}</span>` };
     return event(kind, from, to, prefix,
-      to === "collector"
-        ? `${ROLE_NAME[from]} raportează colectorului <span class="mono">${esc(prefix)}</span>`
-        : `${ROLE_NAME[from]} ${verb} <span class="mono">${esc(prefix)}</span> către ${ROLE_NAME[to]}`,
+      to === "collector" ? t("hop.report", values) : t(kind === "update" ? "hop.announce" : "hop.withdraw", values),
       { path });
   }
 
@@ -181,16 +180,16 @@ export function mountSimulator(root) {
         return `<tr class="${p.origin_as === attackerAs ? "bad" : ""}" data-router="${r.role}" data-prefix="${esc(p.prefix)}" data-best="${p.best}">
           <td class="mono">${esc(p.prefix)}</td>
           <td>${chain(p.as_path, r.asn)}</td>
-          <td><span class="state ${p.best ? "best" : "spare"}">${p.best ? "aleasă" : "rezervă"}</span>${why}</td>
+          <td><span class="state ${p.best ? "best" : "spare"}">${p.best ? t("rib.best") : t("rib.spare")}</span>${why}</td>
         </tr>`;
       }).join("");
-      const empty = `<tr><td colspan="3" class="empty">${r.reachable ? "Nicio rută." : "Ruter oprit."}</td></tr>`;
+      const empty = `<tr><td colspan="3" class="empty">${r.reachable ? t("rib.none") : t("rib.off")}</td></tr>`;
       return `<tbody class="${r.role}">
         <tr><th colspan="3" class="router"><span class="${r.role}">${ROLE_NAME[r.role]}</span> <span class="addr">AS${esc(r.asn)}, ${esc(r.address)}</span></th></tr>
         ${rows || empty}
       </tbody>`;
     }).join("");
-    $("tables").innerHTML = `<table class="data rib"><thead><tr><th>Prefix</th><th>Calea AS</th><th>Stare</th></tr></thead>${bodies}</table>`;
+    $("tables").innerHTML = `<table class="data rib"><thead><tr><th>${t("col.prefix")}</th><th>${t("col.path")}</th><th>${t("col.state")}</th></tr></thead>${bodies}</table>`;
   }
 
   function highlightRow(ev) {
@@ -205,16 +204,16 @@ export function mountSimulator(root) {
     const msg = $("now");
     const buttons = [$("hijack"), $("reset")];
     buttons.forEach((b) => { b.disabled = true; });
-    msg.textContent = kind === "trigger" ? "se injectează..." : "se retrag...";
+    msg.textContent = kind === "trigger" ? t("sim.busy.trigger") : t("sim.busy.reset");
     try {
       const res = await post(`/api/lab/${kind}`, kind === "trigger" ? { scenario } : undefined);
       msg.innerHTML = kind === "trigger"
-        ? `Atacatorul <b>${esc(SCENARIO_TEXT[scenario])}</b>. Mesajele urmează pe hartă.`
-        : "Atacatorul și-a retras anunțurile. Tabelele revin la starea de bază.";
-      if (!res.ok) msg.textContent = "Eroare: " + (res.error || "necunoscută");
+        ? t("sim.done.trigger", { what: `<b>${esc(SCENARIO_TEXT[scenario])}</b>` })
+        : esc(t("sim.done.reset"));
+      if (!res.ok) msg.textContent = t("error", { message: res.error || t("error.unknown") });
       transport.resume();
     } catch (e) {
-      msg.textContent = "Eroare: " + e.message;
+      msg.textContent = t("error", { message: e.message });
     } finally {
       buttons.forEach((b) => { b.disabled = false; });
       setTimeout(refresh, 1200);
@@ -239,20 +238,20 @@ export function mountSimulator(root) {
 
   function narrate(step, to) {
     const who = `<b class="${step.router}">${ROLE_NAME[step.router]}</b>`;
-    const owner = (p) => (p.as_path.length ? ROLE_NAME[(lab.routers.find((r) => r.asn === p.origin_as) || {}).role] || `AS${p.origin_as}` : "propriul anunț");
-    const options = step.candidates.map((p) => `<span class="mono">${esc(p.prefix)}</span> (${esc(owner(p))})`).join(" și ");
-    if (step.kind === "unreachable") return `${who}: nicio rută nu acoperă <span class="mono">${esc(to)}</span>.`;
+    const owner = (p) => (p.as_path.length ? ROLE_NAME[(lab.routers.find((r) => r.asn === p.origin_as) || {}).role] || `AS${p.origin_as}` : t("own.announcement"));
+    const options = step.candidates.map((p) => `<span class="mono">${esc(p.prefix)}</span> (${esc(owner(p))})`).join(and());
+    if (step.kind === "unreachable") return t("walk.unreachable", { who, to: `<span class="mono">${esc(to)}</span>` });
     const choice = step.candidates.length > 1
-      ? `se potrivesc ${options}; câștigă <span class="mono">${esc(step.chosen.prefix)}</span>, prefixul mai specific`
-      : `se potrivește ${options}`;
-    if (step.kind === "delivered") return `${who}: ${choice}; ruta este a lui și adresa este pe propria interfață.`;
-    if (step.kind === "blackhole") return `${who}: ${choice}; ruta este propriul anunț, dar adresa nu este a lui, iar ruta sa statică este un blackhole.`;
+      ? t("walk.choice.many", { options, chosen: `<span class="mono">${esc(step.chosen.prefix)}</span>` })
+      : t("walk.choice.one", { options });
+    if (step.kind === "delivered") return t("walk.delivered", { who, choice });
+    if (step.kind === "blackhole") return t("walk.blackhole", { who, choice });
     const nextName = step.next ? ROLE_NAME[step.next] : step.nextHop;
     const sender = step.chosen.as_path.length ? ROLE_NAME[(lab.routers.find((r) => r.asn === step.chosen.as_path[0]) || {}).role] : "";
     const shortcut = step.next && sender && sender !== nextName
-      ? ` Anunțul a venit de la ${esc(sender)}, dar următorul salt este direct ${esc(nextName)}, pe segmentul partajat.`
+      ? " " + t("walk.shortcut", { sender: esc(sender), next: esc(nextName) })
       : "";
-    return `${who}: ${choice}; următorul salt este <b>${esc(nextName)}</b> <span class="mono">(${esc(step.nextHop)})</span>.${shortcut}`;
+    return t("walk.next", { who, choice, next: `<b>${esc(nextName)}</b>`, hop: `<span class="mono">(${esc(step.nextHop)})</span>` }) + shortcut;
   }
 
   // The kernel walk: each router's real routing decision, asked with ip route get.
@@ -262,7 +261,7 @@ export function mountSimulator(root) {
     const btn = $("ask");
     const msg = $("now");
     btn.disabled = true;
-    msg.textContent = "se întreabă nucleele...";
+    msg.textContent = t("sim.busy.ask");
     try {
       const res = await post("/api/lab/trace", { from, to });
       const batch = res.hops.map((h, i) => {
@@ -275,11 +274,11 @@ export function mountSimulator(root) {
           (last ? ` <b class="verdict ${verdict}">${esc(OUTCOME[res.outcome] || OUTCOME.unknown)}</b> ${agreement(res, from, to)}` : "");
         return event("kernel", h.router, next ? next.role : null, to, detail, { verdict, hop: h, outcome: last ? res.outcome : null, agrees: last ? agreement(res, from, to) : "" });
       });
-      msg.textContent = "Nucleele au răspuns; niciun pachet nu a fost trimis.";
+      msg.textContent = t("sim.done.ask");
       transport.enqueue(batch);
       transport.resume();
     } catch (e) {
-      msg.textContent = "Eroare: " + e.message;
+      msg.textContent = t("error", { message: e.message });
     } finally {
       btn.disabled = false;
     }
@@ -290,11 +289,11 @@ export function mountSimulator(root) {
     const report = ev.to === "collector";
     const content = {
       kind: report ? "report" : ev.kind,
-      title: report ? (ev.kind === "withdraw" ? "Raport BMP, retragere" : "Raport BMP") : POPOVER_TITLE[ev.kind],
+      title: report ? (ev.kind === "withdraw" ? t("pop.report.withdraw") : t("pop.report")) : POPOVER_TITLE[ev.kind],
       route: ev.toName ? `${ev.fromName} → ${ev.toName}` : ev.fromName,
       position: `${index + 1} / ${total}`,
       fields: [],
-      footer: `<button class="btn outline small" data-pop="back"${index === 0 ? " disabled" : ""}>Înapoi</button><button class="btn small" data-pop="step"${index === total - 1 ? " disabled" : ""}>Pas</button>`,
+      footer: `<button class="btn outline small" data-pop="back"${index === 0 ? " disabled" : ""}>${t("back")}</button><button class="btn small" data-pop="step"${index === total - 1 ? " disabled" : ""}>${t("step")}</button>`,
     };
     if (ev.kind === "packet") content.fields = packetFields(ev);
     else if (ev.kind === "kernel") content.fields = kernelFields(ev);
@@ -319,29 +318,29 @@ export function mountSimulator(root) {
     const path = carried(ev);
     const withdrawn = ev.kind === "withdraw";
     return [
-      [withdrawn ? "Prefix retras" : "Prefix", `<b class="mono">${esc(ev.label)}</b>`],
-      [withdrawn ? "Calea care dispare" : "Calea AS pe acest salt", pathOnHop(path)],
-      ["Origine", originText(ev.label, path[path.length - 1])],
-      withdrawn ? [`Ce rămâne la ${ev.toName}`, remaining(ev.to, ev.label)] : [`Ce face ${ev.toName}`, decision(ev.to, ev.label, path)],
+      [withdrawn ? t("pop.prefix.withdrawn") : t("col.prefix"), `<b class="mono">${esc(ev.label)}</b>`],
+      [withdrawn ? t("pop.path.gone") : t("pop.path.hop"), pathOnHop(path)],
+      [t("col.origin"), originText(ev.label, path[path.length - 1])],
+      withdrawn ? [t("pop.remains", { name: ev.toName }), remaining(ev.to, ev.label)] : [t("pop.does", { name: ev.toName }), decision(ev.to, ev.label, path)],
     ];
   }
 
   function reportFields(ev) {
-    const fields = [["Ruta din Loc-RIB", `<b class="mono">${esc(ev.label)}</b>`], ["Calea AS", chain(ev.path, (lab.byRole.get(ev.from) || {}).asn)]];
+    const fields = [[t("pop.locrib"), `<b class="mono">${esc(ev.label)}</b>`], [t("col.path"), chain(ev.path, (lab.byRole.get(ev.from) || {}).asn)]];
     return ev.kind === "withdraw"
-      ? [...fields, ["Ce află colectorul", "Ruta a ieșit din tabela aleasă a ruterului."]]
-      : [...fields, ["Verdictul detectorului", "<span data-alerts>se caută alertele...</span>"]];
+      ? [...fields, [t("pop.collector.learns"), t("pop.collector.gone")]]
+      : [...fields, [t("pop.verdict"), `<span data-alerts>${t("pop.alerts.busy")}</span>`]];
   }
 
   function packetFields(ev) {
     const { step } = ev;
-    const owner = (p) => (p.as_path.length ? ROLE_NAME[(lab.routers.find((r) => r.asn === p.origin_as) || {}).role] || `AS${p.origin_as}` : "propriul anunț");
-    const fields = [["Destinație", `<b class="mono">${esc(ev.label)}</b>`]];
-    if (!step.candidates.length) return [...fields, ["Rânduri care se potrivesc", "niciunul: nicio rută nu acoperă adresa"]];
-    fields.push(["Rânduri care se potrivesc", step.candidates.map((p) => `<span class="mono">${esc(p.prefix)}</span> (${esc(owner(p))})`).join(" și ")]);
-    fields.push(["Câștigă", `<span class="mono">${esc(step.chosen.prefix)}</span>${step.candidates.length > 1 ? ", prefixul mai specific" : ""}`]);
-    if (step.nextHop) fields.push(["Următorul salt", `<b class="mono">${esc(step.next ? ROLE_NAME[step.next] : "")} ${esc(step.nextHop)}</b>`]);
-    if (ev.outcome) fields.push(["Rezultat", esc(OUTCOME[ev.outcome] || OUTCOME.unknown)]);
+    const owner = (p) => (p.as_path.length ? ROLE_NAME[(lab.routers.find((r) => r.asn === p.origin_as) || {}).role] || `AS${p.origin_as}` : t("own.announcement"));
+    const fields = [[t("pop.destination"), `<b class="mono">${esc(ev.label)}</b>`]];
+    if (!step.candidates.length) return [...fields, [t("pop.matches"), t("pop.matches.none")]];
+    fields.push([t("pop.matches"), step.candidates.map((p) => `<span class="mono">${esc(p.prefix)}</span> (${esc(owner(p))})`).join(and())]);
+    fields.push([t("pop.wins"), `<span class="mono">${esc(step.chosen.prefix)}</span>${step.candidates.length > 1 ? t("pop.wins.specific") : ""}`]);
+    if (step.nextHop) fields.push([t("pop.next"), `<b class="mono">${esc(step.next ? ROLE_NAME[step.next] : "")} ${esc(step.nextHop)}</b>`]);
+    if (ev.outcome) fields.push([t("pop.result"), esc(OUTCOME[ev.outcome] || OUTCOME.unknown)]);
     return fields;
   }
 
@@ -349,8 +348,8 @@ export function mountSimulator(root) {
     const h = ev.hop;
     const answer = h.kind === "via" ? `${ev.label} via ${h.next_hop} dev ${h.dev}` : h.kind === "local" ? `local ${ev.label} dev ${h.dev}` : h.kind;
     const fields = [[`ip route get ${ev.label}`, `<b class="mono">${esc(answer)}</b>`]];
-    if (ev.outcome) fields.push(["Rezultat", esc(OUTCOME[ev.outcome] || OUTCOME.unknown)]);
-    if (ev.agrees) fields.push(["Față de simulare", esc(ev.agrees)]);
+    if (ev.outcome) fields.push([t("pop.result"), esc(OUTCOME[ev.outcome] || OUTCOME.unknown)]);
+    if (ev.agrees) fields.push([t("pop.against"), esc(ev.agrees)]);
     return fields;
   }
 
@@ -361,22 +360,22 @@ export function mountSimulator(root) {
     if (!covering.length) return `AS${esc(origin)}`;
     const m = covering.reduce((a, b) => (prefixLength(b.prefix) > prefixLength(a.prefix) ? b : a));
     return m.expected_origins.includes(origin)
-      ? `AS${esc(origin)}, așteptată.`
-      : `<b class="bad">AS${esc(origin)}, neașteptată</b>: <span class="mono">${esc(m.prefix)}</span> este al AS${m.expected_origins.map(esc).join(", AS")}.`;
+      ? t("origin.expected", { origin: `AS${esc(origin)}` })
+      : t("origin.unexpected", { origin: `AS${esc(origin)}`, prefix: `<span class="mono">${esc(m.prefix)}</span>`, owners: `AS${m.expected_origins.map(esc).join(", AS")}` });
   }
 
   function decision(role, prefix, path) {
     const router = lab.byRole.get(role);
     const p = router && router.paths.find((q) => q.prefix === prefix && q.as_path.join(" ") === path.join(" "));
-    if (!p) return `Ruta nu mai este în tabela lui ${esc(ROLE_NAME[role])}.`;
+    if (!p) return t("decision.gone", { name: esc(ROLE_NAME[role]) });
     const why = p.reason ? ` (${esc(REASON[p.reason] || p.reason)})` : "";
-    return p.best ? `O alege${why}.` : `O ține ca rezervă; alege altă cale${why}.`;
+    return p.best ? t("decision.best", { why }) : t("decision.spare", { why });
   }
 
   function remaining(role, prefix) {
     const router = lab.byRole.get(role);
     const best = router && router.paths.find((q) => q.prefix === prefix && q.best);
-    return best ? `<span class="mono">${esc(prefix)}</span> prin ${chain(best.as_path, router.asn)}` : `Nicio rută pentru <span class="mono">${esc(prefix)}</span>.`;
+    return best ? t("remaining.via", { prefix: `<span class="mono">${esc(prefix)}</span>`, path: chain(best.as_path, router.asn) }) : t("remaining.none", { prefix: `<span class="mono">${esc(prefix)}</span>` });
   }
 
   // The alerts the detector raised for this route as this router reported it.
@@ -388,26 +387,26 @@ export function mountSimulator(root) {
       const alerts = await get(`/api/alerts?limit=${ALERTS_LOOKED_AT}`);
       const mine = alerts.filter((a) => a.source === "lab" && a.prefix === ev.label && a.observed_origin === origin && a.peer === router.address);
       text = mine.length
-        ? `Alertă ${[...new Set(mine.map((a) => ALERT_NAME[a.alert_type] || a.alert_type))].join(" și ")}, ridicată la ${esc(fmtTime(mine[0].raised_at))}.`
-        : "Nicio alertă pentru această rută.";
+        ? t("alerts.raised", { kinds: [...new Set(mine.map((a) => ALERT_NAME[a.alert_type] || a.alert_type))].join(and()), time: esc(fmtTime(mine[0].raised_at)) })
+        : t("alerts.none");
     } catch (e) {
-      text = "Alertele nu se pot citi acum.";
+      text = t("alerts.unreadable");
     }
     const slot = document.querySelector(".popover [data-alerts]");
     if (slot) slot.innerHTML = text;
   }
 
   function describeRouter(r) {
-    const peer = (s) => `${esc(ROLE_NAME[(lab.byAddress.get(s.peer) || {}).role] || s.peer)} <span class="mono">${esc(s.peer)}</span>: ${s.established ? "stabilită" : '<b class="bad">căzută</b>'}`;
-    const rows = r.paths.map((p) => `<tr><td class="mono">${esc(p.prefix)}</td><td>${chain(p.as_path, r.asn)}</td><td>${p.best ? "aleasă" : "rezervă"}</td></tr>`).join("");
+    const peer = (s) => `${esc(ROLE_NAME[(lab.byAddress.get(s.peer) || {}).role] || s.peer)} <span class="mono">${esc(s.peer)}</span>: ${s.established ? t("session.up") : `<b class="bad">${t("session.down")}</b>`}`;
+    const rows = r.paths.map((p) => `<tr><td class="mono">${esc(p.prefix)}</td><td>${chain(p.as_path, r.asn)}</td><td>${p.best ? t("rib.best") : t("rib.spare")}</td></tr>`).join("");
     return {
       kind: r.role,
       title: ROLE_NAME[r.role],
       route: `AS${r.asn}, ${r.address}`,
       fields: [
-        ["Sesiuni BGP", r.sessions.map(peer).join("<br>") || "niciuna"],
-        ["Raportare BMP", r.reporting ? "raportează colectorului" : '<b class="bad">nu raportează</b>'],
-        ["Tabela BGP", rows ? `<table class="mini">${rows}</table>` : (r.reachable ? "nicio rută" : "ruter oprit")],
+        [t("router.sessions"), r.sessions.map(peer).join("<br>") || t("none")],
+        [t("router.bmp"), r.reporting ? t("router.reporting") : `<b class="bad">${t("map.router.silent")}</b>`],
+        [t("router.table"), rows ? `<table class="mini">${rows}</table>` : (r.reachable ? t("router.table.none") : t("map.router.off"))],
       ],
     };
   }
@@ -417,8 +416,8 @@ export function mountSimulator(root) {
     const simRouters = lastSim.steps.map((s) => s.router).join(" ");
     const realRouters = res.hops.map((h) => h.router).join(" ");
     return simRouters === realRouters && lastSim.outcome === res.outcome
-      ? "Nucleele confirmă simularea de pe tabelele BGP: aceleași rutere, același rezultat."
-      : "Nucleele spun altceva decât simularea: tabelele s-au schimbat între timp sau nucleul rutează diferit.";
+      ? t("kernel.agrees")
+      : t("kernel.disagrees");
   }
 }
 

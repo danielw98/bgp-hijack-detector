@@ -3,6 +3,7 @@
 // outside, its close button, a resize or a scroll.
 
 import { esc } from "./format.js";
+import { t } from "./i18n.js";
 
 const WIDTH = 360;
 const GAP = 14;
@@ -33,7 +34,7 @@ export function createPopover() {
     card.innerHTML = `<div class="head">
         <div class="title"><b class="kind">${esc(content.title)}</b>${content.route ? `<span class="route">${esc(content.route)}</span>` : ""}</div>
         ${content.position ? `<span class="pos">${esc(content.position)}</span>` : ""}
-        <button class="close" data-close aria-label="Închide">&times;</button>
+        <button class="close" data-close aria-label="${esc(t("close"))}">&times;</button>
       </div>
       ${content.fields.map(([label, html]) => `<div class="field"><div class="label">${esc(label)}</div><div class="value">${html}</div></div>`).join("")}
       ${content.footer ? `<div class="foot">${content.footer}</div>` : ""}

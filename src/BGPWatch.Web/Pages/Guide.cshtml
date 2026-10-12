@@ -1,0 +1,107 @@
+@page
+@{
+    ViewData["Title"] = T["guide.title"];
+}
+<header class="col">
+  <p class="lang-row">@await Html.PartialAsync("_Language")</p>
+  <h1>@T["brand"]</h1>
+  <p class="subtitle">@T["guide.subtitle"]</p>
+  <p class="status"><span id="dot-lab" class="dot"></span><span id="lab-state">@T["status.lab.checking"]</span>. <span id="dot-data" class="dot"></span><span id="data-state">@T["status.data.checking"]</span>. <span id="updated" class="updated"></span></p>
+  <p class="status">@T.Html("guide.intro.map")</p>
+</header>
+
+<main>
+<section class="col">
+  <p>@T.Html("guide.intro.p1")</p>
+  <p>@T.Html("guide.intro.p2")</p>
+  <ol class="contents">
+    <li><a href="#s1">@T["guide.s1.title"]</a></li>
+    <li><a href="#s2">@T["guide.s2.title"]</a></li>
+    <li><a href="#s3">@T["guide.s3.title"]</a></li>
+    <li><a href="#s4">@T["guide.s4.title"]</a></li>
+    <li><a href="#s5">@T["guide.s5.title"]</a></li>
+    <li><a href="#s6">@T["guide.s6.title"]</a></li>
+  </ol>
+</section>
+
+<section class="col">
+  <h2 id="s1">@T["guide.s1.title"]</h2>
+  <p>@T.Html("guide.s1.p1")</p>
+  <p>@T.Html("guide.s1.p2")</p>
+</section>
+
+<div class="figure wide" id="fig-lab">
+  <div class="frame">
+    <div class="frame-head"><h3>@T["guide.fig1.title"]</h3><span class="note">@T["guide.fig1.note"]</span></div>
+    @await Html.PartialAsync("_Simulator")
+  </div>
+</div>
+
+<section class="col">
+  <p>@T.Html("guide.s1.p3")</p>
+  <p>@T.Html("guide.s1.p4")</p>
+  <p>@T.Html("guide.s1.p5")</p>
+</section>
+
+<section class="col">
+  <h2 id="s2">@T["guide.s2.title"]</h2>
+  <p>@T.Html("guide.s2.p1")</p>
+</section>
+
+<div class="figure" id="fig-incidents">
+  <div class="frame">
+    <div class="frame-head"><h3>@T["guide.fig2.title"]</h3><span class="note">@T["guide.fig2.note"]</span></div>
+    <div class="frame-body tight" data-incidents><div class="empty">@T["loading"]</div></div>
+    <details class="raw"><summary>@T["guide.fig2.raw"]</summary><pre data-raw-incidents></pre></details>
+  </div>
+</div>
+
+<section class="col">
+  <h2 id="s3">@T["guide.s3.title"]</h2>
+  <p>@T.Html("guide.s3.p1")</p>
+  <p>@T.Html("guide.s3.p2")</p>
+</section>
+
+<div class="figure wide" id="fig-2008">
+  <div class="frame">
+    <div class="frame-head"><h3>@T["guide.fig3.title"]</h3><span class="note">@T["guide.fig3.note"]</span></div>
+    <div class="frame-body">
+      <p class="caption">@T.Html("guide.fig3.caption")</p>
+    </div>
+    @await Html.PartialAsync("_Incident2008")
+  </div>
+</div>
+
+<section class="col">
+  <h2 id="s4">@T["guide.s4.title"]</h2>
+  <p>@T.Html("guide.s4.p1")</p>
+</section>
+
+<div class="figure wide" id="fig-prefix">
+  <div class="frame">
+    <div class="frame-head"><h3>@T["guide.fig4.title"]</h3><span class="note">@T["guide.fig4.note"]</span></div>
+    @await Html.PartialAsync("_Prefix")
+  </div>
+</div>
+
+<section class="col">
+  <h2 id="s5">@T["guide.s5.title"]</h2>
+  <p>@T.Html("guide.s5.p1")</p>
+</section>
+
+<div class="figure" id="fig-lookup">
+  <div class="frame">
+    <div class="frame-head"><h3>@T["guide.fig5.title"]</h3></div>
+    @await Html.PartialAsync("_Lookup")
+  </div>
+</div>
+
+<section class="col">
+  <h2 id="s6">@T["guide.s6.title"]</h2>
+  <dl class="glossary" id="glossary"></dl>
+  <p style="margin-top: 24px">@T.Html("guide.s6.p1")</p>
+  <p>@T.Html("guide.s6.p2")</p>
+</section>
+</main>
+
+<footer class="col">@T["guide.footer"]</footer>

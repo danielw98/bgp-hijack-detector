@@ -1,116 +1,122 @@
-# Detector de deturnări de rute BGP
+# BGP route hijack detector
 
-Proiect pentru cursul PTIRC (TCSI, UPB), tema 9. Un detector defensiv: urmărește anunțurile BGP pentru prefixele monitorizate și ridică o alertă când un alt sistem autonom le anunță. Tehnica este cea folosită de ARTEMIS (FORTH-ICS) și BGPalerter (NTT).
+**English** | [Română](README.ro.md)
 
-Detectează trei situații:
+A course project for PTIRC (TCSI master's programme, National University of Science and Technology POLITEHNICA Bucharest), theme 9. A defensive detector: it watches the BGP announcements for the monitored prefixes and raises an alert when another autonomous system announces them. The technique is the one used by ARTEMIS (FORTH-ICS) and BGPalerter (NTT).
 
-- **origine falsă**: prefixul exact, anunțat de un AS care nu îl deține;
-- **sub-prefix**: o parte mai specifică a prefixului, anunțată de un AS străin;
-- **RPKI-invalid**: anunț pe care nicio autorizație de origine (ROA) nu îl permite.
+It detects three situations:
 
-Componente: un laborator cu trei rutere FRR, care își raportează rutele prin BMP (BGP Monitoring Protocol) către o stație de monitorizare, aplicația BGPWatch scrisă în C# (stația BMP, detectorul, pagina web), o bază de date Postgres pentru istoricul rutelor și al alertelor și un parser BGP scris în C, care decodează atât mesajele din laborator, cât și datele reale din arhiva RIPE RIS.
+- **false origin**: the exact prefix, announced by an AS that does not hold it;
+- **sub-prefix**: a more specific part of the prefix, announced by a foreign AS;
+- **RPKI-invalid**: an announcement that no route origin authorisation (ROA) allows.
 
-**Demo public:** <https://student-dev.ro/bgp/> (aplicația), [`/ghid`](https://student-dev.ro/bgp/ghid) (ghidul de citit), [`/referinte`](https://student-dev.ro/bgp/referinte) (lecturile).
+Components: a lab of three FRR routers that report their routes over BMP (BGP Monitoring Protocol) to a monitoring station; the BGPWatch application in C# (the BMP station, the detector, the web pages); a Postgres database for the route and alert history; and a BGP parser in C that decodes both the lab's messages and the real data of the RIPE RIS archive.
 
-![Simulatorul: trei sisteme autonome, deturnarea sub-prefixului 203.0.113.0/25 și tabelele BGP ale fiecărui ruter](media/app-simulator.png)
+**Live demo:** <https://student-dev.ro/bgp/> (the application), [`/guide`](https://student-dev.ro/bgp/guide) (the guide to read), [`/references`](https://student-dev.ro/bgp/references) (the readings). The site is in English by default; the **EN | RO** toggle in the top bar, or `?lang=ro` in the address, switches it to Romanian and remembers the choice.
 
-## Capturi
+![The simulator: three autonomous systems, the hijack of the 203.0.113.0/25 sub-prefix and the BGP table of every router](media/app-simulator.png)
+
+## Screenshots
 
 | | |
 |---|---|
-| ![YouTube 2008: un rând pentru fiecare vecin RIS, roșu cât timp trimitea traficul către AS17557](media/app-2008.png) | ![Istoricul prefixului 203.0.113.0/24 pe fiecare ruter](media/app-prefixe.png) |
-| **YouTube 2008**, redat din actualizările reale RIPE RIS rrc00 | **Prefixe**: unde trimite fiecare ruter prefixul, de-a lungul timpului |
-| ![Verificarea unui prefix real prin RIPEstat, cu starea RPKI](media/app-verifica.png) | ![Lecturile despre BGP, pe etape](media/referinte.png) |
-| **Verifică**: un prefix real, cu originea și starea RPKI de la RIPEstat | **Referințe**: 44 de surse în 9 etape |
+| ![YouTube 2008: one row per RIS neighbour, red while it sent the traffic to AS17557](media/app-2008.png) | ![The history of the prefix 203.0.113.0/24 on every router](media/app-prefixes.png) |
+| **YouTube 2008**, replayed from the real RIPE RIS rrc00 updates | **Prefixes**: where each router sends the prefix, over time |
+| ![Looking up a real prefix through RIPEstat, with its RPKI state](media/app-lookup.png) | ![The BGP readings, in stages](media/references.png) |
+| **Lookup**: a real prefix, with its origin and RPKI state from RIPEstat | **References**: 44 sources in 9 stages |
 
-Capturile se refac cu `python scripts/screenshots.py` (implicit de pe instanța publică; `--url http://localhost:8080/` pentru cea locală).
+`python scripts/screenshots.py` rewrites them, in English into `media/` and in Romanian into `media/ro/` (from the public instance by default; `--url http://localhost:8080/` for a local one).
 
-## Tehnologii
+## Stack
 
-| Strat | Ce folosește |
+| Layer | What it uses |
 |---|---|
-| Laborator | FRRouting 10.4 în Docker Compose, rețea internă `10.10.0.0/24`, BMP Loc-RIB (RFC 7854, RFC 9069) |
-| Parser | C11, bibliotecă partajată (`libmrt.so`, `mrt.dll`): MRT (RFC 6396) și UPDATE BGP, IPv4 și IPv6, AS4_PATH |
-| Aplicație | C# pe .NET 10: ASP.NET Core, Razor Pages, API JSON minimal, P/Invoke spre parser, Docker Engine API prin socket |
-| Date | PostgreSQL 16 prin Npgsql (COPY binar, fără ORM); RIPEstat Data API, cu cache de 10 minute |
-| Pagină | module ES fără framework, SVG, fonturile Atkinson Hyperlegible Next și Mono |
-| Teste și verificări | xUnit v3, Playwright pentru Python, ASan și UBSan pentru parser |
+| Lab | FRRouting 10.4 in Docker Compose, internal network `10.10.0.0/24`, BMP Loc-RIB (RFC 7854, RFC 9069) |
+| Parser | C11, a shared library (`libmrt.so`, `mrt.dll`): MRT (RFC 6396) and BGP UPDATE, IPv4 and IPv6, AS4_PATH; every read bounds-checked, every failure reported |
+| Application | C# on .NET 10: ASP.NET Core, Razor Pages, a minimal JSON API, P/Invoke to the parser, the Docker Engine API over its socket |
+| Languages | a C# translation service over one JSON file per language (`Localization/strings.en.json`, `strings.ro.json`), shared by the pages and the browser modules |
+| Data | PostgreSQL 16 through Npgsql (binary COPY, no ORM); the RIPEstat Data API, with a 10-minute cache |
+| Page | ES modules without a framework, SVG, the Atkinson Hyperlegible Next and Mono fonts |
+| Tests and checks | xUnit v3, Playwright for Python, ASan and UBSan for the parser |
 
-## Garanții de izolare
+## Isolation guarantees
 
-- Rețeaua laboratorului este internă (`internal: true` în `lab/docker-compose.yml`), fără uplink. Niciun anunț nu părăsește calculatorul.
-- Ruterele folosesc numere AS private (65000, 65001, 65003) și prefixul de documentație `203.0.113.0/24` (RFC 5737). Stația BMP doar ascultă: nu are sesiuni BGP și nu anunță nimic.
-- Deturnarea din laborator este un test: ruterul „atacator” anunță prefixul doar în această rețea închisă.
-- Redarea incidentului din 2008 citește un fișier înregistrat. Nu contactează nicio rețea.
-- Local, pagina este publicată pe portul 8080 al calculatorului; pe server este servită sub prefixul `/bgp`. În ambele cazuri comandă laboratorul prin socket-ul Docker, deci oricine vede pagina poate declanșa și reseta deturnarea de test, și nimic altceva.
-- Niciun pachet real nu traversează laboratorul: Docker aruncă pachetele adresate în afara subrețelei unei rețele interne. „Întreabă nucleele” citește decizia de rutare a fiecărui ruter în loc să trimită pachete.
-- Figura 5 întreabă RIPEstat (`stat.ripe.net`) despre un prefix real; este singura cerere către Internet și doar citește.
+- The lab network is internal (`internal: true` in `lab/docker-compose.yml`), with no uplink. No announcement leaves the machine.
+- The routers use private AS numbers (65000, 65001, 65003) and the documentation prefix `203.0.113.0/24` (RFC 5737). The BMP station only listens: it has no BGP session and announces nothing.
+- The lab hijack is a test: the "attacker" router announces the prefix only inside this closed network.
+- The 2008 replay reads a recorded file. It contacts no network.
+- Locally the page is published on a port of the machine; on the server it is served under the `/bgp` prefix. In both cases it drives the lab through the Docker socket, so anyone who sees the page can trigger and reset the test hijack, and nothing else.
+- No real packet crosses the lab: Docker drops packets addressed outside the subnet of an internal network. "Ask the kernels" reads each router's routing decision instead of sending packets.
+- The lookup view asks RIPEstat (`stat.ripe.net`) about a real prefix; it is the page's only request to the Internet, and it only reads.
 
-## Pornire și oprire
+## Install, start, stop
 
-Instanța publică rulează la <https://student-dev.ro/bgp/>: aceeași aplicație, cu laboratorul pornit pe server.
+Running the application needs only Docker. The other dependencies (the .NET 10 SDK, gcc, Python with Playwright) serve the tests and the scripts in `scripts/`.
 
-Ca să rulezi aplicația local îți ajunge Docker. Restul dependențelor (SDK-ul .NET 10, gcc, Python cu Playwright) servesc la teste și la scripturile din `scripts/`.
+### Install
 
-### Instalare
+- **Windows 10/11:** double-click `install.bat`. It installs Docker Desktop, the .NET 10 SDK, MSYS2 with gcc and Python 3.12 through winget, then Playwright with Chromium and the NuGet packages, and skips what is already there. After the first install of Docker Desktop, restart the computer once (it needs WSL 2).
+- **Debian or Ubuntu:** `sh scripts/install-linux.sh` from the repository root. It installs Docker Engine with the compose plugin, `build-essential`, the .NET 10 SDK in `~/.dotnet` and a `.venv` with Playwright and Chromium.
 
-- **Windows 10/11:** dublu-clic pe `install.bat`. Instalează prin winget Docker Desktop, SDK-ul .NET 10, MSYS2 cu gcc și Python 3.12, apoi Playwright cu Chromium și pachetele NuGet; sare peste ce există deja. După prima instalare a Docker Desktop, repornește calculatorul o dată (cere WSL 2).
-- **Debian sau Ubuntu:** `sh scripts/install-linux.sh` din rădăcina proiectului. Instalează Docker Engine cu pluginul compose, `build-essential`, SDK-ul .NET 10 în `~/.dotnet` și un `.venv` cu Playwright și Chromium.
+### Start and stop
 
-### Pornire și oprire
-
-- **Windows:** dublu-clic pe `start.bat`. Pornește Docker Desktop dacă este oprit, apoi laboratorul și detectorul, și deschide pagina `http://localhost:8080`. Prima pornire construiește imaginile și durează câteva minute. Oprire: dublu-clic pe `stop.bat`. Istoricul rutelor și alertele rămân în volumul Docker.
-- **Linux sau macOS**, din rădăcina proiectului:
+- **Windows:** double-click `start.bat`. It starts Docker Desktop if it is stopped, then the lab and the detector, and opens the page. The page keeps the port of a stack already running, or takes the first free local port from 8080 to 8099. The first start builds the images and takes a few minutes. To stop, double-click `stop.bat`; the route history and the alerts stay in the Docker volume.
+- **Linux or macOS**, from the repository root (`BGP_PORT` picks the local port, 8080 when unset):
 
 ```sh
-# pornire: laboratorul, apoi detectorul (stația BMP, Postgres, pagina pe :8080)
+# start: the lab, then the detector (BMP station, Postgres, the page)
 docker compose -f lab/docker-compose.yml up -d
-docker compose up -d --build --remove-orphans
+BGP_PORT=8080 docker compose up -d --build --remove-orphans
 
-# oprire
+# stop
 docker compose down
 docker compose -f lab/docker-compose.yml down
 ```
 
-### Comenzi Docker utile
+### Useful Docker commands
 
 ```sh
-docker compose ps                                   # starea aplicației și a bazei de date
-docker compose logs -f app                          # jurnalul aplicației
-docker compose -f lab/docker-compose.yml ps         # cele trei rutere
-docker exec lab-transit vtysh -c "show ip bgp"      # tabela BGP a ruterului de tranzit
-docker exec lab-transit vtysh -c "show bmp"         # sesiunea BMP către stație
-docker compose -f lab/docker-compose.yml up -d --force-recreate   # după o schimbare în lab/frr/
-docker compose down -v                              # oprește și ȘTERGE istoricul din Postgres
+docker compose ps                                   # state of the application and the database
+docker compose logs -f app                          # the application's log
+docker compose port app 8080                        # the local port the page is published on
+docker compose -f lab/docker-compose.yml ps         # the three routers
+docker exec lab-transit vtysh -c "show ip bgp"      # the transit router's BGP table
+docker exec lab-transit vtysh -c "show bmp"         # its BMP session to the station
+docker compose -f lab/docker-compose.yml up -d --force-recreate   # after a change in lab/frr/
+docker compose down -v                              # stop and DELETE the Postgres history
 ```
 
-Parola Postgres din `docker-compose.yml` (`bgp`) este valoarea implicită a demo-ului local; baza nu are port publicat.
+The Postgres password in `docker-compose.yml` (`bgp`) is the default of the local demo; the database publishes no port.
 
-## Ce să apeși
+## What each part does
 
-Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi în bara de sus (Simulator, YouTube 2008, Prefixe, Verifică) și butoanele „Ghid” și „Referințe”. Ghidul (`/ghid`) este pagina de citit de sus în jos, cu aceleași figuri între paragrafe și explicațiile; fiecare vedere a aplicației trimite la capitolul ei din ghid. Fiecare figură are datele brute la îndemână, într-un sertar „Date brute” închis, iar în ghid termenii subliniați punctat deschid o definiție. Referințele (`/referinte`) sunt lecturile pentru a învăța BGP, pe etape, cu genealogia specificației de la RFC 1105 la RFC 4271.
+The home page is the application: the simulator on the whole screen, four views in the top bar (Simulator, YouTube 2008, Prefixes, Lookup) and the "Guide" and "References" buttons. The guide (`/guide`) is the page to read from top to bottom, with the same figures between the paragraphs that explain them; every view of the application links to its chapter of the guide. Every figure keeps its raw data in a closed "Raw data" drawer, and in the guide the dotted-underlined terms open a definition. The references (`/references`) are the readings for learning BGP, in stages, with the lineage of the specification from RFC 1105 to RFC 4271.
 
-1. **Figura 1, simulatorul.** Pe pânză, harta celor trei sisteme autonome cu ruterele lor, sesiunile BGP și colectorul; în dreapta, inspectorul cu tabela BGP a fiecărui ruter, lista de evenimente și incidentele, citite la fiecare două secunde. Bara de sus ține cei patru pași, numerotați, și „Opțiuni”, unde alegi scenariul (prefixul exact, sub-prefixul sau ambele) și pachetul. Apasă „1 Deturnează”: fiecare salt al mesajelor UPDATE, de la atacator din ruter în ruter și spre colector, este un eveniment: un punct parcurge legătura, iar eticheta mesajului așteaptă deja la ruterul țintă; rândurile atacatorului apar cu roșu, sub-prefixul `203.0.113.0/25` este ales pe toate ruterele, iar prefixul exact rămâne rută de rezervă pe tranzit, care păstrează ruta mai veche a victimei. Bara de redare, ca în Packet Tracer: „Pauză” și „Redă”, „Pas” (un eveniment înainte), „Înapoi”, viteza de la 0,25x la 4x și evenimentul curent; în tabul „Evenimente”, un clic pe un eveniment sare la el, iar „Șterge evenimentele” golește lista. „Trimite pachetul” urmărește un pachet către `203.0.113.1` (în sub-prefix) sau `203.0.113.129` (în afara lui), după tabelele BGP, cu rândul consultat evidențiat în inspector la fiecare salt și verdictul lângă ruterul unde se oprește. „Întreabă nucleele” cere fiecărui ruter decizia sa reală de rutare pentru aceeași adresă și spune dacă nucleele confirmă simularea; niciun pachet nu este trimis. „Retrage anunțurile” readuce ruterele la starea de bază. Un clic pe eticheta evenimentului curent sau pe rândul lui din „Evenimente” oprește redarea și deschide fișa lui: pentru un UPDATE, calea AS din acel salt, originea (așteptată sau nu) și ce face ruterul care îl primește; pentru un raport BMP, alertele ridicate de detector; pentru un pachet, rândurile care se potrivesc și următorul salt; pentru nucleu, răspunsul lui `ip route get`. Un clic pe un ruter îi arată sesiunile, raportarea BMP și tabela.
-2. **Figura 2, incidentele.** Alertele aceleiași deturnări, văzute din mai multe puncte de observație, formează un incident. Apasă pe el și primești explicația: cine a anunțat, ce era așteptat, de unde a venit anunțul.
-3. **Figura 3, YouTube 2008.** Tot incidentul pe un singur ecran: un rând pentru fiecare dintre cei 11 vecini ai colectorului rrc00, cu banda care arată cui îi trimitea traficul pentru blocul deturnat (roșu către AS17557, verde către YouTube) și, la dreapta, calea AS din momentul ales, cu sistemul autonom care predă ruta originii încadrat. Axa benzilor e împărțită în faze la cele cinci evenimente documentate: fiecare fază are lățimea după rădăcina pătrată a duratei, cu durata reală scrisă deasupra, iar faza comprimată mult (cele 80 de minute ale deturnării) poartă semnul de rupere //. Deasupra stau „Redă” (cursorul merge cu viteză constantă pe bandă, iar eticheta arată ritmul fazei curente), ora și câți vecini trimit spre fiecare origine, apoi evenimentul documentat de RIPE NCC din momentul ales, cu butoane spre cel anterior și cel următor. Trage pe benzi sau pe bara de sub ele ca să derulezi. Evenimentele, prima observare la fiecare vecin și datele brute stau închise sub tabel. Actualizările BGP reale (18:45-21:05 UTC, 136.344 de actualizări) sunt încărcate o singură dată la pornire; detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Reîncarcă incidentul din fișiere”, în datele brute, le rescrie fără dubluri.
-4. **Figura 4, istoricul unui prefix.** Alege prefixul urmărit și fereastra (10 min, 1 oră, 24 h, tot). Verdictul spune unde trimite fiecare ruter prefixul acum. Dedesubt, fiecare ruter are câte un rând pentru fiecare prefix văzut (prefixul urmărit și sub-prefixele lui), cu banda în fereastră (verde spre originea așteptată, roșu spre alt AS, linie subțire fără rută) și calea de acum. Schimbările, alertele și datele brute stau închise dedesubt.
-5. **Figura 5, un prefix real.** Caută un prefix sau o adresă, alege un exemplu ori apasă „Adresa mea”. Răspunsul începe cu verdictul RPKI, apoi prefixul care o acoperă, originea, deținătorul, autorizațiile (ROA) și ce înseamnă starea RPKI, de la RIPEstat. Este singura cerere a paginii către Internet și doar citește.
-6. **„Golește istoricul simulatorului”**, sub inspector. După confirmare, șterge alertele și istoricul de rute ale simulatorului; incidentul din 2008 rămâne. Stația închide apoi conexiunile BMP, ruterele se reconectează și își retrimit tabelele, așa că rutele curente reapar imediat.
+1. **Figure 1, the simulator.** On the canvas, the map of the three autonomous systems with their routers, the BGP sessions and the collector; on the right, the inspector with every router's BGP table, the event list and the incidents, read every two seconds. The top bar holds the four numbered steps and "Options", which choose the scenario (the exact prefix, the sub-prefix or both) and the packet. "1 Hijack" makes every hop of the UPDATE messages, from the attacker from router to router and to the collector, an event: a dot travels the link while the message's label already waits at the target router; the attacker's rows turn red, the sub-prefix `203.0.113.0/25` is chosen on every router, and the exact prefix stays a backup route on the transit, which keeps the victim's older route. The playback bar works as in Packet Tracer: "Pause" and "Play", "Step" (one event forward), "Back", the speed from 0.25x to 4x and the current event; in the "Events" tab a click on an event jumps to it, and "Clear the events" empties the list. "Send the packet" follows a packet to `203.0.113.1` (inside the sub-prefix) or `203.0.113.129` (outside it) along the BGP tables, with the consulted row highlighted in the inspector at every hop and the verdict next to the router where it stops. "Ask the kernels" asks each router for its real routing decision for the same address and says whether the kernels confirm the simulation; no packet is sent. "Withdraw the announcements" returns the routers to their baseline. A click on the current event's label, or on its row in "Events", pauses playback and opens its card: for an UPDATE, the AS path on that hop, the origin (expected or not) and what the receiving router does; for a BMP report, the alerts the detector raised; for a packet, the matching rows and the next hop; for a kernel, its `ip route get` answer. A click on a router shows its sessions, its BMP reporting and its table.
+2. **Figure 2, the incidents.** The alerts of the same hijack, seen from several vantage points, form an incident. A click on it gives the explanation: who announced, what was expected, where the announcement came from.
+3. **Figure 3, YouTube 2008.** The whole incident on one screen: one row for each of the 11 neighbours of the rrc00 collector, with a lane showing where it sent the traffic for the hijacked block (red to AS17557, green to YouTube) and, on the right, the AS path at the chosen moment, with the autonomous system that hands the route to the origin framed. The lane axis is cut into phases at the five documented events: each phase is as wide as the square root of its duration, with the real duration written above it, and the much compressed phase (the 80 minutes of the hijack) carries the // break mark. Above sit "Play" (the cursor moves at one speed along the lane, and the label shows the current phase's pace), the time and how many neighbours send to each origin, then the RIPE NCC's documented event at the chosen moment, with buttons to the previous and the next. Dragging on the lanes or on the bar under them scrubs. The events, the first sighting at each neighbour and the raw data sit closed under the table. The real BGP updates (18:45-21:05 UTC, 136,344 updates) load once at start; the detector raises 31 sub-prefix alerts, the first at 18:47:57 UTC. "Reload the incident from its files", in the raw data, rewrites them without duplicates.
+4. **Figure 4, the history of a prefix.** The watched prefix and the window (10 min, 1 hour, 24 h, all) are chosen at the top. The verdict says where each router sends the prefix now. Below, each router has one row for every prefix it saw (the watched prefix and its sub-prefixes), with the lane over the window (green to the expected origin, red to another AS, a thin line for no route) and its path now. The changes, the alerts and the raw data sit closed below.
+5. **Figure 5, a real prefix.** A prefix or an address typed in, an example, or "My address". The answer starts with the RPKI verdict, then the covering prefix, the origin, the holder, the authorisations (ROAs) and what the RPKI state means, from RIPEstat. It is the page's only request to the Internet, and it only reads.
+6. **"Clear the simulator's history"**, under the inspector. After a confirmation it deletes the simulator's alerts and route history; the 2008 incident stays. The station then drops the BMP sessions, the routers reconnect and send their tables again, so the current routes reappear at once.
 
-## Unde citești mai mult
+## Further reading
 
-- `src/BGPWatch.Web/Reading/lecturi-bgp.md`: lista de lecturi despre BGP, pe etape, cu genealogia specificației; pagina `/referinte` se generează din ea.
-- `detector/incidents/youtube-2008/config.toml`: sursa datelor redate, prefixul monitorizat și cronologia documentată a incidentului.
+- `src/BGPWatch.Web/Reading/readings.en.md` and `readings.ro.md`: the BGP reading list, in English and in Romanian, in stages, with the lineage of the specification; the `/references` page is generated from them.
+- `detector/incidents/youtube-2008/config.toml`: the source of the replayed data, the monitored prefix and the documented timeline of the incident, in both languages.
 
-## Structură
+## Layout
 
-- `lab/`: configurațiile FRR și scripturile care pornesc și opresc deturnarea de test.
-- `src/BGPWatch.Core/`: nucleul, fără dependențe: modelul de domeniu, detecția, gruparea alertelor în incidente, istoricul unui prefix, cazurile de utilizare.
-- `src/BGPWatch.Web/`: adaptoarele și gazda: stația BMP, legătura cu parserul C, Postgres, Docker, RIPEstat, API-ul și paginile (Razor Pages, `wwwroot/static/`).
-- `tests/BGPWatch.Tests/`: testele unitare.
-- `detector/mrt/`: parserul BGP și MRT în C.
-- `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: datele incidentului din 2008, configurația laboratorului și schema bazei de date.
-- `scripts/`: instalatoarele, verificarea paginii, măsurătorile laboratorului, fuzzing-ul parserului, capturile din `media/`.
-- `docker-compose.yml` este forma de producție; `docker-compose.override.yml` (încărcat implicit) adaugă portul local și fișierele montate din arborele de lucru; `docker-compose.server.yml` și `deploy/nginx-bgp.conf` sunt stratul pentru server.
+- `lab/`: the FRR configurations and the scripts that start and stop the test hijack.
+- `src/BGPWatch.Core/`: the core, with no dependencies: the domain model, detection, grouping alerts into incidents, the history of a prefix, the use cases.
+- `src/BGPWatch.Web/`: the adapters and the host: the BMP station, the binding to the C parser, Postgres, Docker, RIPEstat, the API, the translation service (`Localization/`) and the pages (Razor Pages, `wwwroot/static/`).
+- `tests/BGPWatch.Tests/`: the unit tests.
+- `detector/mrt/`: the BGP and MRT parser in C, with its sanitizer fuzz harness.
+- `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: the 2008 incident's data, the lab configuration and the database schema.
+- `scripts/`: the installers, the page check, the lab measurements, the parser fuzzing, the screenshots in `media/`.
+- `docker-compose.yml` is the production shape; `docker-compose.override.yml` (loaded by default) adds the local port and the files mounted from the working tree; `docker-compose.server.yml` and `deploy/nginx-bgp.conf` are the server layer.
 
-Teste: `sh detector/mrt/build.sh`, apoi `dotnet test --solution BGPWatch.slnx`.
+## Tests and checks
+
+- Unit tests: `sh detector/mrt/build.sh`, then `dotnet test --solution BGPWatch.slnx`.
+- Page check, with the stack running: `python scripts/check_page.py` (both languages at 390, 1366 and 1920 px: overflow, script errors, map text size and collisions, token contrast, emoji).
+- Parser fuzzing under ASan and UBSan: `python scripts/fuzz_mrt.py 20000`.

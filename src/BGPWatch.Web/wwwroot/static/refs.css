@@ -103,7 +103,7 @@
   .refs-index { display: block; position: sticky; top: 0; align-self: start; }
 }
 @media (max-width: 700px) {
-  .topbar { grid-template-areas: "brand guide" "views views"; }
+  .topbar { grid-template-areas: "brand" "guide" "views"; }
   .refs-start { padding: 14px 14px 4px; }
   .refs-stage > summary { padding: 12px 14px; }
   .refs-name { font-size: 20px; }

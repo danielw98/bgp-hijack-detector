@@ -1,8 +1,10 @@
 // Text and markup shared by the figures: escaping, times, AS names and the path chain.
 
-export const ROLE_NAME = { victim: "Victimă", transit: "Tranzit", attacker: "Atacator", collector: "Colector" };
-export const ALERT_NAME = { origin_hijack: "origine falsă", subprefix_hijack: "sub-prefix", rpki_invalid: "RPKI-invalid" };
-export const REASON = { "Older Path": "ruta mai veche", "Weight": "ruta proprie", "First path received": "singura rută" };
+import { LOCALE, t } from "./i18n.js";
+
+export const ROLE_NAME = { victim: t("role.victim"), transit: t("role.transit"), attacker: t("role.attacker"), collector: t("role.collector") };
+export const ALERT_NAME = { origin_hijack: t("alert.origin_hijack"), subprefix_hijack: t("alert.subprefix_hijack"), rpki_invalid: t("alert.rpki_invalid") };
+export const REASON = { "Older Path": t("reason.older"), "Weight": t("reason.weight"), "First path received": t("reason.first") };
 
 const labRoles = new Map();     // asn -> role, filled by the lab figure
 const labPeers = new Map();     // link address -> role
@@ -59,7 +61,7 @@ export function asChip(asn, extra = "") {
 export function chain(asPath, localAsn) {
   const path = Array.isArray(asPath) ? asPath : [];
   if (!path.length) {
-    return `<span class="chain">${asChip(localAsn, "origin local")}<span class="sep">(proprie)</span></span>`;
+    return `<span class="chain">${asChip(localAsn, "origin local")}<span class="sep">${esc(t("path.own"))}</span></span>`;
   }
   const chips = path.map((asn, i) => asChip(asn, i === path.length - 1 ? "origin" : ""));
   return `<span class="chain">${chips.join('<span class="sep">&rsaquo;</span>')}</span>`;
@@ -87,24 +89,16 @@ export function fmtTime(iso, utc = false) {
   const t = new Date(iso);
   if (isNaN(t)) return esc(iso);
   if (utc) {
-    const date = t.toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+    const date = t.toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
     return `${date}, ${t.toISOString().slice(11, 19)} UTC`;
   }
-  if (t.toDateString() === new Date().toDateString()) return t.toLocaleTimeString("ro-RO");
-  return t.toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" }) + ", " + t.toLocaleTimeString("ro-RO");
+  if (t.toDateString() === new Date().toDateString()) return t.toLocaleTimeString(LOCALE);
+  return t.toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" }) + ", " + t.toLocaleTimeString(LOCALE);
 }
 
 export function fmtUtc(iso, withSeconds = true) {
   const t = new Date(iso);
   return isNaN(t) ? esc(iso) : t.toISOString().slice(11, withSeconds ? 19 : 16);
-}
-
-// A count with its noun; from 20 on, Romanian puts "de" between them (51 de alerte),
-// except after 01-19 in the last two digits (101 alerte).
-export function plural(n, one, many) {
-  if (n === 1) return `1 ${one}`;
-  const de = n >= 20 && (n % 100 === 0 || n % 100 >= 20) ? "de " : "";
-  return `${n} ${de}${many}`;
 }
 
 export function pretty(data) {

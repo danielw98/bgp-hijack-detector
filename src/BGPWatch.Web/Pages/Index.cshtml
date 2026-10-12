@@ -1,7 +1,8 @@
 @page
 @{
-    ViewData["Title"] = "Rute furate, simulatorul";
+    ViewData["Title"] = T["app.title"];
     ViewData["BodyClass"] = "app";
+    ViewData["Page"] = "app";
 }
 @section Styles {
 <link rel="stylesheet" href="~/static/app.css">
@@ -9,21 +10,7 @@
 @section Scripts {
 <script type="module" src="~/static/app.js"></script>
 }
-<header class="topbar">
-  <a class="brand" href="~/">Rute furate</a>
-  <nav class="views" aria-label="vederile aplicației">
-    <a href="#simulator" data-view="simulator"><span class="num">1</span>Simulator</a>
-    <a href="#2008" data-view="2008"><span class="num">2</span>YouTube 2008</a>
-    <a href="#prefixe" data-view="prefixe"><span class="num">3</span>Prefixe</a>
-    <a href="#verifica" data-view="verifica"><span class="num">4</span>Verifică</a>
-  </nav>
-  <p class="status">
-    <span class="status-item"><span id="dot-lab" class="dot"></span><span id="lab-state">Rutere, se verifică</span></span>
-    <span class="status-item"><span id="dot-data" class="dot"></span><span id="data-state">Flux, se verifică</span></span>
-    <span id="updated" class="updated"></span>
-  </p>
-  <nav class="pages" aria-label="paginile proiectului"><a class="guide" href="~/ghid">Ghid</a><a class="guide" href="~/referinte">Referințe</a></nav>
-</header>
+@await Html.PartialAsync("_TopBar")
 
 <main class="workspace">
 <section class="view sim-view" id="view-simulator">
@@ -31,15 +18,15 @@
 </section>
 
 <section class="view" id="view-2008" hidden>
-<div class="view-head"><h2>YouTube, 24 februarie 2008</h2><span class="note">actualizările reale ale colectorului RIPE RIS rrc00, 18:45-21:05 UTC</span><a class="guide-link" href="~/ghid#s3">În ghid, §3</a></div>
+<div class="view-head"><h2>@T["view.2008.title"]</h2><span class="note">@T["view.2008.note"]</span><a class="guide-link" href="~/guide#s3">@T["view.guide.s3"]</a></div>
 <div class="view-body"><div class="inner">
   @await Html.PartialAsync("_Incident2008")
 </div>
 </div>
 </section>
 
-<section class="view" id="view-prefixe" hidden>
-<div class="view-head"><h2>Istoricul unui prefix</h2><span class="note">cui îi trimite fiecare ruter traficul pentru prefix, de-a lungul timpului</span><a class="guide-link" href="~/ghid#s4">În ghid, §4</a></div>
+<section class="view" id="view-prefixes" hidden>
+<div class="view-head"><h2>@T["view.prefixes.title"]</h2><span class="note">@T["view.prefixes.note"]</span><a class="guide-link" href="~/guide#s4">@T["view.guide.s4"]</a></div>
 <div class="view-body">
 <div class="inner">
   @await Html.PartialAsync("_Prefix")
@@ -47,8 +34,8 @@
 </div>
 </section>
 
-<section class="view" id="view-verifica" hidden>
-<div class="view-head"><h2>Un prefix real, astăzi</h2><span class="note">de la RIPEstat, serviciul public de date al RIPE NCC; doar citește</span><a class="guide-link" href="~/ghid#s5">În ghid, §5</a></div>
+<section class="view" id="view-lookup" hidden>
+<div class="view-head"><h2>@T["view.lookup.title"]</h2><span class="note">@T["view.lookup.note"]</span><a class="guide-link" href="~/guide#s5">@T["view.guide.s5"]</a></div>
 <div class="view-body">
 <div class="inner">
   @await Html.PartialAsync("_Lookup")

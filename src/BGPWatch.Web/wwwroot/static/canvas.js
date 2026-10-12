@@ -5,9 +5,9 @@
 // column), chosen by the container's width; the SVG scales to its box. Labels sit in
 // the quadrant of each glyph that no link leaves from, so no line crosses text.
 
-import { esc } from "./format.js";
+import { ROLE_NAME, esc } from "./format.js";
+import { t } from "./i18n.js";
 
-const ROLE_NAME = { victim: "Victimă", transit: "Tranzit", attacker: "Atacator", collector: "Colector" };
 const ROUTERS = ["victim", "transit", "attacker"];
 const SESSIONS = [["victim", "transit"], ["transit", "attacker"]];
 const RADIUS = 30;
@@ -15,8 +15,8 @@ const MARKER_RADIUS = 11;
 const REFERENCE_LENGTH = 330;
 const LABEL_FADE_MS = 250;
 const TALL_BELOW = 720;
-const KIND_LABEL = { update: "UPDATE", withdraw: "RETRAS", packet: "pachet", kernel: "nucleu" };
-const VERDICT_LABEL = { delivered: "livrat", dropped: "aruncat", unreachable: "fără rută", lost: "pierdut", loop: "buclă" };
+const KIND_LABEL = { update: "UPDATE", withdraw: t("token.withdraw"), packet: t("token.packet"), kernel: t("token.kernel") };
+const VERDICT_LABEL = { delivered: t("verdict.delivered"), dropped: t("verdict.dropped"), unreachable: t("verdict.unreachable"), lost: t("verdict.lost"), loop: t("verdict.loop") };
 
 // Wide: labels above each router glyph, sessions on one horizontal line, reports down
 // to a bus and into the collector at the bottom.
@@ -75,7 +75,7 @@ export function createCanvas(container) {
     const routers = Object.fromEntries(data.routers.map((r) => [r.role, r]));
     const [W, H] = layout.size;
     container.innerHTML = `<svg class="map ${layout === TALL ? "tall" : "wide"}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
-      aria-label="Simulatorul: trei sisteme autonome, sesiunile BGP dintre rutere și colectorul care le ascultă">
+      aria-label="${esc(t("map.label"))}">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker>
       </defs>
@@ -112,7 +112,7 @@ export function createCanvas(container) {
       const d = vertical
         ? `M ${pa[0]} ${pa[1] + RADIUS} L ${pb[0]} ${pb[1] - RADIUS}`
         : `M ${pa[0] + RADIUS} ${pa[1]} L ${pb[0] - RADIUS} ${pb[1]}`;
-      const text = up ? "sesiune BGP" : "sesiune căzută";
+      const text = up ? t("map.session.up") : t("map.session.down");
       return `<path class="session ${up ? "up" : "down"}" d="${d}" marker-start="url(#arrow)" marker-end="url(#arrow)"></path>
         ${halo(lx, ly, anchor, text)}<text class="link-label ${up ? "" : "down"}" x="${lx}" y="${ly}" text-anchor="${anchor}">${text}</text>`;
     });
@@ -133,11 +133,11 @@ export function createCanvas(container) {
   function router(role, r) {
     const [cx, cy] = layout.at[role];
     const lines = [["mono", r.address]];
-    if (!r.reachable) lines.push(["detail down", "ruter oprit"]);
-    else if (!r.reporting) lines.push(["detail down", "nu raportează"]);
+    if (!r.reachable) lines.push(["detail down", t("map.router.off")]);
+    else if (!r.reporting) lines.push(["detail down", t("map.router.silent")]);
     const texts = layout.text(layout.region[role], lines, [cx, cy]).map(([x, y, anchor, [cls, text]]) =>
       text ? `<text class="${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${esc(text)}</text>` : "").join("");
-    return `<g class="node ${role} ${r.reachable ? "" : "off"}" data-role="${role}" tabindex="0" role="button" aria-label="${ROLE_NAME[role]}, detalii"><title>${ROLE_NAME[role]}: clic pentru detalii</title>
+    return `<g class="node ${role} ${r.reachable ? "" : "off"}" data-role="${role}" tabindex="0" role="button" aria-label="${esc(t("map.details", { name: ROLE_NAME[role] }))}"><title>${esc(t("map.click", { name: ROLE_NAME[role] }))}</title>
       <circle class="ring" cx="${cx}" cy="${cy}" r="${RADIUS + 10}"></circle>
       <circle class="body" cx="${cx}" cy="${cy}" r="${RADIUS}"></circle>
       ${routerGlyph(cx, cy)}
@@ -160,7 +160,7 @@ export function createCanvas(container) {
     return `<g class="node collector" data-role="collector">
       <rect class="body" x="${cx - 40}" y="${cy - 25}" width="80" height="50" rx="8"></rect>
       ${[-12, 0, 12].map((dy) => `<line class="slot" x1="${cx - 26}" y1="${cy + dy}" x2="${cx + 26}" y2="${cy + dy}"></line>`).join("")}
-      <text class="name" x="${x1}" y="${y1}" text-anchor="${a1}">Colector</text>
+      <text class="name" x="${x1}" y="${y1}" text-anchor="${a1}">${ROLE_NAME.collector}</text>
       <text class="mono" x="${x2}" y="${y2}" text-anchor="${a2}">BMP ${esc(c ? c.address : "")}</text>
     </g>`;
   }
@@ -202,7 +202,7 @@ export function createCanvas(container) {
   function tokenMarkup(kind, label) {
     const text = `${KIND_LABEL[kind] || kind} ${label || ""}`.trim();
     const width = text.length * 10.5 + 26;
-    return `<g class="token ${kind}" tabindex="0" role="button" aria-label="${esc(text)}, detalii"><title>${esc(text)}: clic pentru detalii</title><rect x="${-width / 2}" y="-16" width="${width}" height="32" rx="16"></rect><text y="6" text-anchor="middle">${esc(text)}</text></g>`;
+    return `<g class="token ${kind}" tabindex="0" role="button" aria-label="${esc(t("map.details", { name: text }))}"><title>${esc(t("map.click", { name: text }))}</title><rect x="${-width / 2}" y="-16" width="${width}" height="32" rx="16"></rect><text y="6" text-anchor="middle">${esc(text)}</text></g>`;
   }
 
   // A verdict next to a node: delivered, dropped, no route.

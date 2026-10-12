@@ -4,10 +4,11 @@
 // while it plays, events that arrive run as they come.
 
 import { esc } from "./format.js";
+import { t } from "./i18n.js";
 
 export const SPEEDS = [0.25, 0.5, 1, 2, 4];
 const HOP_MS = 1400;
-const KIND_NAME = { update: "UPDATE", withdraw: "retragere", packet: "pachet", kernel: "nucleu" };
+const KIND_NAME = { update: "UPDATE", withdraw: t("kind.withdraw"), packet: t("token.packet"), kernel: t("token.kernel") };
 
 export function createTransport({ canvas, list, play, back, step, clear, speed, speedLabel, count, now, onShow }) {
   const events = [];
@@ -103,7 +104,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   }
 
   function renderControls() {
-    play.textContent = auto ? "Pauză" : "Redă";
+    play.textContent = auto ? t("pause") : t("play");
     play.setAttribute("aria-pressed", String(auto));
     step.disabled = cursor + 1 >= events.length;
     back.disabled = running || cursor < 0;
@@ -120,7 +121,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
           <span class="to">${esc(ev.toName || "")}</span>
           <span class="what">${ev.detail || ""}</span>
         </li>`).join("")
-      : '<li class="empty">Niciun eveniment încă. Apasă „Deturnează” sau „Trimite pachetul”.</li>';
+      : `<li class="empty">${esc(t("events.empty"))}</li>`;
     const current = list.querySelector("li.current");
     if (current) current.scrollIntoView({ block: "nearest" });
     count.textContent = events.length || "";
