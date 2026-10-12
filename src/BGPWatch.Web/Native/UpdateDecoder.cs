@@ -54,6 +54,10 @@ public static unsafe class UpdateDecoder
             int status;
             while ((status = NativeMrt.Next(reader, &route)) != NativeMrt.End)
             {
+                if (status == NativeMrt.Invalid)
+                {
+                    throw new InvalidOperationException("mrt_next refused its arguments");
+                }
                 if (status == NativeMrt.Malformed)
                 {
                     malformed++;

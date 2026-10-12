@@ -1,5 +1,6 @@
 #include "mrt.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,8 +25,16 @@ enum
     AFI_IPV4 = 1,
     AFI_IPV6 = 2,
     SAFI_UNICAST = 1,
+    AS_SET = 1,
+    AS_CONFED_SET = 4,
+    NEXT_HOP_IPV4_SIZE = 4,
+    NEXT_HOP_IPV6_SIZE = 16,
+    NEXT_HOP_IPV6_LINK_LOCAL_SIZE = 32,
     MAX_RUNS = 4
 };
+
+/* What an empty input points at, so that no pointer arithmetic touches NULL. */
+static const uint8_t no_data[1];
 
 /* A bounds-checked view of the input. Reading past the end sets *overrun and yields zeros. */
 typedef struct
@@ -125,13 +134,19 @@ static void add_run(mrt_reader *reader, prefix_run run)
     reader->runs[reader->run_count++] = run;
 }
 
-/* Flattens every segment of an AS_PATH or AS4_PATH value into path. */
+/* Flattens every segment of an AS_PATH or AS4_PATH value into path. A segment type
+   outside AS_SET..AS_CONFED_SET (RFC 4271, RFC 5065) marks the record malformed. */
 static void read_as_path(span value, size_t as_width, as_path *path)
 {
     path->length = 0;
     while (remaining(&value) > 0)
     {
-        read_uint(&value, 1); /* segment type */
+        uint32_t type = read_uint(&value, 1);
+        if (type < AS_SET || type > AS_CONFED_SET)
+        {
+            *value.overrun = 1;
+            return;
+        }
         uint32_t count = read_uint(&value, 1);
         if (path->length + count > MRT_MAX_AS_PATH)
         {
@@ -156,6 +171,13 @@ static void merge_as4_path(as_path *path, const as_path *as4_path)
     memcpy(tail, as4_path->asns, as4_path->length * sizeof as4_path->asns[0]);
 }
 
+static int is_unicast_next_hop_size(uint32_t size)
+{
+    return size == NEXT_HOP_IPV4_SIZE || size == NEXT_HOP_IPV6_SIZE || size == NEXT_HOP_IPV6_LINK_LOCAL_SIZE;
+}
+
+/* Queues the reachable prefixes of an MP_REACH_NLRI value (RFC 4760) for IPv4 or IPv6
+   unicast; a next hop of any other length marks the record malformed. */
 static void read_mp_reach(mrt_reader *reader, span value)
 {
     uint32_t afi = read_uint(&value, 2);
@@ -167,7 +189,12 @@ static void read_mp_reach(mrt_reader *reader, span value)
     {
         return;
     }
-    uint8_t next_hop_family = next_hop_size >= 16 ? 6 : 4;
+    if (!is_unicast_next_hop_size(next_hop_size))
+    {
+        reader->overrun = 1;
+        return;
+    }
+    uint8_t next_hop_family = next_hop_size >= NEXT_HOP_IPV6_SIZE ? 6 : 4;
     add_run(reader, (prefix_run){value, family_of(afi), 0, read_address(&next_hop, next_hop_family)});
 }
 
@@ -327,11 +354,12 @@ static int take_prefix(mrt_reader *reader, mrt_route *route)
             continue;
         }
         uint32_t bits = read_uint(&run->prefixes, 1);
-        span bytes = take(&run->prefixes, (bits + 7) / 8);
         if (bits > 8 * address_size(run->family))
         {
             reader->overrun = 1;
+            return 0;
         }
+        span bytes = take(&run->prefixes, (bits + 7) / 8);
         if (reader->overrun)
         {
             return 0;
@@ -351,11 +379,24 @@ static int take_prefix(mrt_reader *reader, mrt_route *route)
 
 mrt_reader *mrt_open(const uint8_t *data, size_t size)
 {
-    mrt_reader *reader = calloc(1, sizeof *reader);
-    if (reader != NULL)
+    if (data == NULL)
     {
-        reader->input = (span){data, data + size, &reader->overrun};
+        if (size != 0)
+        {
+            return NULL;
+        }
+        data = no_data;
     }
+    if ((uintptr_t)data > UINTPTR_MAX - size)
+    {
+        return NULL;
+    }
+    mrt_reader *reader = calloc(1, sizeof *reader);
+    if (reader == NULL)
+    {
+        return NULL;
+    }
+    reader->input = (span){data, data + size, &reader->overrun};
     return reader;
 }
 
@@ -371,6 +412,10 @@ mrt_reader *bgp_update_open(const uint8_t *message, size_t size)
 
 mrt_status mrt_next(mrt_reader *reader, mrt_route *route)
 {
+    if (reader == NULL || route == NULL)
+    {
+        return MRT_INVALID;
+    }
     while (!take_prefix(reader, route))
     {
         if (!reader->overrun && !load_record(reader))

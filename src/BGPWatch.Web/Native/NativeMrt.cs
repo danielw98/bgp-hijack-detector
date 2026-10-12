@@ -9,6 +9,7 @@ internal static unsafe partial class NativeMrt
 
     public const int End = 0;
     public const int Malformed = -1;
+    public const int Invalid = -2;
     public const int MaxAsPath = 2048;
 
     [LibraryImport(Library, EntryPoint = "mrt_open")]

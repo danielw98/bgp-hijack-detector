@@ -30,6 +30,7 @@ typedef struct
 
 typedef enum
 {
+    MRT_INVALID = -2, /* a NULL reader or route */
     MRT_MALFORMED = -1,
     MRT_END = 0,
     MRT_ROUTE = 1
@@ -37,18 +38,21 @@ typedef enum
 
 typedef struct mrt_reader mrt_reader;
 
-/* The reader borrows data, which must outlive it. Returns NULL when out of memory. */
+/* The reader borrows data, which must outlive it. data may be NULL only when size is 0.
+   Returns NULL when out of memory, or when data and size do not form a valid range. */
 mrt_reader *mrt_open(const uint8_t *data, size_t size);
 
 /* A reader over one BGP message (RFC 4271, from its marker on) with four-octet AS
    numbers, as BMP carries it. Its routes have no timestamp and no peer: the caller
-   knows both. Borrows message like mrt_open. Returns NULL when out of memory. */
+   knows both. Borrows message and returns NULL like mrt_open. */
 mrt_reader *bgp_update_open(const uint8_t *message, size_t size);
 
 /* Fills route with the next prefix. MRT_MALFORMED reports one record whose remaining
-   prefixes were dropped; the reader continues with the following record. */
+   prefixes were dropped; the reader continues with the following record. MRT_INVALID
+   reports a NULL reader or route and touches nothing. */
 mrt_status mrt_next(mrt_reader *reader, mrt_route *route);
 
+/* Frees the reader; a NULL reader is ignored. */
 void mrt_close(mrt_reader *reader);
 
 #endif

@@ -104,6 +104,83 @@ public class UpdateDecoderTests
     }
 
     [Fact]
+    public void AnUnknownAsPathSegmentTypeMarksTheRecordMalformed()
+    {
+        var message = UpdateMessage(attributes: Attribute(2, AsPath([64500], segment: 9)), nlri: Prefix("203.0.113.0/24"));
+        Assert.Equal((0, 1), Counts(Record(message)));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(5)]
+    [InlineData(12)]
+    public void AnMpReachNextHopOfAnUnusualLengthMarksTheRecordMalformed(int size)
+    {
+        byte[] reach = [0, 2, 1, (byte)size, .. new byte[size], 0, .. Prefix("2001:db8:1::/48")];
+        Assert.Equal((0, 1), Counts(Record(UpdateMessage(attributes: [.. Attribute(2, AsPath([64500])), .. Attribute(14, reach)]))));
+    }
+
+    [Fact]
+    public void APrefixLongerThanItsFamilyMarksTheRecordMalformed()
+    {
+        Assert.Equal((0, 1), Counts(Record(UpdateMessage(attributes: Attribute(2, AsPath([64500])), nlri: [33, 203, 0, 113, 0, 0]))));
+    }
+
+    [Fact]
+    public void EmptyInputHasNoRoutes()
+    {
+        Assert.Equal((0, 0), Counts([]));
+    }
+
+    [Fact]
+    public unsafe void ANullRouteIsRefused()
+    {
+        var data = Record(UpdateMessage(attributes: Attribute(2, AsPath([64500])), nlri: Prefix("203.0.113.0/24")));
+        fixed (byte* bytes = data)
+        {
+            var reader = NativeMrt.MrtOpen(bytes, (nuint)data.Length);
+            try
+            {
+                Assert.Equal(NativeMrt.Invalid, NativeMrt.Next(reader, null));
+            }
+            finally
+            {
+                NativeMrt.Close(reader);
+            }
+        }
+    }
+
+    [Fact]
+    public unsafe void ANullReaderIsRefused()
+    {
+        var route = new NativeMrt.Route();
+        Assert.Equal(NativeMrt.Invalid, NativeMrt.Next(0, &route));
+    }
+
+    [Fact]
+    public unsafe void NullDataWithASizeIsRefused()
+    {
+        Assert.Equal(0, NativeMrt.MrtOpen(null, 1));
+        Assert.Equal(0, NativeMrt.BgpUpdateOpen(null, 1));
+    }
+
+    [Fact]
+    public unsafe void NullDataWithoutASizeReadsNothing()
+    {
+        var reader = NativeMrt.MrtOpen(null, 0);
+        Assert.NotEqual(0, reader);
+        var route = new NativeMrt.Route();
+        Assert.Equal(NativeMrt.End, NativeMrt.Next(reader, &route));
+        NativeMrt.Close(reader);
+    }
+
+    [Fact]
+    public void ClosingNoReaderIsHarmless()
+    {
+        NativeMrt.Close(0);
+    }
+
+    [Fact]
     public void ExtendedLengthAttribute()
     {
         var path = AsPath([64500, 64501]);
