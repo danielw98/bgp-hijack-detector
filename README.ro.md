@@ -120,3 +120,7 @@ Pagina de pornire este aplicația: simulatorul pe tot ecranul, patru vederi în 
 - Teste unitare: `sh detector/mrt/build.sh`, apoi `dotnet test --solution BGPWatch.slnx`.
 - Verificarea paginii, cu stack-ul pornit: `python scripts/check_page.py` (ambele limbi la 390, 1366 și 1920 px: depășiri, erori de script, mărimea și coliziunile textului de pe hartă, contrastul culorilor, emoji).
 - Fuzzing-ul parserului sub ASan și UBSan: `python scripts/fuzz_mrt.py 20000`.
+
+## Licență
+
+MIT, vezi [LICENSE](LICENSE). Fonturile Atkinson Hyperlegible incluse sunt sub SIL Open Font License; fișierele RIPE RIS din 2008 sunt date ale RIPE NCC.

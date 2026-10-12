@@ -120,3 +120,7 @@ The home page is the application: the simulator on the whole screen, four views 
 - Unit tests: `sh detector/mrt/build.sh`, then `dotnet test --solution BGPWatch.slnx`.
 - Page check, with the stack running: `python scripts/check_page.py` (both languages at 390, 1366 and 1920 px: overflow, script errors, map text size and collisions, token contrast, emoji).
 - Parser fuzzing under ASan and UBSan: `python scripts/fuzz_mrt.py 20000`.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The vendored Atkinson Hyperlegible fonts are under the SIL Open Font License; the 2008 RIPE RIS files are RIPE NCC data.
