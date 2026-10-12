@@ -13,7 +13,7 @@ const KIND_NAME = { update: "UPDATE", withdraw: t("kind.withdraw"), packet: t("t
 export function createTransport({ canvas, list, play, back, step, clear, speed, speedLabel, count, now, onShow }) {
   const events = [];
   let cursor = -1;
-  let auto = true;
+  let auto = false;
   let running = false;
   let stepWaiting = false;
   let speedIndex = SPEEDS.indexOf(1);
