@@ -3,7 +3,8 @@ language (English and Romanian, chosen with ?lang=) at phone, laptop and desktop
 in Chromium and fails on: horizontal page overflow or an element wider than the
 viewport outside an inner scroller; vertical page scroll of the application at laptop
 and desktop sizes (the simulator fills the window); any text of the simulator's map
-rendered under MIN_FONT px; any map text crossed by a line, a path or the edge of a box
+rendered under MIN_FONT px; a part of the simulator's stage drawn past the stage onto
+the caption or the transport; any map text crossed by a line, a path or the edge of a box
 (a label on a white halo may cover a line). On the references page, with every block
 closed and with every block open: no horizontal overflow, also inside its scroller, and
 every in-page link has its target. Fails on a script error, a console error, or an
@@ -28,8 +29,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static"
 SHOTS = ROOT / ".playwright-mcp"
-VIEWPORTS = ((390, 844), (1366, 768), (1920, 1080))
-WORKSPACE_FROM = 1000
+VIEWPORTS = ((390, 844), (1140, 610), (1366, 768), (1920, 1080))
+WORKSPACE_FROM = 1160
 ONE_SCREEN_VIEWS = ("2008", "prefixes", "lookup")  # views that fit one screen from WORKSPACE_FROM up
 VIEWS = ("simulator", "2008", "prefixes", "lookup")
 LANGUAGES = ("en", "ro")
@@ -120,6 +121,16 @@ MAP_TEXT_JS = """
   });
   return [...new Set(out)];
 }
+"""
+
+# The parts of every simulator stage that reach past the stage's own box.
+STAGE_JS = """
+() => [...document.querySelectorAll('.sim-stage')].flatMap((stage) => {
+  const box = stage.getBoundingClientRect();
+  return [...stage.children]
+    .filter((c) => c.getBoundingClientRect().bottom > box.bottom + 1)
+    .map((c) => `.${c.className.split(' ')[0]} reaches past the stage`);
+})
 """
 
 # Opens every block of the references page; returns the in-page links without a target,
@@ -248,7 +259,7 @@ def check_layout(url: str, name: str) -> list[str]:
                 for element in result["wide"]:
                     out.append(f"{label}: {element} is wider than the viewport")
                 if view in ("simulator", ""):
-                    for finding in page.evaluate(MAP_TEXT_JS, MIN_FONT):
+                    for finding in page.evaluate(MAP_TEXT_JS, MIN_FONT) + page.evaluate(STAGE_JS):
                         out.append(f"{label}: {finding}")
                 page.screenshot(path=str(SHOTS / f"check-{name}{'-' + view if view else ''}-{width}.png"), full_page=True)
             page.close()

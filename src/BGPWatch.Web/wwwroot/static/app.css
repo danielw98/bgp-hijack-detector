@@ -1,5 +1,5 @@
 /* The application: the shell (top bar, a header per view) and one view at a time.
-   The simulator fills the window; the other views scroll inside it. Below 1000px
+   The simulator fills the window; the other views scroll inside it. Below 1160px
    the page scrolls instead. Shell design: Figma "Rute furate", page Shell. */
 
 body.app { background: var(--paper); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -96,7 +96,7 @@ body.app { background: var(--paper); height: 100vh; display: flex; flex-directio
 @media (max-width: 1279px) {
   .topbar { flex-wrap: wrap; row-gap: 8px; }
 }
-@media (max-width: 999px) {
+@media (max-width: 1159px) {
   body.app { height: auto; overflow: visible; }
   .workspace { display: block; }
   .view { display: block; }

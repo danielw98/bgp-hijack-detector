@@ -241,22 +241,19 @@ table.data.rib th.router .addr { font-family: var(--mono); font-weight: 400; fon
 .rib .state { font-size: 15px; }
 .rib .state.spare { background: var(--surface); color: var(--ink); border-color: var(--muted); }
 
-/* Stacked below 1000px: the page scrolls, the panels keep a height. */
-@media (max-width: 999px) {
+/* Stacked below 1160px: the map takes the full width, the page scrolls, the panels keep a height. */
+@media (max-width: 1159px) {
   .sim, .sim-view > .sim, .frame > .sim { display: flex; flex-direction: column; height: auto; --inspector: 0; }
-  .sim-stage { aspect-ratio: 1000 / 500; }
-  .sim-canvas { padding: 6px; }
   .sim-canvas svg { max-width: none; max-height: none; }
   .sim-legend { position: static; padding: 6px 14px 10px; background: var(--surface); border-top: 1px solid var(--line); }
   .sim-note { position: static; padding: 6px 14px 0; background: var(--surface); }
   .options-panel { right: auto; left: 0; }
   .sim-stage { display: flex; flex-direction: column; }
-  .sim-canvas { position: relative; flex: 1 1 auto; }
+  .sim-canvas { position: relative; flex: 1 1 auto; aspect-ratio: 1000 / 500; padding: 6px; }
   .sim-inspector { border-left: 0; border-top: 1px solid var(--line); }
   .sim-inspector .panel { max-height: 480px; }
 }
 @media (max-width: 719px) {
-  .sim-stage { aspect-ratio: auto; }
   .sim-canvas { aspect-ratio: 420 / 1040; }
 }
 

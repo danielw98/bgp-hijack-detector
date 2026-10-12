@@ -2,7 +2,7 @@
 // between routers, the BMP reports into the collector, and one message at a time: a
 // small marker travels the link, eased, while its label waits still at the target. Each router shows its address, and a line more only when it is
 // off or not reporting. Two layouts, wide (routers in a row) and tall (routers in a
-// column), chosen by the container's width; the SVG scales to its box. Labels sit in
+// column); the one that draws larger in the container wins, the SVG scales to its box. Labels sit in
 // the quadrant of each glyph that no link leaves from, so no line crosses text.
 
 import { ROLE_NAME, esc } from "./format.js";
@@ -14,7 +14,6 @@ const RADIUS = 30;
 const MARKER_RADIUS = 11;
 const REFERENCE_LENGTH = 330;
 const LABEL_FADE_MS = 250;
-const TALL_BELOW = 720;
 const KIND_LABEL = { update: "UPDATE", withdraw: t("token.withdraw"), packet: t("token.packet"), kernel: t("token.kernel") };
 const VERDICT_LABEL = { delivered: t("verdict.delivered"), dropped: t("verdict.dropped"), unreachable: t("verdict.unreachable"), lost: t("verdict.lost"), loop: t("verdict.loop") };
 
@@ -58,10 +57,18 @@ export function createCanvas(container) {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function pick() {
-    const next = container.clientWidth < TALL_BELOW ? TALL : WIDE;
+    const next = fit(TALL) > fit(WIDE) ? TALL : WIDE;
     if (next === layout) return false;
     layout = next;
     return true;
+  }
+
+  // The scale a layout reaches in the container's content box, at most its natural size.
+  function fit({ size: [w, h] }) {
+    const style = getComputedStyle(container);
+    const width = container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const height = container.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    return Math.max(0, Math.min(1, width / w, height / h));
   }
 
   function svg() {
