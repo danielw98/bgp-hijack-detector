@@ -2,7 +2,7 @@ using BGPWatch.Web.Reading;
 
 namespace BGPWatch.Tests;
 
-/// <summary>The reading list behind the references page: the embedded docs/lecturi-bgp.md and the parser's grammar.</summary>
+/// <summary>The reading list behind the references page: the embedded Reading/lecturi-bgp.md and the parser's grammar.</summary>
 public class ReadingListTests
 {
     private static readonly string Minimal = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "lecturi-minimal.md"));

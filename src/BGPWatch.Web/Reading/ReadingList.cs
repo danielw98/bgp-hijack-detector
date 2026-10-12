@@ -25,7 +25,7 @@ public sealed record SpecGroup(string Title, IReadOnlyList<string> Intro, IReadO
 public sealed record Pick(int Source, string Label, string Note);
 
 /// <summary>
-/// The reading list docs/lecturi-bgp.md, embedded in the assembly at build time and parsed
+/// The reading list Reading/lecturi-bgp.md, embedded in the assembly at build time and parsed
 /// once. Grammar: "# Title" opens a section, its plain lines are intro paragraphs and its
 /// "N. ... (sursa K): note" lines are picks; "## Heading" opens an entry, whose "- Key: value"
 /// lines are its fields. Stage sections ("Etapa N. Title") hold sources ("## N. Title"); the

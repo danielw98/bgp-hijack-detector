@@ -7,4 +7,3 @@ tests
 detector/mrt/build
 referat
 docs/*
-!docs/lecturi-bgp.md

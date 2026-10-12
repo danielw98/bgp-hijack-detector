@@ -12,15 +12,15 @@ Componente: un laborator cu trei rutere FRR, care își raportează rutele prin 
 
 **Demo public:** <https://student-dev.ro/bgp/> (aplicația), [`/ghid`](https://student-dev.ro/bgp/ghid) (ghidul de citit), [`/referinte`](https://student-dev.ro/bgp/referinte) (lecturile).
 
-![Simulatorul: trei sisteme autonome, deturnarea sub-prefixului 203.0.113.0/25 și tabelele BGP ale fiecărui ruter](docs/media/app-simulator.png)
+![Simulatorul: trei sisteme autonome, deturnarea sub-prefixului 203.0.113.0/25 și tabelele BGP ale fiecărui ruter](media/app-simulator.png)
 
 ## Capturi
 
 | | |
 |---|---|
-| ![YouTube 2008: un rând pentru fiecare vecin RIS, roșu cât timp trimitea traficul către AS17557](docs/media/app-2008.png) | ![Istoricul prefixului 203.0.113.0/24 pe fiecare ruter](docs/media/app-prefixe.png) |
+| ![YouTube 2008: un rând pentru fiecare vecin RIS, roșu cât timp trimitea traficul către AS17557](media/app-2008.png) | ![Istoricul prefixului 203.0.113.0/24 pe fiecare ruter](media/app-prefixe.png) |
 | **YouTube 2008**, redat din actualizările reale RIPE RIS rrc00 | **Prefixe**: unde trimite fiecare ruter prefixul, de-a lungul timpului |
-| ![Verificarea unui prefix real prin RIPEstat, cu starea RPKI](docs/media/app-verifica.png) | ![Lecturile despre BGP, pe etape](docs/media/referinte.png) |
+| ![Verificarea unui prefix real prin RIPEstat, cu starea RPKI](media/app-verifica.png) | ![Lecturile despre BGP, pe etape](media/referinte.png) |
 | **Verifică**: un prefix real, cu originea și starea RPKI de la RIPEstat | **Referințe**: 44 de surse în 9 etape |
 
 Capturile se refac cu `python scripts/screenshots.py` (implicit de pe instanța publică; `--url http://localhost:8080/` pentru cea locală).
@@ -99,8 +99,7 @@ Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi �
 
 ## Unde citești mai mult
 
-- `referat/referat.md`: referatul cursului, cu noțiunile BGP, patru incidente documentate, arhitectura detectorului, rezultate și limite.
-- `docs/lecturi-bgp.md`: lista de lecturi despre BGP, pe etape, cu genealogia specificației; pagina `/referinte` se generează din ea, iar `scripts/check_lecturi.py` îi verifică linkurile și jurnalul de verificare.
+- `src/BGPWatch.Web/Reading/lecturi-bgp.md`: lista de lecturi despre BGP, pe etape, cu genealogia specificației; pagina `/referinte` se generează din ea.
 - `detector/incidents/youtube-2008/config.toml`: sursa datelor redate, prefixul monitorizat și cronologia documentată a incidentului.
 
 ## Structură
@@ -111,7 +110,7 @@ Pagina de pornire este aplicația: simulatorul pe tot ecranul, cu patru vederi �
 - `tests/BGPWatch.Tests/`: testele unitare.
 - `detector/mrt/`: parserul BGP și MRT în C.
 - `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: datele incidentului din 2008, configurația laboratorului și schema bazei de date.
-- `scripts/`: măsurătorile din referat și verificările lui și ale paginii.
+- `scripts/`: instalatoarele, verificarea paginii, măsurătorile laboratorului, fuzzing-ul parserului, capturile din `media/`.
 - `docker-compose.yml` este forma de producție; `docker-compose.override.yml` (încărcat implicit) adaugă portul local și fișierele montate din arborele de lucru; `docker-compose.server.yml` și `deploy/nginx-bgp.conf` sunt stratul pentru server.
 
 Teste: `sh detector/mrt/build.sh`, apoi `dotnet test --solution BGPWatch.slnx`.

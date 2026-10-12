@@ -1,4 +1,4 @@
-"""Write the README screenshots into docs/media/: the four views of the application
+"""Write the README screenshots into media/: the four views of the application
 and the references page, at 1600x900 in Chromium. Read-only: no lab action.
 
 Usage: python scripts/screenshots.py [--url https://student-dev.ro/bgp/]
@@ -13,7 +13,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-MEDIA = ROOT / "docs" / "media"
+MEDIA = ROOT / "media"
 VIEWPORT = {"width": 1600, "height": 900}
 VIEWS = ("simulator", "2008", "prefixe", "verifica")
 SETTLE_MS = 1500
