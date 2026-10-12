@@ -9,6 +9,6 @@ exit /b 0
 
 :failed
 echo.
-echo Instalarea s-a oprit. Mesajul de eroare este mai sus.
+echo The installation stopped. The error message is above.
 pause
 exit /b 1

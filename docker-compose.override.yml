@@ -1,11 +1,12 @@
 # Development layer, loaded by every plain `docker compose` call at the repo root: the page
-# on localhost:8080 and the files the app reads bind-mounted from the working tree, so a
-# change to the static modules, the ground truth or an incident needs no rebuild.
+# on localhost:BGP_PORT (8080 when unset; start.bat picks a free one) and the files the app
+# reads bind-mounted from the working tree, so a change to the static modules, the ground
+# truth or an incident needs no rebuild.
 
 services:
   app:
     ports:
-      - "8080:8080"
+      - "${BGP_PORT:-8080}:8080"
     volumes:
       - ./src/BGPWatch.Web/wwwroot:/app/wwwroot:ro
       - ./detector/config.toml:/data/config.toml:ro

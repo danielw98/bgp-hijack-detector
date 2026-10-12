@@ -57,5 +57,5 @@ Invoke-Checked 'Chromium for Playwright' { python -m playwright install chromium
 Invoke-Checked 'NuGet packages' { dotnet restore (Join-Path $Root 'BGPWatch.slnx') }
 
 Write-Host ''
-Write-Host 'Gata. Daca Docker Desktop tocmai a fost instalat, reporneste calculatorul o data'
-Write-Host '(cere WSL 2), apoi dublu-clic pe start.bat.'
+Write-Host 'Done. If Docker Desktop was just installed, restart the computer once'
+Write-Host '(it needs WSL 2), then double-click start.bat.'
