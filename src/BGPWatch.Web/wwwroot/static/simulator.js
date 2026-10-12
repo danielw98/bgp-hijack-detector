@@ -65,7 +65,7 @@ export function mountSimulator(root) {
   let openNext = false;
   let monitored = [];
   get("/api/monitored").then((rows) => { monitored = rows; }).catch(() => {});
-  let previous = null;        // the paths seen at the last poll
+  let previous = new Map();   // the paths seen at the last poll, none before the first
   let lastSim = null;         // the last packet walk, for the agreement line
 
   wireTabs(root);
@@ -127,22 +127,21 @@ export function mountSimulator(root) {
     }
   }
 
-  // One event per hop for every path that appeared or vanished since the last poll:
-  // along the AS path from its origin to the router, then on to the collector.
+  // One event per hop for every path that appeared or vanished since the last poll, so the
+  // first poll plays every current path: along the AS path from its origin to the router,
+  // then on to the collector.
   function announceChanges(routers) {
     const now = new Map();
     routers.forEach((r) => r.paths.forEach((p) => now.set(`${r.role}|${p.prefix}|${p.as_path.join(" ")}`, { router: r, path: p })));
-    if (previous) {
-      const hops = [];
-      [...now].filter(([k]) => !previous.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "update")));
-      [...previous].filter(([k]) => !now.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "withdraw")));
-      const seen = new Set();
-      const batch = hops
-        .sort((a, b) => a.depth - b.depth || a.prefix.localeCompare(b.prefix))
-        .filter((h) => !seen.has(h.key) && seen.add(h.key))
-        .map(hopEvent);
-      if (batch.length) transport.enqueue(batch);
-    }
+    const hops = [];
+    [...now].filter(([k]) => !previous.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "update")));
+    [...previous].filter(([k]) => !now.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "withdraw")));
+    const seen = new Set();
+    const batch = hops
+      .sort((a, b) => a.depth - b.depth || a.prefix.localeCompare(b.prefix))
+      .filter((h) => !seen.has(h.key) && seen.add(h.key))
+      .map(hopEvent);
+    if (batch.length) transport.enqueue(batch);
     previous = now;
   }
 
