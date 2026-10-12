@@ -122,6 +122,8 @@
  "js.none": "none",
  "js.error": "Error: {message}",
  "js.error.unknown": "unknown",
+ "js.error.rate": "too many requests; try again in a minute",
+ "js.error.server": "the server could not finish the request; try again later",
  "js.close": "Close",
  "js.back": "Back",
  "js.step": "Step",

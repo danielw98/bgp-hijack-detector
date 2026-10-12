@@ -122,6 +122,8 @@
  "js.none": "niciuna",
  "js.error": "Eroare: {message}",
  "js.error.unknown": "necunoscută",
+ "js.error.rate": "prea multe cereri; o nouă încercare peste un minut",
+ "js.error.server": "serverul nu a putut termina cererea; o nouă încercare mai târziu",
  "js.close": "Închide",
  "js.back": "Înapoi",
  "js.step": "Pas",

@@ -29,12 +29,14 @@ public sealed record SelfLookup(string Ip, string Via, string Resource, string? 
 /// <summary>
 /// Thin adapter over the RIPEstat Data API: which prefix covers an address, who
 /// originates it, who holds that AS, and what RPKI says about the pair. Answers are
-/// cached for ten minutes. The fetcher and the clock are injected so it is tested offline.
+/// cached for ten minutes, at most MaxCached of them. The fetcher and the clock are
+/// injected so it is tested offline.
 /// </summary>
 public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fetch, Func<TimeSpan> clock)
 {
     public const string SourceApp = "ptirc-bgpwatch";
     public static readonly TimeSpan Ttl = TimeSpan.FromSeconds(600);
+    public const int MaxCached = 2048;
 
     private const string Base = "https://stat.ripe.net/data/{0}/data.json";
 
@@ -128,7 +130,26 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         {
             throw new RipeStatException($"RIPEstat {call}: {status ?? "no status"}");
         }
-        cache[url] = (now, data);
+        Store(url, now, data);
         return data;
+    }
+
+    public int CachedCount => cache.Count;
+
+    /// <summary>Caches one answer, first dropping the expired ones and, while still full, the oldest.</summary>
+    private void Store(string url, TimeSpan now, JsonNode data)
+    {
+        if (cache.Count >= MaxCached)
+        {
+            foreach (var expired in cache.Where(entry => now - entry.Value.At >= Ttl).Select(entry => entry.Key).ToList())
+            {
+                cache.TryRemove(expired, out _);
+            }
+            foreach (var oldest in cache.OrderBy(entry => entry.Value.At).Take(cache.Count - MaxCached + 1).Select(entry => entry.Key).ToList())
+            {
+                cache.TryRemove(oldest, out _);
+            }
+        }
+        cache[url] = (now, data);
     }
 }

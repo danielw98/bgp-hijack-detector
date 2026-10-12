@@ -13,6 +13,7 @@ using BGPWatch.Web.Lookup;
 using BGPWatch.Web.Native;
 using BGPWatch.Web.Reading;
 using BGPWatch.Web.Storage;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.WebEncoders;
 using Npgsql;
 
@@ -58,6 +59,20 @@ builder.Services.AddScoped(sp =>
     return new Translator(sp.GetRequiredService<Translations>(), LanguageChoice.Of(http), http?.Request.PathBase.Value ?? "");
 });
 builder.Services.AddRazorPages();
+builder.Services.AddRateLimiter(RateLimits.Configure);
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    // The client address comes from the last X-Forwarded-For entry, the one the proxy
+    // (nginx on a private Docker network) appended; a header from anywhere else is ignored.
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor;
+    options.ForwardLimit = 1;
+    options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
+    foreach (var network in new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8", "::1/128" })
+    {
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+    }
+});
 builder.Services.Configure<WebEncoderOptions>(o => o.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
@@ -66,6 +81,8 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 
 var app = builder.Build();
+app.UseForwardedHeaders();
+app.Use(SecurityHeaders.Middleware);
 await RouteLog.EnsureSchemaAsync(app.Services.GetRequiredService<NpgsqlDataSource>(), settings.Schema, CancellationToken.None);
 if (settings.PathBase.Length > 0)
 {
@@ -82,6 +99,8 @@ app.UseStaticFiles(new StaticFileOptions
     },
 });
 app.Use(LanguageChoice.Middleware);
+app.UseRouting();
+app.UseRateLimiter();
 app.MapRazorPages();
 app.MapGet("/ghid", (HttpContext http) => Results.Redirect($"{http.Request.PathBase}/guide{http.Request.QueryString}", permanent: true));
 app.MapGet("/referinte", (HttpContext http) => Results.Redirect($"{http.Request.PathBase}/references{http.Request.QueryString}", permanent: true));

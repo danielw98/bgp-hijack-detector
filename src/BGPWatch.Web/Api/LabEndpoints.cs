@@ -17,6 +17,9 @@ namespace BGPWatch.Web.Api;
 public static class LabEndpoints
 {
     private const int OutputTail = 600;
+    private const string LogCategory = "BGPWatch.Lab";
+    private const string RoutersSilent = "the lab routers did not answer";
+    private const string ReloadFailed = "the incident could not be reloaded";
     private const string ReloadedIncident = "youtube-2008";
 
     private static readonly IPNetwork LabPrefix = IPNetwork.Parse("203.0.113.0/24");
@@ -31,11 +34,12 @@ public static class LabEndpoints
     public static void Map(WebApplication app)
     {
         app.MapGet("/api/lab", LabAsync);
-        app.MapPost("/api/lab/trigger", TriggerAsync);
-        app.MapPost("/api/lab/reset", (Settings s, DockerEngine d, LabSnapshots l, CancellationToken c) => ActAsync("reset", Scenarios["both"], s, d, l, c));
-        app.MapPost("/api/lab/trace", TraceAsync);
-        app.MapPost("/api/lab/replay", ReplayAsync);
-        app.MapPost("/api/history/clear", ClearAsync);
+        app.MapPost("/api/lab/trigger", TriggerAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
+        app.MapPost("/api/lab/reset", (Settings s, DockerEngine d, LabSnapshots l, ILoggerFactory g, CancellationToken c) => ActAsync("reset", Scenarios["both"], s, d, l, g, c))
+            .AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
+        app.MapPost("/api/lab/trace", TraceAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
+        app.MapPost("/api/lab/replay", ReplayAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Replay);
+        app.MapPost("/api/history/clear", ClearAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
     }
 
     private static async Task<IResult> LabAsync(Settings settings, LabSnapshots snapshots, CancellationToken c)
@@ -48,21 +52,21 @@ public static class LabEndpoints
         return Results.Ok(new { ok = true, collector = LabView.Station, routers });
     }
 
-    private static async Task<IResult> TriggerAsync(HttpRequest request, Settings settings, DockerEngine docker, LabSnapshots snapshots, CancellationToken c)
+    private static async Task<IResult> TriggerAsync(HttpRequest request, Settings settings, DockerEngine docker, LabSnapshots snapshots, ILoggerFactory logs, CancellationToken c)
     {
         var scenario = (await BodyAsync(request, c))["scenario"]?.ToString() ?? "both";
         if (!Scenarios.TryGetValue(scenario, out var prefixes))
         {
             return Failure(StatusCodes.Status400BadRequest, "unknown scenario");
         }
-        return await ActAsync("trigger", prefixes, settings, docker, snapshots, c);
+        return await ActAsync("trigger", prefixes, settings, docker, snapshots, logs, c);
     }
 
     /// <summary>
     /// Where a packet from a lab router to an address of the lab prefix would go, asked of
     /// each router's kernel along the way. No packet is sent (see KernelWalk).
     /// </summary>
-    private static async Task<IResult> TraceAsync(HttpRequest request, Settings settings, DockerEngine docker, CancellationToken c)
+    private static async Task<IResult> TraceAsync(HttpRequest request, Settings settings, DockerEngine docker, ILoggerFactory logs, CancellationToken c)
     {
         if (!settings.LabControl)
         {
@@ -101,7 +105,8 @@ public static class LabEndpoints
         }
         catch (DockerException e)
         {
-            return Failure(StatusCodes.Status502BadGateway, e.Message);
+            logs.CreateLogger(LogCategory).LogError(e, "kernel walk from {Router} to {Destination} failed", router.Role, destination);
+            return Failure(StatusCodes.Status502BadGateway, RoutersSilent);
         }
     }
 
@@ -120,7 +125,7 @@ public static class LabEndpoints
         catch (Exception e) when (e is IOException or Npgsql.NpgsqlException)
         {
             logger.LogError(e, "reloading {Incident} failed", ReloadedIncident);
-            return Failure(StatusCodes.Status502BadGateway, e.Message);
+            return Failure(StatusCodes.Status502BadGateway, ReloadFailed);
         }
     }
 
@@ -141,7 +146,7 @@ public static class LabEndpoints
     }
 
     private static async Task<IResult> ActAsync(string action, string[] prefixes, Settings settings, DockerEngine docker, LabSnapshots snapshots,
-        CancellationToken c)
+        ILoggerFactory logs, CancellationToken c)
     {
         if (!settings.LabControl)
         {
@@ -160,7 +165,8 @@ public static class LabEndpoints
         }
         catch (DockerException e)
         {
-            return Failure(StatusCodes.Status502BadGateway, e.Message);
+            logs.CreateLogger(LogCategory).LogError(e, "lab action {Action} failed", action);
+            return Failure(StatusCodes.Status502BadGateway, RoutersSilent);
         }
         finally
         {

@@ -33,8 +33,8 @@ public static class ReadEndpoints
         app.MapGet("/api/incidents/{name}", Incident);
         app.MapGet("/api/incidents/{name}/updates", IncidentUpdatesAsync);
         app.MapGet("/api/prefix/{**prefix}", PrefixHistoryAsync);
-        app.MapGet("/api/lookup", LookupAsync);
-        app.MapGet("/api/lookup/self", LookupSelfAsync);
+        app.MapGet("/api/lookup", LookupAsync).RequireRateLimiting(RateLimits.Lookup);
+        app.MapGet("/api/lookup/self", LookupSelfAsync).RequireRateLimiting(RateLimits.Lookup);
     }
 
     /// <summary>Alerts grouped into incidents, newest first.</summary>
@@ -101,7 +101,7 @@ public static class ReadEndpoints
     }
 
     /// <summary>What the Internet says today about an address or prefix, via RIPEstat.</summary>
-    private static async Task<IResult> LookupAsync(RipeStat ripe, CancellationToken c, string? resource = null)
+    private static async Task<IResult> LookupAsync(RipeStat ripe, ILoggerFactory logs, CancellationToken c, string? resource = null)
     {
         if (resource is null || resource.Length > MaxResource)
         {
@@ -117,7 +117,7 @@ public static class ReadEndpoints
         }
         catch (RipeStatException e)
         {
-            return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status502BadGateway);
+            return RipeStatSilent(logs, e);
         }
     }
 
@@ -125,11 +125,10 @@ public static class ReadEndpoints
     /// The visitor's public address and its lookup: the browser's address when it is
     /// public, else the address RIPEstat sees this server coming from.
     /// </summary>
-    private static async Task<IResult> LookupSelfAsync(HttpContext context, RipeStat ripe, CancellationToken c)
+    private static async Task<IResult> LookupSelfAsync(HttpContext context, RipeStat ripe, ILoggerFactory logs, CancellationToken c)
     {
-        var forwarded = context.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim();
         var remote = context.Connection.RemoteIpAddress;
-        var client = forwarded != "" ? forwarded : (remote is { IsIPv4MappedToIPv6: true } ? remote.MapToIPv4() : remote)?.ToString() ?? "";
+        var client = (remote is { IsIPv4MappedToIPv6: true } ? remote.MapToIPv4() : remote)?.ToString() ?? "";
         try
         {
             var (address, via) = IPAddress.TryParse(client, out var ip) && AddressScope.IsGlobal(ip)
@@ -139,8 +138,15 @@ public static class ReadEndpoints
         }
         catch (Exception e) when (e is ArgumentException or RipeStatException)
         {
-            return Results.Json(new { error = e.Message }, statusCode: StatusCodes.Status502BadGateway);
+            return RipeStatSilent(logs, e);
         }
+    }
+
+    /// <summary>A failed RIPEstat call: logged in full, answered with a fixed sentence.</summary>
+    private static IResult RipeStatSilent(ILoggerFactory logs, Exception e)
+    {
+        logs.CreateLogger("BGPWatch.Lookup").LogWarning(e, "RIPEstat lookup failed");
+        return Results.Json(new { error = "RIPEstat did not answer; try again later" }, statusCode: StatusCodes.Status502BadGateway);
     }
 
     public static IResult Detail(int status, string detail)
