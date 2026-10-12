@@ -18,7 +18,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   let stepWaiting = false;
   let speedIndex = SPEEDS.indexOf(1);
 
-  play.addEventListener("click", () => { auto = !auto; renderControls(); if (auto) run(); });
+  play.addEventListener("click", () => { if (auto && running) pause(); else resume(); });
   step.addEventListener("click", () => { auto = false; renderControls(); forward(); });
   back.addEventListener("click", rewind);
   clear.addEventListener("click", reset);
@@ -69,7 +69,7 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   function settle() {
     running = false;
     renderControls();
-    if (stepWaiting) { stepWaiting = false; forward(); }
+    if (stepWaiting) { stepWaiting = false; forward(); } else if (auto && cursor + 1 < events.length) run();
   }
 
   async function rewind() {
@@ -104,8 +104,10 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
   }
 
   function renderControls() {
-    play.textContent = auto ? t("pause") : t("play");
-    play.setAttribute("aria-pressed", String(auto));
+    const playing = auto && running;
+    play.textContent = playing ? t("pause") : t("play");
+    play.setAttribute("aria-pressed", String(playing));
+    play.disabled = !playing && cursor + 1 >= events.length;
     step.disabled = cursor + 1 >= events.length;
     back.disabled = running || cursor < 0;
     clear.disabled = !events.length;

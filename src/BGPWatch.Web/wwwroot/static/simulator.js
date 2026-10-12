@@ -65,7 +65,7 @@ export function mountSimulator(root) {
   let openNext = false;
   let monitored = [];
   get("/api/monitored").then((rows) => { monitored = rows; }).catch(() => {});
-  let previous = new Map();   // the paths seen at the last poll, none before the first
+  let previous = null;        // the paths seen at the last poll
   let lastSim = null;         // the last packet walk, for the agreement line
 
   wireTabs(root);
@@ -83,10 +83,12 @@ export function mountSimulator(root) {
     const button = e.target.closest(".popover [data-pop]");
     if (button) $(button.dataset.pop).click();
   });
+  $("caption").innerHTML = explain(null);
   every(2000, refresh);
 
   function onShow(ev, index, total) {
     highlightRow(ev);
+    $("caption").innerHTML = explain(ev);
     if (!ev) { popover.close(); return; }
     if (openNext || popover.isOpen()) openEvent(ev, index, total);
     openNext = false;
@@ -127,21 +129,22 @@ export function mountSimulator(root) {
     }
   }
 
-  // One event per hop for every path that appeared or vanished since the last poll, so the
-  // first poll plays every current path: along the AS path from its origin to the router,
-  // then on to the collector.
+  // One event per hop for every path that appeared or vanished since the last poll:
+  // along the AS path from its origin to the router, then on to the collector.
   function announceChanges(routers) {
     const now = new Map();
     routers.forEach((r) => r.paths.forEach((p) => now.set(`${r.role}|${p.prefix}|${p.as_path.join(" ")}`, { router: r, path: p })));
-    const hops = [];
-    [...now].filter(([k]) => !previous.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "update")));
-    [...previous].filter(([k]) => !now.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "withdraw")));
-    const seen = new Set();
-    const batch = hops
-      .sort((a, b) => a.depth - b.depth || a.prefix.localeCompare(b.prefix))
-      .filter((h) => !seen.has(h.key) && seen.add(h.key))
-      .map(hopEvent);
-    if (batch.length) transport.enqueue(batch);
+    if (previous) {
+      const hops = [];
+      [...now].filter(([k]) => !previous.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "update")));
+      [...previous].filter(([k]) => !now.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "withdraw")));
+      const seen = new Set();
+      const batch = hops
+        .sort((a, b) => a.depth - b.depth || a.prefix.localeCompare(b.prefix))
+        .filter((h) => !seen.has(h.key) && seen.add(h.key))
+        .map(hopEvent);
+      if (batch.length) transport.enqueue(batch);
+    }
     previous = now;
   }
 
@@ -163,6 +166,28 @@ export function mountSimulator(root) {
     return event(kind, from, to, prefix,
       to === "collector" ? t("hop.report", values) : t(kind === "update" ? "hop.announce" : "hop.withdraw", values),
       { path });
+  }
+
+  // The current event in plain words: what the hop means for the hijack, not its fields.
+  function explain(ev) {
+    if (!ev) return esc(t("cap.start"));
+    if (ev.kind === "packet" || ev.kind === "kernel") return ev.detail;
+    const attacker = lab.byRole.get("attacker");
+    const origin = ev.path.length ? ev.path[ev.path.length - 1] : (lab.byRole.get(ev.from) || {}).asn;
+    const stolen = attacker && origin === attacker.asn;
+    const values = { from: t(`cap.who.${ev.from}`), to: ROLE_NAME[ev.to], prefix: `<span class="mono">${esc(ev.label)}</span>` };
+    const report = ev.to === "collector";
+    const own = ev.from === "attacker" ? ".own" : "";
+    if (!stolen) return ev.kind === "update" ? t(report ? "cap.report.good" : "cap.pass.good", values) : ev.detail;
+    if (ev.kind === "withdraw") return t((report ? "cap.withdraw.report" : "cap.withdraw") + own, values);
+    if (report) return t(own ? "cap.report.own" : "cap.report.bad", values);
+    if (!own) return t("cap.pass.bad", values);
+    return t("cap.lie", values) + (moreSpecific(ev.label) ? " " + t("cap.lie.specific") : "");
+  }
+
+  function moreSpecific(prefix) {
+    const base = prefix.split("/")[0];
+    return monitored.some((m) => contains(m.prefix, base) && prefixLength(m.prefix) < prefixLength(prefix));
   }
 
   function event(kind, from, to, label, detail, extra = {}) {

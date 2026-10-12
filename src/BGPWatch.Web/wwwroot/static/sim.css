@@ -4,8 +4,8 @@
 .sim {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--inspector);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-areas: "toolbar inspector" "stage inspector" "transport inspector";
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "toolbar inspector" "stage inspector" "caption inspector" "transport inspector";
   background: var(--surface);
   min-height: 0;
   --inspector: 440px;
@@ -141,6 +141,20 @@ svg.map .badge.delivered rect { stroke: var(--green); }
 svg.map .badge.delivered text { fill: var(--green); }
 svg.map .badge.dropped rect, svg.map .badge.unreachable rect, svg.map .badge.lost rect, svg.map .badge.loop rect { stroke: var(--red); }
 svg.map .badge.dropped text, svg.map .badge.unreachable text, svg.map .badge.lost text, svg.map .badge.loop text { fill: var(--red); }
+
+/* The caption: the current event in plain words, two lines tall so the map stays put. */
+.sim-caption {
+  grid-area: caption;
+  margin: 0;
+  min-height: calc(2 * 1.4em);
+  padding: 10px 16px;
+  border-top: 2px solid var(--ink);
+  background: var(--surface);
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.sim-caption .mono { font-family: var(--mono); font-weight: 700; }
 
 /* Transport: how to watch. */
 .sim-transport {
