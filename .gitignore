@@ -14,3 +14,4 @@ detector/mrt/build/
 referat/resources/
 referat/*.pdf
 docs/*.pdf
+/InstallationLog.txt

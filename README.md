@@ -10,6 +10,32 @@ Detectează trei situații:
 
 Componente: un laborator cu trei rutere FRR, care își raportează rutele prin BMP (BGP Monitoring Protocol) către o stație de monitorizare, aplicația BGPWatch scrisă în C# (stația BMP, detectorul, pagina web), o bază de date Postgres pentru istoricul rutelor și al alertelor și un parser BGP scris în C, care decodează atât mesajele din laborator, cât și datele reale din arhiva RIPE RIS.
 
+**Demo public:** <https://student-dev.ro/bgp/> (aplicația), [`/ghid`](https://student-dev.ro/bgp/ghid) (ghidul de citit), [`/referinte`](https://student-dev.ro/bgp/referinte) (lecturile).
+
+![Simulatorul: trei sisteme autonome, deturnarea sub-prefixului 203.0.113.0/25 și tabelele BGP ale fiecărui ruter](docs/media/app-simulator.png)
+
+## Capturi
+
+| | |
+|---|---|
+| ![YouTube 2008: un rând pentru fiecare vecin RIS, roșu cât timp trimitea traficul către AS17557](docs/media/app-2008.png) | ![Istoricul prefixului 203.0.113.0/24 pe fiecare ruter](docs/media/app-prefixe.png) |
+| **YouTube 2008**, redat din actualizările reale RIPE RIS rrc00 | **Prefixe**: unde trimite fiecare ruter prefixul, de-a lungul timpului |
+| ![Verificarea unui prefix real prin RIPEstat, cu starea RPKI](docs/media/app-verifica.png) | ![Lecturile despre BGP, pe etape](docs/media/referinte.png) |
+| **Verifică**: un prefix real, cu originea și starea RPKI de la RIPEstat | **Referințe**: 44 de surse în 9 etape |
+
+Capturile se refac cu `python scripts/screenshots.py` (implicit de pe instanța publică; `--url http://localhost:8080/` pentru cea locală).
+
+## Tehnologii
+
+| Strat | Ce folosește |
+|---|---|
+| Laborator | FRRouting 10.4 în Docker Compose, rețea internă `10.10.0.0/24`, BMP Loc-RIB (RFC 7854, RFC 9069) |
+| Parser | C11, bibliotecă partajată (`libmrt.so`, `mrt.dll`): MRT (RFC 6396) și UPDATE BGP, IPv4 și IPv6, AS4_PATH |
+| Aplicație | C# pe .NET 10: ASP.NET Core, Razor Pages, API JSON minimal, P/Invoke spre parser, Docker Engine API prin socket |
+| Date | PostgreSQL 16 prin Npgsql (COPY binar, fără ORM); RIPEstat Data API, cu cache de 10 minute |
+| Pagină | module ES fără framework, SVG, fonturile Atkinson Hyperlegible Next și Mono |
+| Teste și verificări | xUnit v3, Playwright pentru Python, ASan și UBSan pentru parser |
+
 ## Garanții de izolare
 
 - Rețeaua laboratorului este internă (`internal: true` în `lab/docker-compose.yml`), fără uplink. Niciun anunț nu părăsește calculatorul.
@@ -24,17 +50,41 @@ Componente: un laborator cu trei rutere FRR, care își raportează rutele prin 
 
 Instanța publică rulează la <https://student-dev.ro/bgp/>: aceeași aplicație, cu laboratorul pornit pe server.
 
-Local ai nevoie de [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Ca să rulezi aplicația local îți ajunge Docker. Restul dependențelor (SDK-ul .NET 10, gcc, Python cu Playwright) servesc la teste și la scripturile din `scripts/`.
 
-- **Pornire:** dublu-clic pe `start.bat`. Pornește Docker Desktop dacă este oprit, apoi laboratorul și detectorul, și deschide pagina `http://localhost:8080`. Prima pornire construiește imaginile și durează câteva minute.
-- **Oprire:** dublu-clic pe `stop.bat`. Istoricul rutelor și alertele rămân în volumul Docker.
+### Instalare
 
-Pe Linux sau macOS:
+- **Windows 10/11:** dublu-clic pe `install.bat`. Instalează prin winget Docker Desktop, SDK-ul .NET 10, MSYS2 cu gcc și Python 3.12, apoi Playwright cu Chromium și pachetele NuGet; sare peste ce există deja. După prima instalare a Docker Desktop, repornește calculatorul o dată (cere WSL 2).
+- **Debian sau Ubuntu:** `sh scripts/install-linux.sh` din rădăcina proiectului. Instalează Docker Engine cu pluginul compose, `build-essential`, SDK-ul .NET 10 în `~/.dotnet` și un `.venv` cu Playwright și Chromium.
+
+### Pornire și oprire
+
+- **Windows:** dublu-clic pe `start.bat`. Pornește Docker Desktop dacă este oprit, apoi laboratorul și detectorul, și deschide pagina `http://localhost:8080`. Prima pornire construiește imaginile și durează câteva minute. Oprire: dublu-clic pe `stop.bat`. Istoricul rutelor și alertele rămân în volumul Docker.
+- **Linux sau macOS**, din rădăcina proiectului:
 
 ```sh
-docker compose -f lab/docker-compose.yml up -d && docker compose up -d --build
-docker compose down && docker compose -f lab/docker-compose.yml down
+# pornire: laboratorul, apoi detectorul (stația BMP, Postgres, pagina pe :8080)
+docker compose -f lab/docker-compose.yml up -d
+docker compose up -d --build --remove-orphans
+
+# oprire
+docker compose down
+docker compose -f lab/docker-compose.yml down
 ```
+
+### Comenzi Docker utile
+
+```sh
+docker compose ps                                   # starea aplicației și a bazei de date
+docker compose logs -f app                          # jurnalul aplicației
+docker compose -f lab/docker-compose.yml ps         # cele trei rutere
+docker exec lab-transit vtysh -c "show ip bgp"      # tabela BGP a ruterului de tranzit
+docker exec lab-transit vtysh -c "show bmp"         # sesiunea BMP către stație
+docker compose -f lab/docker-compose.yml up -d --force-recreate   # după o schimbare în lab/frr/
+docker compose down -v                              # oprește și ȘTERGE istoricul din Postgres
+```
+
+Parola Postgres din `docker-compose.yml` (`bgp`) este valoarea implicită a demo-ului local; baza nu are port publicat.
 
 ## Ce să apeși
 
