@@ -2,7 +2,10 @@ using BGPWatch.Web.Lab;
 
 namespace BGPWatch.Tests;
 
-/// <summary>Lab-view tests against vtysh output captured from the FRR 10.4.5 lab during the hijack (2026-10-09).</summary>
+/// <summary>
+/// Lab-view tests against vtysh output captured from the FRR 10.4.5 lab during the hijack
+/// (2026-10-09); the neighbors document is the transit's with route-map ROV applied (2026-10-16), trimmed.
+/// </summary>
 public class LabViewTests
 {
     private const string Summary = """
@@ -35,17 +38,58 @@ public class LabViewTests
          } , "totalRoutes": 2, "totalPaths": 2 }
         """;
 
+    private const string TransitNeighbors = """
+        {
+          "10.10.0.11":{"remoteAs":65001,"bgpState":"Established","addressFamilyInfo":{"ipv4Unicast":{"acceptedPrefixCounter":1,"sentPrefixCounter":2}}},
+          "10.10.0.13":{"remoteAs":65003,"bgpState":"Established","addressFamilyInfo":{"ipv4Unicast":{"routeMapForIncomingAdvertisements":"ROV","acceptedPrefixCounter":0}}}
+        }
+        """;
+
+    private const string VictimNeighbors = """
+        {"10.10.0.10":{"remoteAs":65000,"bgpState":"Established","addressFamilyInfo":{"ipv4Unicast":{"acceptedPrefixCounter":1}}}}
+        """;
+
+    private static string Show(string table, string neighbors = VictimNeighbors)
+    {
+        return Summary + "\n" + table + "\n" + neighbors;
+    }
+
     private static List<LabPath> PathsOf(string table)
     {
-        return LabView.Paths(LabView.SplitDocuments(Summary + "\n" + table).Table);
+        return LabView.Paths(LabView.SplitDocuments(Show(table)).Table);
     }
 
     [Fact]
-    public void SplitDocumentsReturnsSummaryThenTable()
+    public void SplitDocumentsReturnsSummaryTableAndNeighbors()
     {
-        var (summary, table) = LabView.SplitDocuments("% Can't open configuration file\n" + Summary + "\n" + TransitTable);
+        var (summary, table, neighbors) = LabView.SplitDocuments("% Can't open configuration file\n" + Show(TransitTable, TransitNeighbors));
         Assert.Equal(65000, summary.GetProperty("as").GetInt32());
         Assert.Equal(65000, table.GetProperty("localAS").GetInt32());
+        Assert.True(neighbors.TryGetProperty("10.10.0.13", out _));
+    }
+
+    [Fact]
+    public void SplitDocumentsRejectsOutputWithTwoDocuments()
+    {
+        Assert.Throws<FormatException>(() => LabView.SplitDocuments(Summary + "\n" + TransitTable));
+    }
+
+    [Fact]
+    public void RovIsAppliedWhenANeighborsRoutesPassRouteMapRov()
+    {
+        Assert.True(LabView.RovApplied(LabView.SplitDocuments(Show(TransitTable, TransitNeighbors)).Neighbors));
+    }
+
+    [Fact]
+    public void RovIsNotAppliedWithoutAnInboundRouteMap()
+    {
+        Assert.False(LabView.RovApplied(LabView.SplitDocuments(Show(VictimTable)).Neighbors));
+    }
+
+    [Fact]
+    public void RovIsNotAppliedWhenTheRouterHasNoNeighbors()
+    {
+        Assert.False(LabView.RovApplied(LabView.SplitDocuments("{} {} {}").Neighbors));
     }
 
     [Fact]
@@ -57,7 +101,7 @@ public class LabViewTests
     [Fact]
     public void SessionsReportEachNeighborAndWhetherItIsEstablished()
     {
-        var (summary, _) = LabView.SplitDocuments(Summary + "\n" + TransitTable);
+        var (summary, _, _) = LabView.SplitDocuments(Show(TransitTable));
         Assert.Equal([new Session("10.10.0.11", 65001, true), new Session("10.10.0.13", 65003, false)], LabView.Sessions(summary));
     }
 
@@ -97,7 +141,7 @@ public class LabViewTests
     [Fact]
     public void ATableWithoutRoutesHasNoPaths()
     {
-        Assert.Empty(LabView.Paths(LabView.SplitDocuments("{} {}").Table));
+        Assert.Empty(LabView.Paths(LabView.SplitDocuments("{} {} {}").Table));
     }
 
     [Fact]
@@ -107,7 +151,7 @@ public class LabViewTests
         var states = await LabView.SnapshotAsync((container, command) =>
         {
             asked.Add((container, command));
-            return Task.FromResult(Summary + "\n" + VictimTable);
+            return Task.FromResult(Show(VictimTable));
         }, []);
         Assert.Equal(["victim", "transit", "attacker"], states.Select(s => s.Role));
         Assert.All(states, s => Assert.True(s.Reachable));
@@ -118,7 +162,7 @@ public class LabViewTests
     [Fact]
     public async Task SnapshotNamesTheAddressesARouterAnswersFor()
     {
-        var states = await LabView.SnapshotAsync((_, _) => Task.FromResult(Summary + "\n" + VictimTable), []);
+        var states = await LabView.SnapshotAsync((_, _) => Task.FromResult(Show(VictimTable)), []);
         Assert.Equal(["203.0.113.1", "203.0.113.129"], states[0].Hosts);
         Assert.Empty(states[1].Hosts);
     }
@@ -126,8 +170,16 @@ public class LabViewTests
     [Fact]
     public async Task SnapshotTellsWhichRoutersReportOverBmp()
     {
-        var states = await LabView.SnapshotAsync((_, _) => Task.FromResult(Summary + "\n" + VictimTable), ["10.10.0.10"]);
+        var states = await LabView.SnapshotAsync((_, _) => Task.FromResult(Show(VictimTable)), ["10.10.0.10"]);
         Assert.Equal([false, true, false], states.Select(s => s.Reporting));
+    }
+
+    [Fact]
+    public async Task SnapshotTellsWhichRoutersApplyOriginValidation()
+    {
+        var states = await LabView.SnapshotAsync((container, _) =>
+            Task.FromResult(container == "lab-transit" ? Show(TransitTable, TransitNeighbors) : Show(VictimTable)), []);
+        Assert.Equal([false, true, false], states.Select(s => s.Rov));
     }
 
     [Fact]
@@ -135,7 +187,7 @@ public class LabViewTests
     {
         var states = await LabView.SnapshotAsync((_, _) => throw new DockerException("container is not running"), []);
         var victim = states[0];
-        Assert.Equal(("victim", "10.10.0.11", 65001, false), (victim.Role, victim.Address, victim.Asn, victim.Reachable));
+        Assert.Equal(("victim", "10.10.0.11", 65001, false, false), (victim.Role, victim.Address, victim.Asn, victim.Reachable, victim.Rov));
         Assert.Equal(["203.0.113.1", "203.0.113.129"], victim.Hosts);
         Assert.Empty(victim.Sessions);
         Assert.Empty(victim.Paths);

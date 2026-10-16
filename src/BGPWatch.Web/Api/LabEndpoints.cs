@@ -10,7 +10,8 @@ namespace BGPWatch.Web.Api;
 
 /// <summary>
 /// The lab view and the demo controls over the Docker socket: hijack scenarios, reset,
-/// the kernel walk, reloading the recorded incident, clearing the lab's history; a demo
+/// the victim's fresh announcement, origin validation at the transit, the kernel walk,
+/// reloading the recorded incident, clearing the lab's history; a demo
 /// needs no typed commands. Enabled only when LAB_CONTROL=1 and the socket is mounted.
 /// The vtysh command lists mirror lab/trigger-hijack.sh and lab/stop-hijack.sh.
 /// </summary>
@@ -23,6 +24,7 @@ public static class LabEndpoints
     private const string ReloadedIncident = "youtube-2008";
 
     private static readonly IPNetwork LabPrefix = IPNetwork.Parse("203.0.113.0/24");
+    private static readonly TimeSpan AnnouncePause = TimeSpan.FromSeconds(1);
 
     private static readonly Dictionary<string, string[]> Scenarios = new()
     {
@@ -37,6 +39,8 @@ public static class LabEndpoints
         app.MapPost("/api/lab/trigger", TriggerAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
         app.MapPost("/api/lab/reset", (Settings s, DockerEngine d, LabSnapshots l, ILoggerFactory g, CancellationToken c) => ActAsync("reset", Scenarios["both"], s, d, l, g, c))
             .AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
+        app.MapPost("/api/lab/announce", AnnounceAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
+        app.MapPost("/api/lab/rov", RovAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
         app.MapPost("/api/lab/trace", TraceAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
         app.MapPost("/api/lab/replay", ReplayAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Replay);
         app.MapPost("/api/history/clear", ClearAsync).AddEndpointFilter(JsonOnly.Filter).RequireRateLimiting(RateLimits.Lab);
@@ -60,6 +64,63 @@ public static class LabEndpoints
             return Failure(StatusCodes.Status400BadRequest, "unknown scenario");
         }
         return await ActAsync("trigger", prefixes, settings, docker, snapshots, logs, c);
+    }
+
+    /// <summary>
+    /// The victim withdraws its prefix and announces it again a second later, so the
+    /// announcement travels the lab afresh.
+    /// </summary>
+    private static async Task<IResult> AnnounceAsync(Settings settings, DockerEngine docker, LabSnapshots snapshots, ILoggerFactory logs, CancellationToken c)
+    {
+        if (!settings.LabControl)
+        {
+            return Disabled();
+        }
+        try
+        {
+            var (withdraw, announce) = AnnounceBatches();
+            await RunBatchesAsync(docker, ContainerOf("victim"), [withdraw], c);
+            snapshots.Expire();
+            await Task.Delay(AnnouncePause, c);
+            await RunBatchesAsync(docker, ContainerOf("victim"), [announce], c);
+        }
+        catch (DockerException e)
+        {
+            logs.CreateLogger(LogCategory).LogError(e, "lab action announce failed");
+            return Failure(StatusCodes.Status502BadGateway, RoutersSilent);
+        }
+        finally
+        {
+            snapshots.Expire();
+        }
+        return Results.Ok(new { ok = true });
+    }
+
+    /// <summary>Applies route-map ROV to the attacker's session at the transit, or removes it.</summary>
+    private static async Task<IResult> RovAsync(HttpRequest request, Settings settings, DockerEngine docker, LabSnapshots snapshots, ILoggerFactory logs, CancellationToken c)
+    {
+        if (!settings.LabControl)
+        {
+            return Disabled();
+        }
+        if ((await BodyAsync(request, c))["on"] is not JsonValue value || !value.TryGetValue<bool>(out var on))
+        {
+            return Failure(StatusCodes.Status400BadRequest, "on must be true or false");
+        }
+        try
+        {
+            await RunBatchesAsync(docker, ContainerOf("transit"), RovBatches(on), c);
+        }
+        catch (DockerException e)
+        {
+            logs.CreateLogger(LogCategory).LogError(e, "lab action rov {On} failed", on);
+            return Failure(StatusCodes.Status502BadGateway, RoutersSilent);
+        }
+        finally
+        {
+            snapshots.Expire();
+        }
+        return Results.Ok(new { ok = true, rov = on });
     }
 
     /// <summary>
@@ -152,16 +213,11 @@ public static class LabEndpoints
         {
             return Disabled();
         }
-        var output = "";
-        long exitCode = 0;
+        string output;
+        long exitCode;
         try
         {
-            foreach (var batch in VtyshBatches(action, prefixes))
-            {
-                var result = await docker.ExecAsync(settings.AttackerContainer, ["vtysh", .. batch.SelectMany(line => new[] { "-c", line })], c);
-                output += result.Stdout + result.Stderr;
-                exitCode = Math.Max(exitCode, result.ExitCode);
-            }
+            (output, exitCode) = await RunBatchesAsync(docker, settings.AttackerContainer, VtyshBatches(action, prefixes), c);
         }
         catch (DockerException e)
         {
@@ -220,6 +276,51 @@ public static class LabEndpoints
                 "end",
             }),
         ];
+    }
+
+    /// <summary>
+    /// The victim's fresh announcement: one vtysh call withdraws the prefix, the next one
+    /// announces it again.
+    /// </summary>
+    public static (List<string> Withdraw, List<string> Announce) AnnounceBatches()
+    {
+        List<string> Victim(string network) => ["configure terminal", "router bgp 65001", "address-family ipv4 unicast", network, "end"];
+        return (Victim($"no network {LabPrefix}"), Victim($"network {LabPrefix}"));
+    }
+
+    /// <summary>
+    /// Origin validation on the attacker's session at the transit, on or off, then a soft
+    /// inbound refresh of that session so the routes it already sent pass the new policy.
+    /// The refresh is a call of its own: it runs even when removing an absent route-map fails.
+    /// </summary>
+    public static List<List<string>> RovBatches(bool on)
+    {
+        var line = $"neighbor 10.10.0.13 route-map {LabView.RovRouteMap} in";
+        return
+        [
+            ["configure terminal", "router bgp 65000", "address-family ipv4 unicast", on ? line : $"no {line}", "end"],
+            ["clear ip bgp 10.10.0.13 soft in"],
+        ];
+    }
+
+    /// <summary>Runs each batch as one vtysh call in the container; returns the joined output and the highest exit code.</summary>
+    private static async Task<(string Output, long ExitCode)> RunBatchesAsync(DockerEngine docker, string container, IEnumerable<List<string>> batches,
+        CancellationToken c)
+    {
+        var output = "";
+        long exitCode = 0;
+        foreach (var batch in batches)
+        {
+            var result = await docker.ExecAsync(container, ["vtysh", .. batch.SelectMany(line => new[] { "-c", line })], c);
+            output += result.Stdout + result.Stderr;
+            exitCode = Math.Max(exitCode, result.ExitCode);
+        }
+        return (output, exitCode);
+    }
+
+    private static string ContainerOf(string role)
+    {
+        return LabView.Routers.Single(r => r.Role == role).Container;
     }
 
     private static async Task<JsonObject> BodyAsync(HttpRequest request, CancellationToken c)

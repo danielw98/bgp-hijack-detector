@@ -11,7 +11,10 @@ public sealed record Session(string Peer, long RemoteAs, bool Established);
 /// <summary>A path of a router's BGP table; NextHop is null for a route the router originates.</summary>
 public sealed record LabPath(string Prefix, long[] AsPath, long OriginAs, string? NextHop, bool Best, string Reason);
 
-/// <summary>A router as it reports itself; Reporting tells whether its BMP session to the station is up.</summary>
+/// <summary>
+/// A router as it reports itself; Reporting tells whether its BMP session to the station is up,
+/// Rov whether route-map ROV filters the routes of one of its neighbors (origin validation).
+/// </summary>
 public sealed record RouterState(
     string Role,
     string Address,
@@ -19,6 +22,7 @@ public sealed record RouterState(
     string[] Hosts,
     bool Reachable,
     bool Reporting,
+    bool Rov,
     List<Session> Sessions,
     List<LabPath> Paths);
 
@@ -32,7 +36,11 @@ public sealed record Collector(string Address, int Port);
 /// </summary>
 public static class LabView
 {
-    public static readonly string[] ShowCommand = ["vtysh", "-c", "show bgp ipv4 unicast summary json", "-c", "show ip bgp json"];
+    public static readonly string[] ShowCommand =
+        ["vtysh", "-c", "show bgp ipv4 unicast summary json", "-c", "show ip bgp json", "-c", "show bgp neighbors json"];
+
+    /// <summary>The route-map of lab/frr/transit/frr.conf that drops the routes RPKI finds invalid.</summary>
+    public const string RovRouteMap = "ROV";
 
     public static readonly Collector Station = new("10.10.0.100", Bmp.BmpStation.Port);
 
@@ -55,8 +63,8 @@ public static class LabView
         return [.. states];
     }
 
-    /// <summary>The two JSON documents ShowCommand prints back to back: summary, then table.</summary>
-    public static (JsonElement Summary, JsonElement Table) SplitDocuments(string stdout)
+    /// <summary>The three JSON documents ShowCommand prints back to back: summary, table, neighbors.</summary>
+    public static (JsonElement Summary, JsonElement Table, JsonElement Neighbors) SplitDocuments(string stdout)
     {
         var bytes = Encoding.UTF8.GetBytes(stdout);
         var start = Array.IndexOf(bytes, (byte)'{');
@@ -65,13 +73,29 @@ public static class LabView
             throw new FormatException("no JSON document in the output");
         }
         var reader = new Utf8JsonReader(bytes.AsSpan(start), new JsonReaderOptions { AllowMultipleValues = true });
-        using var summary = JsonDocument.ParseValue(ref reader);
-        if (!reader.Read())
+        var documents = new List<JsonElement>();
+        do
         {
-            throw new FormatException("one JSON document in the output, two expected");
+            using var document = JsonDocument.ParseValue(ref reader);
+            documents.Add(document.RootElement.Clone());
         }
-        using var table = JsonDocument.ParseValue(ref reader);
-        return (summary.RootElement.Clone(), table.RootElement.Clone());
+        while (documents.Count < 3 && reader.Read());
+        if (documents.Count < 3)
+        {
+            throw new FormatException($"{documents.Count} JSON documents in the output, three expected");
+        }
+        return (documents[0], documents[1], documents[2]);
+    }
+
+    /// <summary>Whether route-map ROV filters what one of the router's neighbors announces.</summary>
+    public static bool RovApplied(JsonElement neighbors)
+    {
+        return neighbors.ValueKind == JsonValueKind.Object && neighbors.EnumerateObject().Any(n =>
+            n.Value.ValueKind == JsonValueKind.Object
+            && n.Value.TryGetProperty("addressFamilyInfo", out var families)
+            && families.TryGetProperty("ipv4Unicast", out var unicast)
+            && unicast.TryGetProperty("routeMapForIncomingAdvertisements", out var map)
+            && map.GetString() == RovRouteMap);
     }
 
     /// <summary>One entry per configured BGP neighbor of the router.</summary>
@@ -101,12 +125,13 @@ public static class LabView
     {
         try
         {
-            var (summary, table) = SplitDocuments(await run(router.Container, ShowCommand));
-            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, true, reporting, Sessions(summary), Paths(table));
+            var (summary, table, neighbors) = SplitDocuments(await run(router.Container, ShowCommand));
+            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, true, reporting, RovApplied(neighbors),
+                Sessions(summary), Paths(table));
         }
         catch (Exception)
         {
-            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, false, reporting, [], []);
+            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, false, reporting, false, [], []);
         }
     }
 
