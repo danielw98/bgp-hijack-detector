@@ -14,3 +14,23 @@ export function setData(up) {
   $("data-state").textContent = up ? t("status.data.up") : t("status.data.down");
   if (up) $("updated").textContent = t("status.updated", { time: new Date().toLocaleTimeString(LOCALE) });
 }
+
+// The status line of a page without the simulator: the lab and the route feed, polled.
+export function watchStatus(get, everyMs = 15000) {
+  const check = async () => {
+    try {
+      const lab = await get("/api/lab");
+      setLab(lab.routers.every((r) => r.reachable));
+    } catch {
+      setLab(false);
+    }
+    try {
+      await get("/api/stats");
+      setData(true);
+    } catch {
+      setData(false);
+    }
+  };
+  check();
+  setInterval(check, everyMs);
+}

@@ -367,3 +367,11 @@ footer.col { padding: 40px 16px 64px; color: var(--muted); font-size: 16px; }
   html { scroll-behavior: auto; }
   * { transition: none !important; animation: none !important; }
 }
+
+/* The guide: six chapters, prose and still figures on one column of 760 px. */
+body.guide { --column: 792px; }
+.guide .still { margin: 24px 0 12px; }
+.guide .still img { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.guide .still figcaption { margin-top: 10px; font-size: 17px; font-weight: 700; }
+.guide .live { margin: 0; font-size: 17px; font-weight: 700; }
+.guide dl.glossary { margin-top: 32px; }
