@@ -49,9 +49,28 @@ public class LabViewTests
         {"10.10.0.10":{"remoteAs":65000,"bgpState":"Established","addressFamilyInfo":{"ipv4Unicast":{"acceptedPrefixCounter":1}}}}
         """;
 
-    private static string Show(string table, string neighbors = VictimNeighbors)
+    private const string TransitReceived = """
+        {"localAS":65000,"receivedRoutes": {"203.0.113.0/24":{"network":"203.0.113.0/24","nextHop":"10.10.0.13","path":"65003","origin":"IGP","valid":true,"best":true},"203.0.113.0/25":{"network":"203.0.113.0/25","nextHop":"10.10.0.13","path":"65003","origin":"IGP","valid":true,"best":true}}
+        ,"totalPrefixCounter":2,"filteredPrefixCounter":2}
+        """;
+
+    private const string NoSuchNeighbor = """
+        {"warning":"No such neighbor in this view/vrf"}
+        """;
+
+    private const string RovTransitTable = """
+        {"localAS": 65000, "routes": { "203.0.113.0/24": [{"valid":true,"bestpath":true,"selectionReason":"First path received","peerId":"10.10.0.11","path":"65001","origin":"IGP","nexthops":[{"ip":"10.10.0.11","afi":"ipv4","used":true}]}]}}
+        """;
+
+    private static string Show(string table, string neighbors = VictimNeighbors, string received = NoSuchNeighbor)
     {
-        return Summary + "\n" + table + "\n" + neighbors;
+        return Summary + "\n" + table + "\n" + neighbors + "\n" + received;
+    }
+
+    private static List<RejectedRoute> RejectedOf(string table, bool rov)
+    {
+        var (_, parsed, _, received) = LabView.SplitDocuments(Show(table, TransitNeighbors, TransitReceived));
+        return LabView.Rejected(received, LabView.Paths(parsed), rov);
     }
 
     private static List<LabPath> PathsOf(string table)
@@ -62,16 +81,43 @@ public class LabViewTests
     [Fact]
     public void SplitDocumentsReturnsSummaryTableAndNeighbors()
     {
-        var (summary, table, neighbors) = LabView.SplitDocuments("% Can't open configuration file\n" + Show(TransitTable, TransitNeighbors));
+        var (summary, table, neighbors, _) = LabView.SplitDocuments("% Can't open configuration file\n" + Show(TransitTable, TransitNeighbors));
         Assert.Equal(65000, summary.GetProperty("as").GetInt32());
         Assert.Equal(65000, table.GetProperty("localAS").GetInt32());
         Assert.True(neighbors.TryGetProperty("10.10.0.13", out _));
     }
 
     [Fact]
-    public void SplitDocumentsRejectsOutputWithTwoDocuments()
+    public void SplitDocumentsRejectsOutputWithThreeDocuments()
     {
-        Assert.Throws<FormatException>(() => LabView.SplitDocuments(Summary + "\n" + TransitTable));
+        Assert.Throws<FormatException>(() => LabView.SplitDocuments(Summary + "\n" + TransitTable + "\n" + TransitNeighbors));
+    }
+
+    [Fact]
+    public void RejectedListsTheAttackersRoutesMissingFromTheTableUnderRov()
+    {
+        Assert.Equal(
+            [("203.0.113.0/24", "65003", 65003L), ("203.0.113.0/25", "65003", 65003L)],
+            RejectedOf(RovTransitTable, rov: true).Select(r => (r.Prefix, string.Join(' ', r.AsPath), r.OriginAs)));
+    }
+
+    [Fact]
+    public void RejectedLeavesOutTheAttackersRoutesTheTableKept()
+    {
+        Assert.Empty(RejectedOf(TransitTable, rov: true));
+    }
+
+    [Fact]
+    public void RejectedIsEmptyWithoutRov()
+    {
+        Assert.Empty(RejectedOf(RovTransitTable, rov: false));
+    }
+
+    [Fact]
+    public void RejectedIsEmptyWhenTheRouterHasNoSuchNeighbor()
+    {
+        var (_, _, _, received) = LabView.SplitDocuments(Show(VictimTable));
+        Assert.Empty(LabView.Rejected(received, [], rov: true));
     }
 
     [Fact]
@@ -89,7 +135,7 @@ public class LabViewTests
     [Fact]
     public void RovIsNotAppliedWhenTheRouterHasNoNeighbors()
     {
-        Assert.False(LabView.RovApplied(LabView.SplitDocuments("{} {} {}").Neighbors));
+        Assert.False(LabView.RovApplied(LabView.SplitDocuments("{} {} {} {}").Neighbors));
     }
 
     [Fact]
@@ -101,7 +147,7 @@ public class LabViewTests
     [Fact]
     public void SessionsReportEachNeighborAndWhetherItIsEstablished()
     {
-        var (summary, _, _) = LabView.SplitDocuments(Show(TransitTable));
+        var (summary, _, _, _) = LabView.SplitDocuments(Show(TransitTable));
         Assert.Equal([new Session("10.10.0.11", 65001, true), new Session("10.10.0.13", 65003, false)], LabView.Sessions(summary));
     }
 
@@ -141,7 +187,7 @@ public class LabViewTests
     [Fact]
     public void ATableWithoutRoutesHasNoPaths()
     {
-        Assert.Empty(LabView.Paths(LabView.SplitDocuments("{} {} {}").Table));
+        Assert.Empty(LabView.Paths(LabView.SplitDocuments("{} {} {} {}").Table));
     }
 
     [Fact]
@@ -178,8 +224,9 @@ public class LabViewTests
     public async Task SnapshotTellsWhichRoutersApplyOriginValidation()
     {
         var states = await LabView.SnapshotAsync((container, _) =>
-            Task.FromResult(container == "lab-transit" ? Show(TransitTable, TransitNeighbors) : Show(VictimTable)), []);
+            Task.FromResult(container == "lab-transit" ? Show(RovTransitTable, TransitNeighbors, TransitReceived) : Show(VictimTable)), []);
         Assert.Equal([false, true, false], states.Select(s => s.Rov));
+        Assert.Equal([0, 2, 0], states.Select(s => s.Rejected.Count));
     }
 
     [Fact]
@@ -191,5 +238,6 @@ public class LabViewTests
         Assert.Equal(["203.0.113.1", "203.0.113.129"], victim.Hosts);
         Assert.Empty(victim.Sessions);
         Assert.Empty(victim.Paths);
+        Assert.Empty(victim.Rejected);
     }
 }

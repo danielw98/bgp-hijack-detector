@@ -11,9 +11,13 @@ public sealed record Session(string Peer, long RemoteAs, bool Established);
 /// <summary>A path of a router's BGP table; NextHop is null for a route the router originates.</summary>
 public sealed record LabPath(string Prefix, long[] AsPath, long OriginAs, string? NextHop, bool Best, string Reason);
 
+/// <summary>A route a router received from the attacker and refused under route-map ROV.</summary>
+public sealed record RejectedRoute(string Prefix, long[] AsPath, long OriginAs);
+
 /// <summary>
 /// A router as it reports itself; Reporting tells whether its BMP session to the station is up,
-/// Rov whether route-map ROV filters the routes of one of its neighbors (origin validation).
+/// Rov whether route-map ROV filters the routes of one of its neighbors (origin validation),
+/// Rejected the attacker's routes that ROV refused.
 /// </summary>
 public sealed record RouterState(
     string Role,
@@ -24,7 +28,8 @@ public sealed record RouterState(
     bool Reporting,
     bool Rov,
     List<Session> Sessions,
-    List<LabPath> Paths);
+    List<LabPath> Paths,
+    List<RejectedRoute> Rejected);
 
 /// <summary>The station the routers report to over BMP.</summary>
 public sealed record Collector(string Address, int Port);
@@ -36,11 +41,17 @@ public sealed record Collector(string Address, int Port);
 /// </summary>
 public static class LabView
 {
-    public static readonly string[] ShowCommand =
-        ["vtysh", "-c", "show bgp ipv4 unicast summary json", "-c", "show ip bgp json", "-c", "show bgp neighbors json"];
+    /// <summary>The attacker's address: the transit's session that route-map ROV filters.</summary>
+    public const string FilteredPeer = "10.10.0.13";
 
     /// <summary>The route-map of lab/frr/transit/frr.conf that drops the routes RPKI finds invalid.</summary>
     public const string RovRouteMap = "ROV";
+
+    public static readonly string[] ShowCommand =
+    [
+        "vtysh", "-c", "show bgp ipv4 unicast summary json", "-c", "show ip bgp json", "-c", "show bgp neighbors json",
+        "-c", $"show bgp ipv4 unicast neighbors {FilteredPeer} received-routes json",
+    ];
 
     public static readonly Collector Station = new("10.10.0.100", Bmp.BmpStation.Port);
 
@@ -63,8 +74,8 @@ public static class LabView
         return [.. states];
     }
 
-    /// <summary>The three JSON documents ShowCommand prints back to back: summary, table, neighbors.</summary>
-    public static (JsonElement Summary, JsonElement Table, JsonElement Neighbors) SplitDocuments(string stdout)
+    /// <summary>The four JSON documents ShowCommand prints back to back: summary, table, neighbors, received routes.</summary>
+    public static (JsonElement Summary, JsonElement Table, JsonElement Neighbors, JsonElement Received) SplitDocuments(string stdout)
     {
         var bytes = Encoding.UTF8.GetBytes(stdout);
         var start = Array.IndexOf(bytes, (byte)'{');
@@ -79,12 +90,12 @@ public static class LabView
             using var document = JsonDocument.ParseValue(ref reader);
             documents.Add(document.RootElement.Clone());
         }
-        while (documents.Count < 3 && reader.Read());
-        if (documents.Count < 3)
+        while (documents.Count < 4 && reader.Read());
+        if (documents.Count < 4)
         {
-            throw new FormatException($"{documents.Count} JSON documents in the output, three expected");
+            throw new FormatException($"{documents.Count} JSON documents in the output, four expected");
         }
-        return (documents[0], documents[1], documents[2]);
+        return (documents[0], documents[1], documents[2], documents[3]);
     }
 
     /// <summary>Whether route-map ROV filters what one of the router's neighbors announces.</summary>
@@ -96,6 +107,29 @@ public static class LabView
             && families.TryGetProperty("ipv4Unicast", out var unicast)
             && unicast.TryGetProperty("routeMapForIncomingAdvertisements", out var map)
             && map.GetString() == RovRouteMap);
+    }
+
+    /// <summary>
+    /// The routes FilteredPeer sent that are missing from the router's table while ROV is
+    /// applied. <paramref name="received"/> is its Adj-RIB-In before policy (soft-reconfiguration
+    /// inbound); without ROV nothing counts as rejected.
+    /// </summary>
+    public static List<RejectedRoute> Rejected(JsonElement received, IReadOnlyList<LabPath> paths, bool rov)
+    {
+        if (!rov || received.ValueKind != JsonValueKind.Object || !received.TryGetProperty("receivedRoutes", out var routes))
+        {
+            return [];
+        }
+        var accepted = paths.Where(p => p.NextHop == FilteredPeer).Select(p => (p.Prefix, string.Join(' ', p.AsPath))).ToHashSet();
+        return routes.EnumerateObject()
+            .Select(r => (r.Name, Path: r.Value.GetProperty("path").GetString() ?? ""))
+            .Where(r => !accepted.Contains((r.Name, r.Path)))
+            .Select(r =>
+            {
+                var asPath = r.Path.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray();
+                return new RejectedRoute(r.Name, asPath, asPath.Length > 0 ? asPath[^1] : 0);
+            })
+            .ToList();
     }
 
     /// <summary>One entry per configured BGP neighbor of the router.</summary>
@@ -125,13 +159,15 @@ public static class LabView
     {
         try
         {
-            var (summary, table, neighbors) = SplitDocuments(await run(router.Container, ShowCommand));
-            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, true, reporting, RovApplied(neighbors),
-                Sessions(summary), Paths(table));
+            var (summary, table, neighbors, received) = SplitDocuments(await run(router.Container, ShowCommand));
+            var rov = RovApplied(neighbors);
+            var paths = Paths(table);
+            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, true, reporting, rov,
+                Sessions(summary), paths, Rejected(received, paths, rov));
         }
         catch (Exception)
         {
-            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, false, reporting, false, [], []);
+            return new RouterState(router.Role, router.Address, router.Asn, router.Hosts, false, reporting, false, [], [], []);
         }
     }
 

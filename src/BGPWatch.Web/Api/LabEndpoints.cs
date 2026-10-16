@@ -295,11 +295,11 @@ public static class LabEndpoints
     /// </summary>
     public static List<List<string>> RovBatches(bool on)
     {
-        var line = $"neighbor 10.10.0.13 route-map {LabView.RovRouteMap} in";
+        var line = $"neighbor {LabView.FilteredPeer} route-map {LabView.RovRouteMap} in";
         return
         [
             ["configure terminal", "router bgp 65000", "address-family ipv4 unicast", on ? line : $"no {line}", "end"],
-            ["clear ip bgp 10.10.0.13 soft in"],
+            [$"clear ip bgp {LabView.FilteredPeer} soft in"],
         ];
     }
 
