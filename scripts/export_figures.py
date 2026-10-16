@@ -219,6 +219,8 @@ def export(browser, base: str, lang: str, figure: Figure) -> str:
     page.goto(f"{base}?lang={lang}#simulator", wait_until="load")
     page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=20000)
     page.wait_for_selector("svg.map", state="attached", timeout=20000)
+    if page.locator('[data-mode="free"]').count():
+        page.click('[data-mode="free"]')
     page.wait_for_timeout(SETTLE_MS)
     if figure.packet:
         source, target = figure.packet

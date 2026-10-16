@@ -15,6 +15,7 @@
    ],
    "reachable": true,
    "reporting": true,
+   "rov": false,
    "sessions": [
     {
      "peer": "10.10.0.10",
@@ -31,7 +32,8 @@
      "best": true,
      "reason": "First path received"
     }
-   ]
+   ],
+   "rejected": []
   },
   {
    "role": "transit",
@@ -40,6 +42,7 @@
    "hosts": [],
    "reachable": true,
    "reporting": true,
+   "rov": true,
    "sessions": [
     {
      "peer": "10.10.0.11",
@@ -63,6 +66,22 @@
      "best": true,
      "reason": "First path received"
     }
+   ],
+   "rejected": [
+    {
+     "prefix": "203.0.113.0/24",
+     "as_path": [
+      65003
+     ],
+     "origin_as": 65003
+    },
+    {
+     "prefix": "203.0.113.0/25",
+     "as_path": [
+      65003
+     ],
+     "origin_as": 65003
+    }
    ]
   },
   {
@@ -72,6 +91,7 @@
    "hosts": [],
    "reachable": true,
    "reporting": true,
+   "rov": false,
    "sessions": [
     {
      "peer": "10.10.0.10",
@@ -107,7 +127,8 @@
      "best": true,
      "reason": "First path received"
     }
-   ]
+   ],
+   "rejected": []
   }
  ]
 }
