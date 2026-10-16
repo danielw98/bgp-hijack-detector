@@ -39,7 +39,15 @@ export function createLog() {
     return hops;
   }
 
-  return { take, get cursor() { return cursor; } };
+  // What the routers held before the rows to come, from a lab snapshot: the chosen paths,
+  // stored as the Loc-RIB reports them (the router's own AS first).
+  function seed(snapshot) {
+    snapshot.routers.forEach((r) => r.paths.filter((p) => p.best).forEach((p) => {
+      held.set(`${r.address}|${p.prefix}`, { originAs: p.origin_as, asPath: [r.asn, ...p.as_path], withdrawn: false });
+    }));
+  }
+
+  return { take, seed, get cursor() { return cursor; } };
 }
 
 function same(a, b) {

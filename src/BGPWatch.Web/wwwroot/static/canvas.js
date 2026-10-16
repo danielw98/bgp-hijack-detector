@@ -25,6 +25,7 @@ const WIDE = {
   at: { victim: [170, 222], transit: [500, 222], attacker: [830, 222], collector: [500, 415] },
   text: ([x, y], lines) => lines.map((line, i) => [x + 16, y + 58 + i * 24, "start", line]),
   regionLabel: ([x, y]) => [x + 16, y + 28, "start"],
+  rovLabel: ([x, y, w]) => [x + w - 16, y + 56, "end"],
   sessionLabel: ([x1, y1], [x2]) => [(x1 + x2) / 2, y1 + 36, "middle"],
   report: (role, [x, y], [cx, cy]) => {
     const top = cy - 25;
@@ -44,6 +45,7 @@ const TALL = {
   at: { victim: [170, 156], transit: [170, 456], attacker: [170, 756], collector: [60, 990] },
   text: (box, lines, [cx, cy]) => lines.map((line, i) => [cx + RADIUS + 16, cy - 6 + i * 24, "start", line]),
   regionLabel: ([x, y, w]) => [x + w - 14, y + 28, "end"],
+  rovLabel: ([x, y]) => [x + 14, y + 28, "start"],
   sessionLabel: ([x1, y1], [, y2]) => [x1 + 14, (y1 + y2) / 2 + 6, "start"],
   report: (role, [x, y], [cx, cy]) => `M ${x - RADIUS} ${y} L ${cx - 10} ${y} L ${cx - 10} ${cy - 25}`,
   collectorText: ([cx, cy]) => [[cx + 56, cy - 4, "start"], [cx + 56, cy + 20, "start"]],
@@ -100,12 +102,16 @@ export function createCanvas(container) {
     if (badge) mark(badge.at, badge.verdict);
   }
 
+  // The region of an AS with its label; a router that validates origins wears a badge in
+  // the corner the label leaves free.
   function region(role, r) {
     const box = layout.region[role];
     const [x, y, w, h] = box;
     const [lx, ly, anchor] = layout.regionLabel(box);
+    const [rx, ry, ranchor] = layout.rovLabel(box);
+    const badge = r.rov ? `${halo(rx, ry, ranchor, t("map.rov"))}<text class="rov-label" x="${rx}" y="${ry}" text-anchor="${ranchor}">${esc(t("map.rov"))}</text>` : "";
     return `<rect class="region ${role}" x="${x}" y="${y}" width="${w}" height="${h}" rx="14"></rect>
-      <text class="region-label ${role}" x="${lx}" y="${ly}" text-anchor="${anchor}">${ROLE_NAME[role]} <tspan class="asn">AS${esc(r.asn)}</tspan></text>`;
+      <text class="region-label ${role}" x="${lx}" y="${ly}" text-anchor="${anchor}">${ROLE_NAME[role]} <tspan class="asn">AS${esc(r.asn)}</tspan></text>${badge}`;
   }
 
   function links(routers) {

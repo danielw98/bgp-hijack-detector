@@ -5,6 +5,7 @@ import { get, post } from "./api.js";
 import { t } from "./i18n.js";
 import { renderGlossary, wirePopovers } from "./glossary.js";
 import { mountSimulator } from "./simulator.js";
+import { mountTour } from "./tour.js";
 import { startIncidents } from "./incidents.js";
 import { startIncident2008 } from "./timeline.js";
 import { startPrefix } from "./prefix.js";
@@ -17,7 +18,7 @@ const $ = (id) => document.getElementById(id);
 if ($("glossary")) renderGlossary($("glossary"));
 wirePopovers();
 document.querySelectorAll("[data-disclosures]").forEach(wireDisclosures);
-document.querySelectorAll("[data-simulator]").forEach(mountSimulator);
+document.querySelectorAll("[data-simulator]").forEach((root) => mountTour(root, mountSimulator(root)));
 if (document.querySelector("[data-incidents]")) startIncidents();
 else if ($("dot-lab")) watchStatus(get);
 

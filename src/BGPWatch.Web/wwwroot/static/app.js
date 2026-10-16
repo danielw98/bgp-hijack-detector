@@ -14,9 +14,10 @@ function show(name) {
   window.scrollTo({ top: 0 });
 }
 
+// "#tour-N" opens the simulator on step N of the tour (tour.js reads the step).
 function fromHash() {
   const hash = location.hash.replace("#", "");
-  const name = OLD_NAMES[hash] || hash || "simulator";
+  const name = hash.startsWith("tour") ? "simulator" : OLD_NAMES[hash] || hash || "simulator";
   show(views.some((view) => view.id === `view-${name}`) ? name : "simulator");
 }
 

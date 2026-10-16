@@ -1,0 +1,2605 @@
+{
+ "recorded_at": "2026-10-16T17:52:02.924857Z",
+ "steps": {
+  "1": {
+   "action": "announce",
+   "started_at": "2026-10-16T17:51:28.2318549Z",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [
+    {
+     "id": 1370743,
+     "seen_at": "2026-10-16T17:51:27.274428Z",
+     "peer": "10.10.0.11",
+     "prefix": "203.0.113.0/24",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    },
+    {
+     "id": 1370744,
+     "seen_at": "2026-10-16T17:51:27.324851Z",
+     "peer": "10.10.0.10",
+     "prefix": "203.0.113.0/24",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    },
+    {
+     "id": 1370745,
+     "seen_at": "2026-10-16T17:51:27.375644Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/24",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    },
+    {
+     "id": 1370746,
+     "seen_at": "2026-10-16T17:51:28.343963Z",
+     "peer": "10.10.0.11",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65001,
+     "as_path": [
+      65001
+     ],
+     "next_hop": null,
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370747,
+     "seen_at": "2026-10-16T17:51:28.394365Z",
+     "peer": "10.10.0.10",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65001,
+     "as_path": [
+      65000,
+      65001
+     ],
+     "next_hop": "10.10.0.11",
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370748,
+     "seen_at": "2026-10-16T17:51:28.444846Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65001,
+     "as_path": [
+      65003,
+      65000,
+      65001
+     ],
+     "next_hop": "10.10.0.11",
+     "withdrawn": false,
+     "source": "lab"
+    }
+   ],
+   "alerts": []
+  },
+  "3": {
+   "action": "packet",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [],
+   "alerts": [],
+   "trace": {
+    "attacker": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     }
+    },
+    "transit": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     }
+    }
+   }
+  },
+  "4": {
+   "action": "trigger exact",
+   "started_at": "2026-10-16T17:51:33.2897399Z",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [
+    {
+     "id": 1370749,
+     "seen_at": "2026-10-16T17:51:33.402799Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65003,
+     "as_path": [
+      65003
+     ],
+     "next_hop": null,
+     "withdrawn": false,
+     "source": "lab"
+    }
+   ],
+   "alerts": [
+    {
+     "id": 814,
+     "raised_at": "2026-10-16T17:51:33.402799Z",
+     "alert_type": "origin_hijack",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 815,
+     "raised_at": "2026-10-16T17:51:33.402799Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    }
+   ],
+   "trace": {
+    "attacker": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     }
+    },
+    "transit": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     }
+    }
+   }
+  },
+  "5": {
+   "action": "trigger subprefix",
+   "started_at": "2026-10-16T17:51:38.3508706Z",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65000,
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [
+    {
+     "id": 1370750,
+     "seen_at": "2026-10-16T17:51:38.486374Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/25",
+     "origin_as": 65003,
+     "as_path": [
+      65003
+     ],
+     "next_hop": null,
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370751,
+     "seen_at": "2026-10-16T17:51:38.537083Z",
+     "peer": "10.10.0.10",
+     "prefix": "203.0.113.0/25",
+     "origin_as": 65003,
+     "as_path": [
+      65000,
+      65003
+     ],
+     "next_hop": "10.10.0.13",
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370752,
+     "seen_at": "2026-10-16T17:51:38.587699Z",
+     "peer": "10.10.0.11",
+     "prefix": "203.0.113.0/25",
+     "origin_as": 65003,
+     "as_path": [
+      65001,
+      65000,
+      65003
+     ],
+     "next_hop": "10.10.0.13",
+     "withdrawn": false,
+     "source": "lab"
+    }
+   ],
+   "alerts": [
+    {
+     "id": 816,
+     "raised_at": "2026-10-16T17:51:38.486374Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 817,
+     "raised_at": "2026-10-16T17:51:38.486374Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 818,
+     "raised_at": "2026-10-16T17:51:38.537083Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.10",
+     "as_path": [
+      65000,
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 819,
+     "raised_at": "2026-10-16T17:51:38.537083Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.10",
+     "as_path": [
+      65000,
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 820,
+     "raised_at": "2026-10-16T17:51:38.587699Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.11",
+     "as_path": [
+      65001,
+      65000,
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 821,
+     "raised_at": "2026-10-16T17:51:38.587699Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.11",
+     "as_path": [
+      65001,
+      65000,
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    }
+   ],
+   "trace": {
+    "attacker": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     }
+    },
+    "transit": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.13",
+        "dev": "eth0"
+       },
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     }
+    }
+   }
+  },
+  "6": {
+   "action": "detector",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65000,
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65000,
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [],
+   "alerts": [
+    {
+     "id": 814,
+     "raised_at": "2026-10-16T17:51:33.402799Z",
+     "alert_type": "origin_hijack",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 815,
+     "raised_at": "2026-10-16T17:51:33.402799Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 816,
+     "raised_at": "2026-10-16T17:51:38.486374Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 817,
+     "raised_at": "2026-10-16T17:51:38.486374Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 818,
+     "raised_at": "2026-10-16T17:51:38.537083Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.10",
+     "as_path": [
+      65000,
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 819,
+     "raised_at": "2026-10-16T17:51:38.537083Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.10",
+     "as_path": [
+      65000,
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 820,
+     "raised_at": "2026-10-16T17:51:38.587699Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.11",
+     "as_path": [
+      65001,
+      65000,
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 821,
+     "raised_at": "2026-10-16T17:51:38.587699Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.11",
+     "as_path": [
+      65001,
+      65000,
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    }
+   ]
+  },
+  "7": {
+   "action": "reset",
+   "started_at": "2026-10-16T17:51:43.3244808Z",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65000,
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "Older Path"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003,
+        "next_hop": "10.10.0.13",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [
+    {
+     "id": 1370753,
+     "seen_at": "2026-10-16T17:51:43.452569Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65001,
+     "as_path": [
+      65003,
+      65000,
+      65001
+     ],
+     "next_hop": "10.10.0.11",
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370754,
+     "seen_at": "2026-10-16T17:51:43.527532Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/25",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    },
+    {
+     "id": 1370755,
+     "seen_at": "2026-10-16T17:51:43.57801Z",
+     "peer": "10.10.0.10",
+     "prefix": "203.0.113.0/25",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    },
+    {
+     "id": 1370756,
+     "seen_at": "2026-10-16T17:51:43.628435Z",
+     "peer": "10.10.0.11",
+     "prefix": "203.0.113.0/25",
+     "origin_as": null,
+     "as_path": [],
+     "next_hop": null,
+     "withdrawn": true,
+     "source": "lab"
+    }
+   ],
+   "alerts": []
+  },
+  "8": {
+   "action": "defence",
+   "started_at": "2026-10-16T17:51:50.0656408Z",
+   "before": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": true,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003,
+         65000,
+         65001
+        ],
+        "origin_as": 65001
+       }
+      ]
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "after": {
+    "ok": true,
+    "collector": {
+     "address": "10.10.0.100",
+     "port": 5000
+    },
+    "routers": [
+     {
+      "role": "victim",
+      "address": "10.10.0.11",
+      "asn": 65001,
+      "hosts": [
+       "203.0.113.1",
+       "203.0.113.129"
+      ],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65001,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     },
+     {
+      "role": "transit",
+      "address": "10.10.0.10",
+      "asn": 65000,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": true,
+      "sessions": [
+       {
+        "peer": "10.10.0.11",
+        "remote_as": 65001,
+        "established": true
+       },
+       {
+        "peer": "10.10.0.13",
+        "remote_as": 65003,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [
+         65003
+        ],
+        "origin_as": 65003
+       }
+      ]
+     },
+     {
+      "role": "attacker",
+      "address": "10.10.0.13",
+      "asn": 65003,
+      "hosts": [],
+      "reachable": true,
+      "reporting": true,
+      "rov": false,
+      "sessions": [
+       {
+        "peer": "10.10.0.10",
+        "remote_as": 65000,
+        "established": true
+       }
+      ],
+      "paths": [
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "Weight"
+       },
+       {
+        "prefix": "203.0.113.0/24",
+        "as_path": [
+         65000,
+         65001
+        ],
+        "origin_as": 65001,
+        "next_hop": "10.10.0.11",
+        "best": false,
+        "reason": ""
+       },
+       {
+        "prefix": "203.0.113.0/25",
+        "as_path": [],
+        "origin_as": 65003,
+        "next_hop": null,
+        "best": true,
+        "reason": "First path received"
+       }
+      ],
+      "rejected": []
+     }
+    ]
+   },
+   "rows": [
+    {
+     "id": 1370757,
+     "seen_at": "2026-10-16T17:51:50.179306Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/24",
+     "origin_as": 65003,
+     "as_path": [
+      65003
+     ],
+     "next_hop": null,
+     "withdrawn": false,
+     "source": "lab"
+    },
+    {
+     "id": 1370758,
+     "seen_at": "2026-10-16T17:51:50.179388Z",
+     "peer": "10.10.0.13",
+     "prefix": "203.0.113.0/25",
+     "origin_as": 65003,
+     "as_path": [
+      65003
+     ],
+     "next_hop": null,
+     "withdrawn": false,
+     "source": "lab"
+    }
+   ],
+   "alerts": [
+    {
+     "id": 822,
+     "raised_at": "2026-10-16T17:51:50.179306Z",
+     "alert_type": "origin_hijack",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 823,
+     "raised_at": "2026-10-16T17:51:50.179306Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/24",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/24 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    },
+    {
+     "id": 824,
+     "raised_at": "2026-10-16T17:51:50.179388Z",
+     "alert_type": "subprefix_hijack",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [
+      65001
+     ],
+     "covering_prefix": "203.0.113.0/24",
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "more-specific 203.0.113.0/25 of monitored 203.0.113.0/24 announced by AS65003, expected AS65001",
+     "source": "lab"
+    },
+    {
+     "id": 825,
+     "raised_at": "2026-10-16T17:51:50.179388Z",
+     "alert_type": "rpki_invalid",
+     "prefix": "203.0.113.0/25",
+     "observed_origin": 65003,
+     "expected_origins": [],
+     "covering_prefix": null,
+     "peer": "10.10.0.13",
+     "as_path": [
+      65003
+     ],
+     "detail": "203.0.113.0/25 from AS65003 is RPKI-invalid (no VRP authorizes this origin or length)",
+     "source": "lab"
+    }
+   ],
+   "trace": {
+    "attacker": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "attacker",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "attacker",
+        "kind": "blackhole",
+        "next_hop": null,
+        "dev": null
+       }
+      ],
+      "outcome": "dropped"
+     }
+    },
+    "transit": {
+     "203.0.113.1": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.1",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     },
+     "203.0.113.129": {
+      "ok": true,
+      "from": "transit",
+      "to": "203.0.113.129",
+      "hops": [
+       {
+        "router": "transit",
+        "kind": "via",
+        "next_hop": "10.10.0.11",
+        "dev": "eth0"
+       },
+       {
+        "router": "victim",
+        "kind": "local",
+        "next_hop": null,
+        "dev": "lo"
+       }
+      ],
+      "outcome": "delivered"
+     }
+    }
+   }
+  }
+ }
+}

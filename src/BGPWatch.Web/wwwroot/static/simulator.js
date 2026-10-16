@@ -1,16 +1,19 @@
 // The simulator: the lab as its routers report it, drawn on the canvas with its tables
-// in the inspector; the hijack scenarios run in the real routers; the packet walk on
-// the tables; the kernel walk as proof. Everything that moves is an event of the
-// transport: one hop of an UPDATE or a withdrawal as the routers reported it over BMP
-// (the route log, events.js), a packet or a kernel answer. On entry the last rows of the
-// log wait in the queue, so Play always has something to show. A click on the current
-// message, its row or a router opens a popover with what the hop carried and decided.
+// and the reachability grid in the inspector; the hijack scenarios run in the real
+// routers; the packet walk on the tables; the kernel walk as proof. Everything that moves
+// is an event of the transport: one hop of an UPDATE or a withdrawal as the routers
+// reported it over BMP (the route log, events.js), a packet or a kernel answer. On entry
+// the last rows of the log wait in the queue, so Play always has something to show. The
+// tour (tour.js) drives the same machinery from a recorded cycle: it switches the source
+// to a fixture snapshot and plays recorded rows. A click on the current message, its row
+// or a router opens a popover with what the hop carried and decided.
 
 import { every, get, post } from "./api.js";
 import { ALERT_NAME, ROLE_NAME, REASON, asChip, chain, esc, fmtTime, registerLab } from "./format.js";
 import { createCanvas } from "./canvas.js";
 import { createTransport } from "./transport.js";
 import { createLog } from "./events.js";
+import { createGrid } from "./grid.js";
 import { contains, prefixLength, simulate } from "./simulate.js";
 import { createPopover } from "./popover.js";
 import { setLab } from "./status.js";
@@ -19,6 +22,10 @@ import { and, t } from "./i18n.js";
 const DESTINATIONS = [
   ["203.0.113.1", t("sim.dest.inside")],
   ["203.0.113.129", t("sim.dest.outside")],
+];
+const GRID_DESTINATIONS = [
+  ["203.0.113.1", t("grid.inside")],
+  ["203.0.113.129", t("grid.outside")],
 ];
 const SCENARIO_TEXT = {
   exact: t("sim.scenario.done.exact"),
@@ -37,6 +44,7 @@ const POPOVER_TITLE = { update: "UPDATE", withdraw: t("token.withdraw"), packet:
 const ALERTS_LOOKED_AT = 200;
 const ENTRY_ROWS = 24;
 const POLL_ROWS = 200;
+const ONE_SCREEN_FROM = 1160;   // app.css: from this width the simulator fills the window and its panels scroll
 const AFTER_ACTION_MS = [700, 1800];
 const STEP_VERDICT = { delivered: "delivered", blackhole: "dropped", unreachable: "unreachable" };
 const KERNEL_VERDICT = { local: "delivered", direct: "delivered", blackhole: "dropped", unreachable: "unreachable" };
@@ -67,8 +75,11 @@ export function mountSimulator(root) {
     now: $("now"),
     onShow,
   });
+  const grid = createGrid($("grid"), GRID_DESTINATIONS, (from, to) => { $("from").value = from; $("to").value = to; sendPacket(); });
   const popover = createPopover();
-  const log = createLog();
+  let log = createLog();
+  let source = "live";        // "live": the lab as it reports itself; "fixture": a given snapshot, no polling
+  let generation = 0;         // bumped by every source change, so a poll in flight across it says nothing
   let openNext = false;
   let monitored = [];
   get("/api/monitored").then((rows) => { monitored = rows; }).catch(() => {});
@@ -77,10 +88,11 @@ export function mountSimulator(root) {
   wireTabs(root);
   fillSelect($("from"), [["transit", ROLE_NAME.transit], ["victim", ROLE_NAME.victim], ["attacker", ROLE_NAME.attacker]]);
   fillSelect($("to"), DESTINATIONS);
-  $("hijack").addEventListener("click", () => act("trigger"));
+  $("hijack").addEventListener("click", () => act("trigger", { scenario: $("scenario").value }));
   $("reset").addEventListener("click", () => act("reset"));
-  $("send").addEventListener("click", sendPacket);
-  $("ask").addEventListener("click", askKernels);
+  $("rov").addEventListener("click", () => act("rov", { on: !validating() }));
+  $("send").addEventListener("click", () => sendPacket());
+  $("ask").addEventListener("click", () => askKernels());
   $("events").addEventListener("click", (e) => { if (e.target.closest("li[data-i]")) openNext = true; });
   $("canvas").addEventListener("click", openFromMap);
   $("canvas").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFromMap(e); } });
@@ -115,31 +127,66 @@ export function mountSimulator(root) {
     if (ev.to === "collector" && ev.kind === "update") fillAlerts(ev);
   }
 
+  // The live poll: the status always, the picture and the log only while the source is
+  // live, and only for the source the poll started under.
   async function refresh() {
+    const started = generation;
     try {
       const data = await get("/api/lab");
-      lab.routers = data.routers;
-      lab.collector = data.collector;
-      lab.byAddress = new Map(data.routers.map((r) => [r.address, r]));
-      lab.byRole = new Map(data.routers.map((r) => [r.role, r]));
-      registerLab(data.routers, data.collector);
-      canvas.render(data);
-      renderTables(data.routers);
-      document.getElementById("raw-lab").textContent = JSON.stringify(data, null, 2);
       setLab(data.routers.every((r) => r.reachable));
-      await pollLog();
+      if (source !== "live" || started !== generation) return;
+      show(data);
+      const rows = await get(`/api/lab/events?${log.cursor ? `since=${log.cursor}&limit=${POLL_ROWS}` : `limit=${ENTRY_ROWS}`}`);
+      if (source !== "live" || started !== generation) return;
+      const hops = log.take(rows, lab.routers);
+      if (hops.length) transport.enqueue(hops.map(hopEvent));
       if (!transport.current()) $("caption").innerHTML = explain(null);
     } catch (e) {
       setLab(false);
-      $("tables").innerHTML = `<div class="empty">${esc(t("sim.tables.down", { message: e.message }))}</div>`;
+      if (source === "live" && started === generation) $("tables").innerHTML = `<div class="empty">${esc(t("sim.tables.down", { message: e.message }))}</div>`;
     }
   }
 
-  // The rows the routers reported since the last poll, the last few on entry, as hops.
-  async function pollLog() {
-    const query = log.cursor ? `since=${log.cursor}&limit=${POLL_ROWS}` : `limit=${ENTRY_ROWS}`;
-    const rows = await get(`/api/lab/events?${query}`);
-    const hops = log.take(rows, lab.routers);
+  // Draws a lab snapshot: the map, the tables, the grid, the raw data.
+  function show(data) {
+    lab.routers = data.routers;
+    lab.collector = data.collector;
+    lab.byAddress = new Map(data.routers.map((r) => [r.address, r]));
+    lab.byRole = new Map(data.routers.map((r) => [r.role, r]));
+    registerLab(data.routers, data.collector);
+    canvas.render(data);
+    renderTables(data.routers);
+    grid.render(lab, ROLE_NAME);
+    $("rov").setAttribute("aria-pressed", String(validating()));
+    $("rov-state").textContent = t(validating() ? "rov.on" : "rov.off");
+    document.getElementById("raw-lab").textContent = JSON.stringify(data, null, 2);
+  }
+
+  // Whether the transit validates origins against the RPKI right now.
+  function validating() {
+    return Boolean((lab.byRole.get("transit") || {}).rov);
+  }
+
+  // Live again, or a fixture snapshot in place of the lab; either way the queue starts over.
+  function setSource(kind, snapshot) {
+    source = kind;
+    generation++;
+    transport.reset();
+    if (kind === "fixture") {
+      show(snapshot);
+      $("caption").innerHTML = explain(null);
+      return;
+    }
+    log = createLog();
+    refresh();
+  }
+
+  // Recorded rows, played as if the routers had just reported them; `before` is the lab
+  // snapshot they changed, so a withdrawal knows the route it removes.
+  function playRows(rows, before) {
+    const recorded = createLog();
+    if (before) recorded.seed(before);
+    const hops = recorded.take(rows, lab.routers);
     if (hops.length) transport.enqueue(hops.map(hopEvent));
   }
 
@@ -178,16 +225,23 @@ export function mountSimulator(root) {
     return t("cap.lie", values) + (moreSpecific(ev.label) ? " " + t("cap.lie.specific") : "");
   }
 
-  // The lab's state in plain words, shown while no event is under the cursor: at rest,
-  // an attacker's claim the transit holds off, or a claim the routers follow.
-  function stateCaption() {
+  // What the attacker claims and whether the other routers follow it.
+  function state() {
     const attacker = lab.byRole.get("attacker");
-    if (!attacker) return esc(t("cap.start"));
-    const claimed = attacker.paths.filter((p) => p.best && !p.as_path.length && monitored.some((m) => contains(m.prefix, p.prefix.split("/")[0])));
-    if (!claimed.length) return esc(t("cap.start"));
+    if (!attacker) return { claimed: [], diverted: false };
+    const claimed = attacker.paths.filter((p) => p.best && !p.as_path.length && monitored.some((m) => contains(m.prefix, p.prefix.split("/")[0]))).map((p) => p.prefix);
     const diverted = lab.routers.some((r) => r.role !== "attacker" && r.paths.some((p) => p.best && p.origin_as === attacker.asn));
-    const prefix = claimed.map((p) => p.prefix).sort((a, b) => prefixLength(b) - prefixLength(a))[0];
-    return t(diverted ? "cap.state.diverted" : "cap.state.exact", { prefix: mono(prefix) });
+    return { claimed, diverted };
+  }
+
+  // The lab's state in plain words, shown while no event is under the cursor: at rest,
+  // an attacker's claim the transit holds off or rejects, or a claim the routers follow.
+  function stateCaption() {
+    const { claimed, diverted } = state();
+    if (!claimed.length) return esc(t("cap.start"));
+    const prefix = [...claimed].sort((a, b) => prefixLength(b) - prefixLength(a))[0];
+    const key = diverted ? "cap.state.diverted" : validating() ? "cap.state.defended" : "cap.state.exact";
+    return t(key, { prefix: mono(prefix) });
   }
 
   function moreSpecific(prefix) {
@@ -222,38 +276,54 @@ export function mountSimulator(root) {
   }
 
   function highlightRow(ev) {
-    $("tables").querySelectorAll("tr.hilite").forEach((tr) => tr.classList.remove("hilite"));
-    if (!ev || !ev.row) return;
-    const row = $("tables").querySelector(`tr[data-router="${ev.row.router}"][data-prefix="${ev.row.prefix}"][data-best="true"]`);
-    if (row) { row.classList.add("hilite"); row.scrollIntoView({ block: "nearest" }); }
+    highlight(ev && ev.row ? ev.row.router : null, ev && ev.row ? ev.row.prefix : null);
   }
 
-  async function act(kind) {
-    const scenario = $("scenario").value;
+  // Lights the chosen row of a router for a prefix, or none; the tables panel scrolls to
+  // it where the panel is the only thing that scrolls (the one-screen layout).
+  function highlight(router, prefix) {
+    $("tables").querySelectorAll("tr.hilite").forEach((tr) => tr.classList.remove("hilite"));
+    if (!router) return;
+    const row = $("tables").querySelector(`tr[data-router="${router}"][data-prefix="${prefix}"][data-best="true"]`);
+    if (!row) return;
+    row.classList.add("hilite");
+    if (window.innerWidth >= ONE_SCREEN_FROM) row.scrollIntoView({ block: "nearest" });
+  }
+
+  // A lab action through the API: the routers change, the log reports what they did.
+  async function act(kind, body = {}) {
     const msg = $("now");
-    const buttons = [$("hijack"), $("reset")];
+    const buttons = [$("hijack"), $("reset"), $("rov")];
     buttons.forEach((b) => { b.disabled = true; });
-    msg.textContent = kind === "trigger" ? t("sim.busy.trigger") : t("sim.busy.reset");
+    msg.textContent = t(kind === "trigger" ? "sim.busy.trigger" : kind === "rov" ? "sim.busy.rov" : "sim.busy.reset");
     try {
-      const res = await post(`/api/lab/${kind}`, kind === "trigger" ? { scenario } : undefined);
+      const res = await post(`/api/lab/${kind}`, body);
       msg.innerHTML = kind === "trigger"
-        ? t("sim.done.trigger", { what: `<b>${esc(SCENARIO_TEXT[scenario])}</b>` })
-        : esc(t("sim.done.reset"));
+        ? t("sim.done.trigger", { what: `<b>${esc(SCENARIO_TEXT[body.scenario])}</b>` })
+        : kind === "rov" ? esc(t(body.on ? "sim.done.rov.on" : "sim.done.rov.off"))
+          : esc(t("sim.done.reset"));
       if (!res.ok) msg.textContent = t("error", { message: res.error || t("error.unknown") });
       transport.skipToEnd();
       transport.resume();
+      return res;
     } catch (e) {
       msg.textContent = t("error", { message: e.message });
+      throw e;
     } finally {
       buttons.forEach((b) => { b.disabled = false; });
       AFTER_ACTION_MS.forEach((ms) => setTimeout(refresh, ms));
     }
   }
 
-  // The packet walk on the BGP tables, one event per router consulted.
-  function sendPacket() {
-    const from = $("from").value;
-    const to = $("to").value;
+  // The packet walk on the BGP tables, one event per router consulted; it plays next.
+  function sendPacket(from = $("from").value, to = $("to").value) {
+    transport.skipToEnd();
+    queuePacket(from, to);
+    transport.resume();
+  }
+
+  // The packet walk queued behind whatever waits, for the tour.
+  function queuePacket(from, to) {
     const sim = simulate(lab, from, to);
     const batch = sim.steps.map((step, i) => {
       const last = i === sim.steps.length - 1;
@@ -262,9 +332,7 @@ export function mountSimulator(root) {
       return event("packet", step.router, step.next, to, detail, { verdict, step, outcome: last ? sim.outcome : null, row: step.chosen && { router: step.router, prefix: step.chosen.prefix } });
     });
     lastSim = { ...sim, from, to };
-    transport.skipToEnd();
     transport.enqueue(batch);
-    transport.resume();
   }
 
   function narrate(step, to) {
@@ -286,34 +354,37 @@ export function mountSimulator(root) {
   }
 
   // The kernel walk: each router's real routing decision, asked with ip route get.
-  async function askKernels() {
-    const from = $("from").value;
-    const to = $("to").value;
+  async function askKernels(from = $("from").value, to = $("to").value) {
     const btn = $("ask");
     const msg = $("now");
     btn.disabled = true;
     msg.textContent = t("sim.busy.ask");
     try {
       const res = await post("/api/lab/trace", { from, to });
-      const batch = res.hops.map((h, i) => {
-        const next = lab.byAddress.get(h.next_hop);
-        const name = next ? ROLE_NAME[next.role] : h.next_hop;
-        const last = i === res.hops.length - 1;
-        const verdict = KERNEL_VERDICT[h.kind] || (last ? res.outcome : null);
-        const text = (KERNEL_TEXT[h.kind] || KERNEL_TEXT.unknown)(h, name);
-        const detail = `<b class="${h.router}">${ROLE_NAME[h.router]}</b> ${text}` +
-          (last ? ` <b class="verdict ${verdict}">${esc(OUTCOME[res.outcome] || OUTCOME.unknown)}</b> ${agreement(res, from, to)}` : "");
-        return event("kernel", h.router, next ? next.role : null, to, detail, { verdict, hop: h, outcome: last ? res.outcome : null, agrees: last ? agreement(res, from, to) : "" });
-      });
       msg.textContent = t("sim.done.ask");
       transport.skipToEnd();
-      transport.enqueue(batch);
+      queueKernel(res, from, to);
       transport.resume();
     } catch (e) {
       msg.textContent = t("error", { message: e.message });
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // The answers of a kernel walk as events, queued behind whatever waits.
+  function queueKernel(res, from, to) {
+    const batch = res.hops.map((h, i) => {
+      const next = lab.byAddress.get(h.next_hop);
+      const name = next ? ROLE_NAME[next.role] : h.next_hop;
+      const last = i === res.hops.length - 1;
+      const verdict = KERNEL_VERDICT[h.kind] || (last ? res.outcome : null);
+      const text = (KERNEL_TEXT[h.kind] || KERNEL_TEXT.unknown)(h, name);
+      const detail = `<b class="${h.router}">${ROLE_NAME[h.router]}</b> ${text}` +
+        (last ? ` <b class="verdict ${verdict}">${esc(OUTCOME[res.outcome] || OUTCOME.unknown)}</b> ${agreement(res, from, to)}` : "");
+      return event("kernel", h.router, next ? next.role : null, to, detail, { verdict, hop: h, outcome: last ? res.outcome : null, agrees: last ? agreement(res, from, to) : "" });
+    });
+    transport.enqueue(batch);
   }
 
   // What a popover shows for an event: the hop's message and what it decided.
@@ -453,6 +524,8 @@ export function mountSimulator(root) {
       ? t("kernel.agrees")
       : t("kernel.disagrees");
   }
+
+  return { transport, lab, setSource, playRows, queuePacket, queueKernel, act, highlight, state, refresh };
 }
 
 function fillSelect(select, options) {

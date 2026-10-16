@@ -1,9 +1,17 @@
-<div class="sim" data-simulator>
+<div class="sim tour-mode" data-simulator>
   <div class="sim-toolbar">
-    <button data-sim="hijack" class="btn red"><span class="step">1</span>@T["sim.hijack"]</button>
-    <button data-sim="send" class="btn"><span class="step">2</span>@T["sim.send"]</button>
-    <button data-sim="ask" class="btn outline"><span class="step">3</span>@T["sim.ask"]</button>
-    <button data-sim="reset" class="btn outline"><span class="step">4</span>@T["sim.reset"]</button>
+    <div class="seg-control mode" role="group" aria-label="@T["tour.mode.label"]">
+      <button type="button" data-mode="tour" aria-pressed="true">@T["tour.mode.tour"]</button>
+      <button type="button" data-mode="free" aria-pressed="false">@T["tour.mode.free"]</button>
+    </div>
+    <ol class="tour-strip" data-tour="strip"></ol>
+    <div class="actions">
+      <button data-sim="hijack" class="btn red"><span class="step">1</span>@T["sim.hijack"]</button>
+      <button data-sim="send" class="btn"><span class="step">2</span>@T["sim.send"]</button>
+      <button data-sim="ask" class="btn outline"><span class="step">3</span>@T["sim.ask"]</button>
+      <button data-sim="reset" class="btn outline"><span class="step">4</span>@T["sim.reset"]</button>
+      <button data-sim="rov" class="btn outline rov" aria-pressed="false">@T["sim.rov"] <b data-sim="rov-state"></b></button>
+    </div>
   </div>
 
   <div class="sim-stage">
@@ -28,6 +36,7 @@
   </div>
 
   <aside class="sim-inspector">
+    <section class="tour-panel" data-tour="panel" aria-live="polite"></section>
     <div class="sim-choices">
       <div class="choice">
         <label for="sim-scenario">@T["sim.options.scenario"]</label>
@@ -44,6 +53,7 @@
         <select id="sim-to" data-sim="to"></select>
       </div>
     </div>
+    <div class="sim-grid" data-sim="grid"></div>
     <div class="tabs" role="tablist">
       <button class="tab current" role="tab" aria-selected="true" data-tab="tables">@T["sim.tab.tables"]</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="events">@T["sim.tab.events"] <span class="count" data-sim="count"></span></button>

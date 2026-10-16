@@ -76,12 +76,14 @@ public static class LabEndpoints
         {
             return Disabled();
         }
+        var issued = DateTime.UtcNow;
         try
         {
             var (withdraw, announce) = AnnounceBatches();
             await RunBatchesAsync(docker, ContainerOf("victim"), [withdraw], c);
             snapshots.Expire();
             await Task.Delay(AnnouncePause, c);
+            issued = DateTime.UtcNow;
             await RunBatchesAsync(docker, ContainerOf("victim"), [announce], c);
         }
         catch (DockerException e)
@@ -93,7 +95,7 @@ public static class LabEndpoints
         {
             snapshots.Expire();
         }
-        return Results.Ok(new { ok = true });
+        return Results.Ok(new { ok = true, issued_at = issued });
     }
 
     /// <summary>Applies route-map ROV to the attacker's session at the transit, or removes it.</summary>
@@ -215,6 +217,7 @@ public static class LabEndpoints
         }
         string output;
         long exitCode;
+        var issued = DateTime.UtcNow;
         try
         {
             (output, exitCode) = await RunBatchesAsync(docker, settings.AttackerContainer, VtyshBatches(action, prefixes), c);
@@ -230,7 +233,8 @@ public static class LabEndpoints
         }
         // vtysh returns non-zero for benign cases (removing absent config, saving to the
         // read-only mounted frr.conf), so success is "the commands ran": the live route and
-        // alert tables are the ground truth. The highest exit code is still reported.
+        // alert tables are the ground truth. The highest exit code is still reported;
+        // issued_at is the app's clock when the command went out, the clock the alerts carry.
         return Results.Ok(new
         {
             ok = true,
@@ -238,6 +242,7 @@ public static class LabEndpoints
             prefixes,
             exit_code = exitCode,
             output = output.Length > OutputTail ? output[^OutputTail..] : output,
+            issued_at = issued,
         });
     }
 

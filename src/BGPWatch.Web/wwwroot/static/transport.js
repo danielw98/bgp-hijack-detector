@@ -89,12 +89,13 @@ export function createTransport({ canvas, list, play, back, step, clear, speed, 
     renderList();
   }
 
+  // A hop that lands after the queue was reset or skipped past it says nothing.
   async function show(i, animate) {
     cursor = i;
     renderList();
     const ev = events[i];
     await canvas.move(ev, animate ? HOP_MS / SPEEDS[speedIndex] : 0);
-    if (onShow) onShow(ev, i, events.length);
+    if (onShow && events[i] === ev && cursor === i) onShow(ev, i, events.length);
   }
 
   function reset() {

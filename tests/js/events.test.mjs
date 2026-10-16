@@ -95,6 +95,18 @@ test("a row from an address that is not a lab router is ignored", () => {
   assert.deepEqual(createLog().take([row("192.0.2.9", "203.0.113.0/24", [64500, 65001])], ROUTERS), []);
 });
 
+test("a log seeded with a snapshot skips rows that repeat it and knows what a withdrawal removes", () => {
+  const log = createLog();
+  log.seed({ routers: [
+    { role: "victim", address: "10.10.0.11", asn: 65001, paths: [{ prefix: "203.0.113.0/25", as_path: [65000, 65003], origin_as: 65003, best: true }] },
+    { role: "transit", address: "10.10.0.10", asn: 65000, paths: [{ prefix: "203.0.113.0/24", as_path: [65001], origin_as: 65001, best: true }] },
+  ] });
+  assert.deepEqual(log.take([row("10.10.0.10", "203.0.113.0/24", [65000, 65001])], ROUTERS), []);
+  const hops = log.take([withdrawn("10.10.0.11", "203.0.113.0/25")], ROUTERS);
+  assert.deepEqual(legs(hops), ["withdraw transit>victim", "withdraw victim>collector"]);
+  assert.deepEqual(hops[0].path, [65000, 65003]);
+});
+
 test("the hop keeps the row's time and id", () => {
   const first = row("10.10.0.10", "203.0.113.0/24", [65000, 65001]);
   const [hop] = createLog().take([first], ROUTERS);

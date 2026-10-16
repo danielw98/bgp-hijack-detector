@@ -14,18 +14,78 @@
 .frame > .sim { height: 780px; border-top: 1px solid var(--line); }
 @media (min-width: 1700px) { .sim { --inspector: 480px; } }
 
-/* Action bar: the four steps of the demo, then the options. */
+/* Action bar: the mode switch, then the tour's step strip or the four actions of the demo. */
 .sim-toolbar {
   grid-area: toolbar;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 8px 12px;
   padding: 9px 14px;
   border-bottom: 1px solid var(--line);
 }
 .sim-toolbar .btn { padding: 7px 14px; font-size: 16px; }
 .sim-toolbar .step { font: 700 18px var(--mono); margin-right: 8px; }
+.sim-toolbar .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sim.tour-mode .sim-toolbar .actions, .sim.tour-mode .sim-choices { display: none; }
+.sim.free-mode .tour-strip, .sim.free-mode .tour-panel { display: none; }
+.seg-control.mode button, .seg-control.source button { padding: 6px 12px; }
+
+/* The step strip: eight numbered chips, done, current, next; only the current one carries
+   its label below 1700 px, so the strip stays one row beside the mode switch. */
+.tour-strip { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.tour-strip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  font: 700 15px var(--prose);
+  color: var(--ink);
+  cursor: pointer;
+}
+.tour-strip .label { display: none; padding-right: 6px; }
+.tour-strip .current .label { display: inline; }
+@media (min-width: 1700px) { .tour-strip .label { display: inline; } }
+.tour-strip .n { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; background: var(--soft); font: 700 15px var(--mono); }
+.tour-strip .done button { border-color: var(--green); }
+.tour-strip .done .n { background: var(--green); color: #fff; }
+.tour-strip .current button { background: var(--ink); border-color: var(--ink); color: #fff; }
+.tour-strip .current .n { background: #fff; color: var(--ink); }
+.tour-strip button:hover { border-color: var(--ink); }
+
+/* The step panel at the top of the inspector. */
+.tour-panel { padding: 12px 14px 14px; border-bottom: 1px solid var(--line); }
+.tour-panel header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.tour-panel .of { font: 700 15px var(--mono); color: var(--muted); }
+.tour-panel h3 { margin: 8px 0 6px; font-size: 21px; line-height: 1.25; }
+.tour-panel .text { margin: 0; font-size: 17px; line-height: 1.45; }
+.tour-panel .extra { margin: 8px 0 0; font-size: 16px; line-height: 1.4; }
+.tour-panel .extra:empty, .tour-panel .note:empty { display: none; }
+.tour-panel .note { margin: 8px 0 0; font-size: 15px; color: var(--muted); }
+.tour-panel .note.bad { color: var(--red); }
+.tour-panel .nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.tour-panel .nav .btn { padding: 7px 14px; font-size: 16px; }
+.tour-panel .nav .btn.small { margin-left: auto; padding: 5px 10px; font-size: 14px; }
+
+/* The grid: where a packet ends up, by destination and by the router it leaves from. */
+.sim-grid { padding: 8px 14px 10px; border-bottom: 1px solid var(--line); background: var(--soft); }
+.sim-grid:empty { display: none; }
+table.grid { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; }
+table.grid caption { text-align: left; font-weight: 700; padding: 0 0 6px; color: var(--ink); }
+table.grid th { font-weight: 400; color: var(--muted); text-align: left; padding: 3px 6px 3px 0; overflow-wrap: anywhere; }
+table.grid thead th { font-size: 14px; }
+table.grid tbody th { width: 36%; line-height: 1.25; }
+table.grid tbody th .mono { font-size: 14px; white-space: nowrap; }
+table.grid th .where { display: block; color: var(--muted); font-size: 13px; }
+table.grid td { padding: 3px 4px 3px 0; }
+table.grid .cell { width: 100%; padding: 4px 6px; border: 1.5px solid transparent; border-radius: 4px; font: 700 14px var(--prose); cursor: pointer; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table.grid .cell.delivered { background: var(--green-tint); color: var(--green); border-color: var(--green); }
+table.grid .cell.dropped { background: var(--red-tint); color: var(--red); border-color: var(--red); }
+table.grid .cell.none { background: var(--surface); color: var(--muted); border-color: var(--line); }
+table.grid .cell:hover { border-color: var(--ink); }
 
 /* The stage: a dotted canvas with the map filling it and the legend in a corner. */
 .sim-stage {
@@ -73,6 +133,8 @@ svg.map .session { fill: none; stroke: var(--green); stroke-width: 4; stroke-lin
 svg.map .session.down { stroke: var(--red); stroke-dasharray: 10 8; }
 svg.map #arrow path { fill: context-stroke; }
 svg.map .link-label { font-size: 18px; font-weight: 700; fill: var(--green); }
+svg.map .rov-label { font-size: 18px; font-weight: 700; fill: var(--blue); }
+.sim-toolbar .btn.rov[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); background: var(--blue-tint); }
 svg.map .link-label.down { fill: var(--red); }
 svg.map .halo { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
 svg.map .report { fill: none; stroke: var(--blue); stroke-width: 2.5; stroke-dasharray: 2 7; stroke-linecap: round; }
