@@ -1,0 +1,126 @@
+{
+ "ok": true,
+ "collector": {
+  "address": "10.10.0.100",
+  "port": 5000
+ },
+ "routers": [
+  {
+   "role": "victim",
+   "address": "10.10.0.11",
+   "asn": 65001,
+   "hosts": [
+    "203.0.113.1",
+    "203.0.113.129"
+   ],
+   "reachable": true,
+   "reporting": true,
+   "sessions": [
+    {
+     "peer": "10.10.0.10",
+     "remote_as": 65000,
+     "established": true
+    }
+   ],
+   "paths": [
+    {
+     "prefix": "203.0.113.0/24",
+     "as_path": [],
+     "origin_as": 65001,
+     "next_hop": null,
+     "best": true,
+     "reason": "First path received"
+    },
+    {
+     "prefix": "203.0.113.0/25",
+     "as_path": [
+      65000,
+      65003
+     ],
+     "origin_as": 65003,
+     "next_hop": "10.10.0.13",
+     "best": true,
+     "reason": "First path received"
+    }
+   ]
+  },
+  {
+   "role": "transit",
+   "address": "10.10.0.10",
+   "asn": 65000,
+   "hosts": [],
+   "reachable": true,
+   "reporting": true,
+   "sessions": [
+    {
+     "peer": "10.10.0.11",
+     "remote_as": 65001,
+     "established": true
+    },
+    {
+     "peer": "10.10.0.13",
+     "remote_as": 65003,
+     "established": true
+    }
+   ],
+   "paths": [
+    {
+     "prefix": "203.0.113.0/24",
+     "as_path": [
+      65001
+     ],
+     "origin_as": 65001,
+     "next_hop": "10.10.0.11",
+     "best": true,
+     "reason": "First path received"
+    },
+    {
+     "prefix": "203.0.113.0/25",
+     "as_path": [
+      65003
+     ],
+     "origin_as": 65003,
+     "next_hop": "10.10.0.13",
+     "best": true,
+     "reason": "First path received"
+    }
+   ]
+  },
+  {
+   "role": "attacker",
+   "address": "10.10.0.13",
+   "asn": 65003,
+   "hosts": [],
+   "reachable": true,
+   "reporting": true,
+   "sessions": [
+    {
+     "peer": "10.10.0.10",
+     "remote_as": 65000,
+     "established": true
+    }
+   ],
+   "paths": [
+    {
+     "prefix": "203.0.113.0/24",
+     "as_path": [
+      65000,
+      65001
+     ],
+     "origin_as": 65001,
+     "next_hop": "10.10.0.11",
+     "best": true,
+     "reason": "First path received"
+    },
+    {
+     "prefix": "203.0.113.0/25",
+     "as_path": [],
+     "origin_as": 65003,
+     "next_hop": null,
+     "best": true,
+     "reason": "First path received"
+    }
+   ]
+  }
+ ]
+}
