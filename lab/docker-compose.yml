@@ -3,7 +3,8 @@ name: bgp-hijack-lab
 # A self-contained BGP "mini-internet" for demonstrating hijack detection.
 # The labnet is internal (no uplink): FRR has no session to anything real, uses
 # private ASNs (65000-65003) and an RFC 5737 documentation prefix only. Nothing
-# announced here leaves the host.
+# announced here leaves the host. lab-rtr is the RPKI cache: it serves the one ROA of
+# lab/rtr/roas.json to the transit over RTR, read from the mounted file, no fetch.
 
 networks:
   labnet:
@@ -56,3 +57,14 @@ services:
     volumes:
       - ./frr/attacker/frr.conf:/etc/frr/frr.conf:ro
       - ./frr/daemons:/etc/frr/daemons:ro
+
+  rtr:
+    image: rpki/stayrtr:v0.6.4
+    container_name: lab-rtr
+    restart: unless-stopped
+    command: ["-cache", "/rtr/roas.json", "-checktime=false", "-refresh", "60", "-metrics.addr", ""]
+    networks:
+      labnet:
+        ipv4_address: 10.10.0.20
+    volumes:
+      - ./rtr:/rtr:ro
