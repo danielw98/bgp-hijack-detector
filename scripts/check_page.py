@@ -7,7 +7,9 @@ rendered under MIN_FONT px; a part of the simulator's stage drawn past the stage
 the caption or the transport; any map text crossed by a line, a path or the edge of a box
 (a label on a white halo may cover a line). On the references page, with every block
 closed and with every block open: no horizontal overflow, also inside its scroller, and
-every in-page link has its target. Fails on a script error, a console error, or an
+every in-page link has its target. On the guide, no element inside the chapters or
+the footer wider than the prose column (the content box of a chapter) by more than
+1 px, and every still figure loaded. Fails on a script error, a console error, or an
 error message a module shows after catching a failure. Also checks the colour tokens of page.css
 for 4.5:1 contrast, refuses emoji in every tracked text file and non-ASCII in code
 comments, and writes one full-page screenshot per size into .playwright-mcp/ (the
@@ -133,6 +135,21 @@ STAGE_JS = """
 })
 """
 
+# The guide's prose column (the content box of a chapter), the elements under the header
+# that are wider than it, and the still figures that did not load.
+GUIDE_COLUMN_JS = """
+() => {
+  const chapter = document.querySelector('main .col');
+  const cs = getComputedStyle(chapter);
+  const column = chapter.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const wide = [...document.querySelectorAll('main .col *, footer *')]
+    .filter((el) => el.getBoundingClientRect().width > column + 1)
+    .map((el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' ' + Math.round(el.getBoundingClientRect().width) + 'px');
+  const broken = [...document.querySelectorAll('.still img')].filter((img) => !img.complete || !img.naturalWidth).map((img) => img.getAttribute('src'));
+  return { column, wide: wide.slice(0, 10), broken };
+}
+"""
+
 # Opens every block of the references page; returns the in-page links without a target,
 # whether its scroller overflows sideways, and the window height that shows it all.
 REFERENCES_JS = """
@@ -233,10 +250,11 @@ def check_layout(url: str, name: str) -> list[str]:
             page.on("pageerror", lambda e: errors.append(f"script error: {e}"))
             page.on("console", lambda m: errors.append(f"console {m.type}: {m.text}") if m.type == "error" else None)
             page.goto(url, wait_until="load")
-            page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
-            page.wait_for_selector("svg.map", state="attached", timeout=15000)
             if name.startswith("guide"):
-                page.wait_for_selector(".lane-row svg", state="attached", timeout=15000)
+                page.wait_for_selector("#glossary dt", state="attached", timeout=15000)
+            else:
+                page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
+                page.wait_for_selector("svg.map", state="attached", timeout=15000)
             page.wait_for_timeout(800)
             for view in (VIEWS if name.startswith("app") else ("",)):
                 if view:
@@ -258,7 +276,11 @@ def check_layout(url: str, name: str) -> list[str]:
                         out.append(f"{label}: the view scrolls ({body[0]} > {body[1]})")
                 for element in result["wide"]:
                     out.append(f"{label}: {element} is wider than the viewport")
-                if view in ("simulator", ""):
+                if name.startswith("guide"):
+                    guide = page.evaluate(GUIDE_COLUMN_JS)
+                    out += [f"{label}: {element} is wider than the {guide['column']:.0f}px column" for element in guide["wide"]]
+                    out += [f"{label}: figure {src} did not load" for src in guide["broken"]]
+                if view == "simulator":
                     for finding in page.evaluate(MAP_TEXT_JS, MIN_FONT) + page.evaluate(STAGE_JS):
                         out.append(f"{label}: {finding}")
                 page.screenshot(path=str(SHOTS / f"check-{name}{'-' + view if view else ''}-{width}.png"), full_page=True)
