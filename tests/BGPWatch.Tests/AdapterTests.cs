@@ -76,4 +76,36 @@ public class AdapterTests
             ],
             batches[1]);
     }
+
+    [Fact]
+    public void TheAnnounceWithdrawsTheVictimPrefixThenAnnouncesItAgain()
+    {
+        var (withdraw, announce) = LabEndpoints.AnnounceBatches();
+        Assert.Equal(["configure terminal", "router bgp 65001", "address-family ipv4 unicast", "no network 203.0.113.0/24", "end"], withdraw);
+        Assert.Equal(["configure terminal", "router bgp 65001", "address-family ipv4 unicast", "network 203.0.113.0/24", "end"], announce);
+    }
+
+    [Fact]
+    public void RovOnAppliesTheRouteMapToTheAttackersSessionAtTheTransit()
+    {
+        Assert.Equal(
+            ["configure terminal", "router bgp 65000", "address-family ipv4 unicast", "neighbor 10.10.0.13 route-map ROV in", "end"],
+            LabEndpoints.RovBatches(true)[0]);
+    }
+
+    [Fact]
+    public void RovOffRemovesTheRouteMap()
+    {
+        Assert.Equal("no neighbor 10.10.0.13 route-map ROV in", LabEndpoints.RovBatches(false)[0][3]);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RovRefreshesTheAttackersRoutesInACallOfItsOwn(bool on)
+    {
+        var batches = LabEndpoints.RovBatches(on);
+        Assert.Equal(2, batches.Count);
+        Assert.Equal(["clear ip bgp 10.10.0.13 soft in"], batches[1]);
+    }
 }
