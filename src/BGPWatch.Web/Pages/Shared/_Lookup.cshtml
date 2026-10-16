@@ -12,7 +12,8 @@
   </div>
   <p class="msg" id="lookup-msg" aria-live="polite"></p>
   <div class="answer" id="lookup-result" hidden></div>
-  <div class="more-row">
-    <details class="raw"><summary>@T["lookup.raw"]</summary><pre id="raw-lookup"></pre></details>
+  <div class="more-row" data-disclosures>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-lookup-raw">@T["lookup.raw"]</button>
   </div>
+  <div class="disclosed raw" id="more-lookup-raw" hidden><pre id="raw-lookup"></pre></div>
 </div>

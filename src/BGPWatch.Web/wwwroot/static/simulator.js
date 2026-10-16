@@ -1,13 +1,16 @@
 // The simulator: the lab as its routers report it, drawn on the canvas with its tables
 // in the inspector; the hijack scenarios run in the real routers; the packet walk on
 // the tables; the kernel walk as proof. Everything that moves is an event of the
-// transport: one hop of an UPDATE, a packet or a kernel answer. A click on the current
+// transport: one hop of an UPDATE or a withdrawal as the routers reported it over BMP
+// (the route log, events.js), a packet or a kernel answer. On entry the last rows of the
+// log wait in the queue, so Play always has something to show. A click on the current
 // message, its row or a router opens a popover with what the hop carried and decided.
 
 import { every, get, post } from "./api.js";
 import { ALERT_NAME, ROLE_NAME, REASON, asChip, chain, esc, fmtTime, registerLab } from "./format.js";
 import { createCanvas } from "./canvas.js";
 import { createTransport } from "./transport.js";
+import { createLog } from "./events.js";
 import { contains, prefixLength, simulate } from "./simulate.js";
 import { createPopover } from "./popover.js";
 import { setLab } from "./status.js";
@@ -32,6 +35,9 @@ const OUTCOME = {
 };
 const POPOVER_TITLE = { update: "UPDATE", withdraw: t("token.withdraw"), packet: t("token.packet"), kernel: t("token.kernel") };
 const ALERTS_LOOKED_AT = 200;
+const ENTRY_ROWS = 24;
+const POLL_ROWS = 200;
+const AFTER_ACTION_MS = [700, 1800];
 const STEP_VERDICT = { delivered: "delivered", blackhole: "dropped", unreachable: "unreachable" };
 const KERNEL_VERDICT = { local: "delivered", direct: "delivered", blackhole: "dropped", unreachable: "unreachable" };
 const KERNEL_TEXT = {
@@ -62,14 +68,13 @@ export function mountSimulator(root) {
     onShow,
   });
   const popover = createPopover();
+  const log = createLog();
   let openNext = false;
   let monitored = [];
   get("/api/monitored").then((rows) => { monitored = rows; }).catch(() => {});
-  let previous = null;        // the paths seen at the last poll
   let lastSim = null;         // the last packet walk, for the agreement line
 
   wireTabs(root);
-  wireOptions($("options"), $("options-panel"));
   fillSelect($("from"), [["transit", ROLE_NAME.transit], ["victim", ROLE_NAME.victim], ["attacker", ROLE_NAME.attacker]]);
   fillSelect($("to"), DESTINATIONS);
   $("hijack").addEventListener("click", () => act("trigger"));
@@ -122,67 +127,67 @@ export function mountSimulator(root) {
       renderTables(data.routers);
       document.getElementById("raw-lab").textContent = JSON.stringify(data, null, 2);
       setLab(data.routers.every((r) => r.reachable));
-      announceChanges(data.routers);
+      await pollLog();
+      if (!transport.current()) $("caption").innerHTML = explain(null);
     } catch (e) {
       setLab(false);
       $("tables").innerHTML = `<div class="empty">${esc(t("sim.tables.down", { message: e.message }))}</div>`;
     }
   }
 
-  // One event per hop for every path that appeared or vanished since the last poll:
-  // along the AS path from its origin to the router, then on to the collector.
-  function announceChanges(routers) {
-    const now = new Map();
-    routers.forEach((r) => r.paths.forEach((p) => now.set(`${r.role}|${p.prefix}|${p.as_path.join(" ")}`, { router: r, path: p })));
-    if (previous) {
-      const hops = [];
-      [...now].filter(([k]) => !previous.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "update")));
-      [...previous].filter(([k]) => !now.has(k)).forEach(([, { router, path }]) => hops.push(...hopsOf(router, path, "withdraw")));
-      const seen = new Set();
-      const batch = hops
-        .sort((a, b) => a.depth - b.depth || a.prefix.localeCompare(b.prefix))
-        .filter((h) => !seen.has(h.key) && seen.add(h.key))
-        .map(hopEvent);
-      if (batch.length) transport.enqueue(batch);
-    }
-    previous = now;
+  // The rows the routers reported since the last poll, the last few on entry, as hops.
+  async function pollLog() {
+    const query = log.cursor ? `since=${log.cursor}&limit=${POLL_ROWS}` : `limit=${ENTRY_ROWS}`;
+    const rows = await get(`/api/lab/events?${query}`);
+    const hops = log.take(rows, lab.routers);
+    if (hops.length) transport.enqueue(hops.map(hopEvent));
   }
 
-  // The hops of one path, from its origin to the router and on to the collector, each
-  // with its distance from the origin; the same hop seen from two routers has one key.
-  function hopsOf(router, path, kind) {
-    const roles = path.as_path.map((asn) => (lab.routers.find((r) => r.asn === asn) || {}).role).filter(Boolean);
-    const stops = [...roles.reverse(), router.role];
-    const hops = [];
-    for (let i = 0; i + 1 < stops.length; i++) {
-      if (stops[i] !== stops[i + 1]) hops.push({ kind, from: stops[i], to: stops[i + 1], prefix: path.prefix, path: path.as_path, depth: hops.length });
-    }
-    if (path.best) hops.push({ kind, from: router.role, to: "collector", prefix: path.prefix, path: path.as_path, depth: hops.length + 0.5 });
-    return hops.map((h) => ({ ...h, key: `${h.kind}|${h.from}|${h.to}|${h.prefix}` }));
+  function hopEvent(h) {
+    const values = { from: ROLE_NAME[h.from], to: ROLE_NAME[h.to] || "", prefix: mono(h.prefix) };
+    const key = h.to === "collector" ? "hop.report"
+      : h.to ? (h.kind === "update" ? "hop.announce" : "hop.withdraw")
+        : (h.kind === "update" ? "hop.originate" : "hop.withdraw.own");
+    return event(h.kind, h.from, h.to, h.prefix, t(key, values), { id: h.id, path: h.path, at: h.at, router: h.router, row: { router: h.router, prefix: h.prefix } });
   }
 
-  function hopEvent({ kind, from, to, prefix, path }) {
-    const values = { from: ROLE_NAME[from], to: ROLE_NAME[to], prefix: `<span class="mono">${esc(prefix)}</span>` };
-    return event(kind, from, to, prefix,
-      to === "collector" ? t("hop.report", values) : t(kind === "update" ? "hop.announce" : "hop.withdraw", values),
-      { path });
+  function mono(text) {
+    return `<span class="mono">${esc(text)}</span>`;
   }
 
   // The current event in plain words: what the hop means for the hijack, not its fields.
   function explain(ev) {
-    if (!ev) return esc(t("cap.start"));
+    if (!ev) return stateCaption();
     if (ev.kind === "packet" || ev.kind === "kernel") return ev.detail;
     const attacker = lab.byRole.get("attacker");
-    const origin = ev.path.length ? ev.path[ev.path.length - 1] : (lab.byRole.get(ev.from) || {}).asn;
-    const stolen = attacker && origin === attacker.asn;
-    const values = { from: t(`cap.who.${ev.from}`), to: ROLE_NAME[ev.to], prefix: `<span class="mono">${esc(ev.label)}</span>` };
+    const router = lab.byRole.get(ev.router || ev.from) || {};
+    const origin = ev.path.length ? ev.path[ev.path.length - 1] : router.asn;
+    const stolen = Boolean(attacker) && origin === attacker.asn;
+    const values = { from: t(`cap.who.${ev.from}`), to: ROLE_NAME[ev.to] || "", prefix: mono(ev.label) };
     const report = ev.to === "collector";
-    const own = ev.from === "attacker" ? ".own" : "";
-    if (!stolen) return ev.kind === "update" ? t(report ? "cap.report.good" : "cap.pass.good", values) : ev.detail;
-    if (ev.kind === "withdraw") return t((report ? "cap.withdraw.report" : "cap.withdraw") + own, values);
-    if (report) return t(own ? "cap.report.own" : "cap.report.bad", values);
-    if (!own) return t("cap.pass.bad", values);
+    const own = !ev.path.length;
+    if (ev.kind === "withdraw") {
+      if (!ev.to) return t("cap.withdraw.own", values);
+      if (report) return t(own ? "cap.withdraw.report.own" : stolen ? "cap.withdraw.report" : "cap.withdraw.report.good", values);
+      return t(stolen ? "cap.withdraw" : "cap.withdraw.good", values);
+    }
+    if (!ev.to) return t(stolen ? "cap.originate.bad" : "cap.originate.good", values);
+    if (report) return t(own && stolen ? "cap.report.own" : stolen ? "cap.report.bad" : "cap.report.good", values);
+    if (!stolen) return t("cap.pass.good", values);
+    if (ev.from !== "attacker") return t("cap.pass.bad", values);
     return t("cap.lie", values) + (moreSpecific(ev.label) ? " " + t("cap.lie.specific") : "");
+  }
+
+  // The lab's state in plain words, shown while no event is under the cursor: at rest,
+  // an attacker's claim the transit holds off, or a claim the routers follow.
+  function stateCaption() {
+    const attacker = lab.byRole.get("attacker");
+    if (!attacker) return esc(t("cap.start"));
+    const claimed = attacker.paths.filter((p) => p.best && !p.as_path.length && monitored.some((m) => contains(m.prefix, p.prefix.split("/")[0])));
+    if (!claimed.length) return esc(t("cap.start"));
+    const diverted = lab.routers.some((r) => r.role !== "attacker" && r.paths.some((p) => p.best && p.origin_as === attacker.asn));
+    const prefix = claimed.map((p) => p.prefix).sort((a, b) => prefixLength(b) - prefixLength(a))[0];
+    return t(diverted ? "cap.state.diverted" : "cap.state.exact", { prefix: mono(prefix) });
   }
 
   function moreSpecific(prefix) {
@@ -235,12 +240,13 @@ export function mountSimulator(root) {
         ? t("sim.done.trigger", { what: `<b>${esc(SCENARIO_TEXT[scenario])}</b>` })
         : esc(t("sim.done.reset"));
       if (!res.ok) msg.textContent = t("error", { message: res.error || t("error.unknown") });
+      transport.skipToEnd();
       transport.resume();
     } catch (e) {
       msg.textContent = t("error", { message: e.message });
     } finally {
       buttons.forEach((b) => { b.disabled = false; });
-      setTimeout(refresh, 1200);
+      AFTER_ACTION_MS.forEach((ms) => setTimeout(refresh, ms));
     }
   }
 
@@ -256,6 +262,7 @@ export function mountSimulator(root) {
       return event("packet", step.router, step.next, to, detail, { verdict, step, outcome: last ? sim.outcome : null, row: step.chosen && { router: step.router, prefix: step.chosen.prefix } });
     });
     lastSim = { ...sim, from, to };
+    transport.skipToEnd();
     transport.enqueue(batch);
     transport.resume();
   }
@@ -299,6 +306,7 @@ export function mountSimulator(root) {
         return event("kernel", h.router, next ? next.role : null, to, detail, { verdict, hop: h, outcome: last ? res.outcome : null, agrees: last ? agreement(res, from, to) : "" });
       });
       msg.textContent = t("sim.done.ask");
+      transport.skipToEnd();
       transport.enqueue(batch);
       transport.resume();
     } catch (e) {
@@ -338,14 +346,16 @@ export function mountSimulator(root) {
     return `<span class="chain">${chips.join('<span class="sep">&rsaquo;</span>')}</span>`;
   }
 
+  // The message of a hop, or of a router's own announcement when the hop has no target.
   function messageFields(ev) {
     const path = carried(ev);
     const withdrawn = ev.kind === "withdraw";
+    const at = ev.to || ev.from;
     return [
       [withdrawn ? t("pop.prefix.withdrawn") : t("col.prefix"), `<b class="mono">${esc(ev.label)}</b>`],
-      [withdrawn ? t("pop.path.gone") : t("pop.path.hop"), pathOnHop(path)],
-      [t("col.origin"), originText(ev.label, path[path.length - 1])],
-      withdrawn ? [t("pop.remains", { name: ev.toName }), remaining(ev.to, ev.label)] : [t("pop.does", { name: ev.toName }), decision(ev.to, ev.label, path)],
+      [withdrawn ? t("pop.path.gone") : t("pop.path.hop"), path.length ? pathOnHop(path) : chain([], (lab.byRole.get(at) || {}).asn)],
+      [t("col.origin"), originText(ev.label, path.length ? path[path.length - 1] : (lab.byRole.get(at) || {}).asn)],
+      withdrawn ? [t("pop.remains", { name: ROLE_NAME[at] }), remaining(at, ev.label)] : [t("pop.does", { name: ROLE_NAME[at] }), decision(at, ev.label, path)],
     ];
   }
 
@@ -447,14 +457,6 @@ export function mountSimulator(root) {
 
 function fillSelect(select, options) {
   select.innerHTML = options.map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join("");
-}
-
-// The options panel opens under its button and closes on Escape or a click outside.
-function wireOptions(button, panel) {
-  const show = (open) => { panel.hidden = !open; button.setAttribute("aria-expanded", String(open)); };
-  button.addEventListener("click", () => show(panel.hidden));
-  document.addEventListener("click", (e) => { if (!panel.hidden && !button.parentElement.contains(e.target)) show(false); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) { show(false); button.focus(); } });
 }
 
 function wireTabs(root) {

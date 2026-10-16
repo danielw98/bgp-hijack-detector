@@ -22,7 +22,6 @@ const HIJACKED = "208.65.153.0/24";
 const PROBE = "208.65.153.1";
 const T0 = Date.UTC(2008, 1, 24, 18, 45);
 const T1 = Date.UTC(2008, 1, 24, 21, 5);
-const START = Date.UTC(2008, 1, 24, 18, 49);
 const EVENT_LEAD_MS = 3 * 60 * 1000;
 const MIN_PHASE = 0.1;
 const MARK_RADIUS = 13;
@@ -34,7 +33,7 @@ const SCRUB_STEPS = 1000;
 
 export const incident = { meta: null, updates: [], peers: [] };
 let timer = null;
-let current = START;
+let current = T0;
 let phases = [];
 
 export function startIncident2008() {
@@ -224,7 +223,7 @@ function setTime(time) {
   const state = stateAt(current);
   const clock = fmtUtc(new Date(current).toISOString());
   $("scrub").value = Math.round((x(current) / 1000) * SCRUB_STEPS);
-  $("speed-2008").textContent = t("i2008.speed", { rate: Math.round(rateAt(current)) });
+  $("speed-2008").textContent = t("i2008.pace");
   $("scrub-time").textContent = `${clock} UTC`;
   $("path-head").textContent = t("i2008.path.head", { time: clock.slice(0, 5) });
   $("lanes").querySelector(".handle").style.left = pct(current);
@@ -257,8 +256,8 @@ function renderCurrentEvent() {
   $("event-card").innerHTML = `${body}<span class="jumps">${jump(i - 1, `&lsaquo; ${i}`)}${jump(i + 1, `${i + 2} &rsaquo;`)}</span>`;
 }
 
-// Playback moves the cursor at one speed along the lane, so the incident's clock runs
-// faster through a wide-compressed phase.
+// Playback moves the cursor at one speed along the lane (PLAY_MS for the whole window),
+// so the incident's clock runs faster through a compressed phase.
 function togglePlay() {
   if (timer) { stop(); return; }
   if (current >= T1) current = T0;
@@ -267,12 +266,6 @@ function togglePlay() {
     setTime(timeAt(Math.min(1, x(current) / 1000 + TICK_MS / PLAY_MS)));
     if (current >= T1) stop();
   }, TICK_MS);
-}
-
-// Incident time per playback time in the phase at t.
-function rateAt(t) {
-  const p = phaseAt(t);
-  return (p.to - p.from) / (p.share * PLAY_MS);
 }
 
 function stop() {

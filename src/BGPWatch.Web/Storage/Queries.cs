@@ -60,6 +60,15 @@ public sealed class Queries(NpgsqlDataSource database)
             ReadRoute, cancel, prefix, limit);
     }
 
+    /// <summary>The route updates of a source after an id, oldest first; without an id, the last ones in the same order.</summary>
+    public Task<List<StoredRoute>> SourceRoutesAfterAsync(string source, long? since, int limit, CancellationToken cancel)
+    {
+        return since is { } id
+            ? ListAsync($"SELECT {RouteColumns} FROM route_updates WHERE source = $1 AND id > $2 ORDER BY id LIMIT $3", ReadRoute, cancel, source, id, limit)
+            : ListAsync($"SELECT {RouteColumns} FROM (SELECT * FROM route_updates WHERE source = $1 ORDER BY id DESC LIMIT $2) AS last ORDER BY id",
+                ReadRoute, cancel, source, limit);
+    }
+
     /// <summary>The routes of a source inside any of the prefixes, in time order.</summary>
     public Task<List<StoredRoute>> SourceRoutesWithinAsync(string source, string[] prefixes, CancellationToken cancel)
     {

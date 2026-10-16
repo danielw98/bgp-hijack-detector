@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using BGPWatch.Core.Domain;
+using BGPWatch.Web.Bmp;
 using BGPWatch.Web.Config;
 using BGPWatch.Web.Localization;
 using BGPWatch.Web.Lookup;
@@ -9,12 +10,14 @@ using BGPWatch.Web.Storage;
 namespace BGPWatch.Web.Api;
 
 /// <summary>
-/// The API behind the page: incidents grouped from the alerts, the history of a prefix,
-/// the recorded incident with its timeline, and a RIPEstat lookup.
+/// The API behind the page: incidents grouped from the alerts, the lab's route log as the
+/// simulator plays it, the history of a prefix, the recorded incident with its timeline,
+/// and a RIPEstat lookup.
 /// </summary>
 public static class ReadEndpoints
 {
     private const int MaxLimit = 500;
+    private const int EntryEvents = 40;
     private const int IncidentAlerts = 5000;
     private const int HistoryRoutes = 2000;
     private const int HistoryChanges = 500;
@@ -29,6 +32,8 @@ public static class ReadEndpoints
         app.MapGet("/api/routes", async (Queries q, CancellationToken c, int limit = 100) =>
             limit > MaxLimit ? TooLarge("limit", MaxLimit) : Results.Ok(await q.RoutesAsync(limit, c)));
         app.MapGet("/api/monitored", (Queries q, CancellationToken c) => q.MonitoredAsync(c));
+        app.MapGet("/api/lab/events", async (Queries q, CancellationToken c, long? since = null, int limit = EntryEvents) =>
+            limit is < 1 or > MaxLimit ? TooLarge("limit", MaxLimit) : Results.Ok(await q.SourceRoutesAfterAsync(LabPipeline.Source, since, limit, c)));
         app.MapGet("/api/incidents", IncidentsAsync);
         app.MapGet("/api/incidents/{name}", Incident);
         app.MapGet("/api/incidents/{name}/updates", IncidentUpdatesAsync);

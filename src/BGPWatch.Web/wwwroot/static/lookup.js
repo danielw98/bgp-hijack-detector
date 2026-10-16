@@ -16,6 +16,18 @@ export function startLookup() {
     const b = e.target.closest("button[data-q]");
     if (b) { $("lookup-input").value = b.dataset.q; lookup(b.dataset.q); }
   });
+  answerOnFirstSight();
+}
+
+// The visitor's own address is looked up the first time the figure comes into view, so
+// the page never opens empty; a hidden view waits for its turn.
+function answerOnFirstSight() {
+  const watcher = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    watcher.disconnect();
+    run("/api/lookup/self");
+  });
+  watcher.observe($("lookup-form"));
 }
 
 function lookup(resource) {

@@ -9,11 +9,13 @@ import { startIncidents } from "./incidents.js";
 import { startIncident2008 } from "./timeline.js";
 import { startPrefix } from "./prefix.js";
 import { startLookup } from "./lookup.js";
+import { wireDisclosures } from "./disclosures.js";
 
 const $ = (id) => document.getElementById(id);
 
 if ($("glossary")) renderGlossary($("glossary"));
 wirePopovers();
+document.querySelectorAll("[data-disclosures]").forEach(wireDisclosures);
 document.querySelectorAll("[data-simulator]").forEach(mountSimulator);
 if (document.querySelector("[data-incidents]")) startIncidents();
 

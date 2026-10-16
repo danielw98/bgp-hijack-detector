@@ -279,15 +279,17 @@ dl.glossary dd { margin: 2px 0 0; }
 .lanes .chain .as.origin.victim { background: var(--green-tint); }
 .lanes .chain .times { font-size: 13px; margin-left: 2px; }
 .lanes .assumed { color: var(--muted); font-size: 15px; }
-.more-row { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: flex-start; }
-.more-row details { flex: 0 1 auto; }
-.more-row details[open] { flex: 1 1 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
-.more-row details > summary { cursor: pointer; font-size: 16px; font-weight: 700; color: var(--blue); padding: 4px 0; }
-.more-row details[open] > summary { padding: 8px 14px; border-bottom: 1px solid var(--line); }
-.more-row details .events, .more-row details .caption { padding: 0 14px; }
-.more-row details.raw, .app .more-row details.raw { border-top: none; margin-top: 0; }
-.more-row details:not([open]), .app .more-row details.raw:not([open]) { background: none; border: none; }
-.more-row details.raw > summary { color: var(--blue); }
+/* More, under a figure: a row of toggles that never moves, one panel open under it. */
+.more-row { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: center; }
+.more-row .toggle { padding: 4px 0; border: 0; background: none; font: 700 16px var(--prose); color: var(--blue); cursor: pointer; }
+.more-row .toggle::before { content: "\25B8"; display: inline-block; width: 16px; }
+.more-row .toggle[aria-expanded="true"]::before { content: "\25BE"; }
+.more-row .toggle[aria-expanded="true"] { color: var(--ink); }
+.disclosed { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.disclosed[hidden] { display: none; }
+.disclosed .events, .disclosed .caption { padding: 10px 14px 0; }
+.disclosed pre { margin: 0; padding: 12px 14px; font: 14px/1.45 var(--mono); background: var(--soft); max-height: 340px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.disclosed .caption + pre { margin-top: 10px; }
 
 /* Prefix history on the lane kit: choice row, verdict, router groups. */
 .prefix-view { --peer: 262px; --path: 444px; }

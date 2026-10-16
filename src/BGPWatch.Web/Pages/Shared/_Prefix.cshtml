@@ -12,18 +12,12 @@
   </div>
   <div class="verdict" id="prefix-verdict" aria-live="polite">@T["loading"]</div>
   <div class="lane-table" id="prefix-lanes" role="group" aria-label="@T["prefix.lanes.label"]"></div>
-  <div class="more-row">
-    <details>
-      <summary id="prefix-changes-summary">@T["prefix.changes"]</summary>
-      <div class="scroll-x" id="prefix-changes"></div>
-    </details>
-    <details>
-      <summary id="prefix-alerts-summary">@T["prefix.alerts"]</summary>
-      <div class="scroll-x" id="prefix-alerts"></div>
-    </details>
-    <details class="raw">
-      <summary>@T["raw"]</summary>
-      <pre id="raw-prefix"></pre>
-    </details>
+  <div class="more-row" data-disclosures>
+    <button type="button" class="toggle" id="prefix-changes-summary" aria-expanded="false" aria-controls="more-prefix-changes">@T["prefix.changes"]</button>
+    <button type="button" class="toggle" id="prefix-alerts-summary" aria-expanded="false" aria-controls="more-prefix-alerts">@T["prefix.alerts"]</button>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-prefix-raw">@T["raw"]</button>
   </div>
+  <div class="disclosed" id="more-prefix-changes" hidden><div class="scroll-x" id="prefix-changes"></div></div>
+  <div class="disclosed" id="more-prefix-alerts" hidden><div class="scroll-x" id="prefix-alerts"></div></div>
+  <div class="disclosed raw" id="more-prefix-raw" hidden><pre id="raw-prefix"></pre></div>
 </div>

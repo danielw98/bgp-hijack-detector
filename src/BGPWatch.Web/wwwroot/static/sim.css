@@ -26,29 +26,6 @@
 }
 .sim-toolbar .btn { padding: 7px 14px; font-size: 16px; }
 .sim-toolbar .step { font: 700 18px var(--mono); margin-right: 8px; }
-.options { position: relative; margin-left: auto; }
-.btn.outline.blue { color: var(--blue); border-color: var(--blue); }
-.btn.outline.blue[aria-expanded="true"] { background: var(--blue-tint); }
-.options-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  z-index: 5;
-  width: 340px;
-  max-width: calc(100vw - 32px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1.5px solid var(--ink);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
-}
-.options-panel[hidden] { display: none; }
-.options-panel h4 { margin: 0; font-size: 18px; }
-.options-panel label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 16px; }
-.options-panel select { padding: 6px 8px; font: 400 16px var(--prose); }
 
 /* The stage: a dotted canvas with the map filling it and the legend in a corner. */
 .sim-stage {
@@ -60,7 +37,7 @@
   background-size: 22px 22px;
 }
 .sim-canvas { position: absolute; inset: 0; padding: 36px 12px 40px; display: flex; align-items: center; justify-content: center; }
-.sim-canvas svg { display: block; width: 100%; height: 100%; max-width: 1000px; max-height: 500px; }
+.sim-canvas svg { display: block; width: 100%; height: 100%; max-width: 1400px; max-height: 700px; }
 .sim-note { position: absolute; top: 8px; right: 14px; margin: 0; font-size: 15px; color: var(--muted); }
 .sim-legend {
   position: absolute;
@@ -195,6 +172,7 @@ svg.map .badge.dropped text, svg.map .badge.unreachable text, svg.map .badge.los
 .evlist li.current { background: var(--amber-tint); }
 .evlist li .n, .evlist li .t { font-family: var(--mono); color: var(--muted); }
 .evlist li .kind { font-weight: 700; }
+.evlist li .gap { margin-left: 8px; font: 400 14px var(--mono); color: var(--muted); }
 .evlist li.update .kind { color: var(--ink); }
 .evlist li.withdraw .kind { color: var(--red); }
 .evlist li.packet .kind { color: var(--amber); }
@@ -203,7 +181,7 @@ svg.map .badge.dropped text, svg.map .badge.unreachable text, svg.map .badge.los
 .evlist .verdict.delivered { color: var(--green); }
 .evlist .verdict.dropped, .evlist .verdict.unreachable, .evlist .verdict.lost, .evlist .verdict.loop { color: var(--red); }
 
-/* The inspector. */
+/* The inspector: the choices of the demo on top, then the tabs. */
 .sim-inspector {
   grid-area: inspector;
   display: flex;
@@ -211,6 +189,9 @@ svg.map .badge.dropped text, svg.map .badge.unreachable text, svg.map .badge.los
   min-height: 0;
   border-left: 1px solid var(--line);
 }
+.sim-choices { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--soft); }
+.sim-choices .choice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 15px; color: var(--muted); }
+.sim-choices select { padding: 4px 6px; font: 400 15px var(--prose); color: var(--ink); min-width: 0; max-width: 100%; }
 .sim-inspector .tabs { display: flex; border-bottom: 1px solid var(--line); }
 .sim-inspector .tab {
   flex: 1 1 0;
@@ -247,7 +228,6 @@ table.data.rib th.router .addr { font-family: var(--mono); font-weight: 400; fon
   .sim-canvas svg { max-width: none; max-height: none; }
   .sim-legend { position: static; padding: 6px 14px 10px; background: var(--surface); border-top: 1px solid var(--line); }
   .sim-note { position: static; padding: 6px 14px 0; background: var(--surface); }
-  .options-panel { right: auto; left: 0; }
   .sim-stage { display: flex; flex-direction: column; }
   .sim-canvas { position: relative; flex: 1 1 auto; aspect-ratio: 1000 / 500; padding: 6px; }
   .sim-inspector { border-left: 0; border-top: 1px solid var(--line); }

@@ -4,24 +4,20 @@
     <span id="scrub-time" class="mono"></span>
     <span class="count attacker" id="count-hijacker"></span>
     <span class="count victim" id="count-owner"></span>
-    <span class="speed" id="speed-2008">@T["sim.speed"]</span>
+    <span class="speed" id="speed-2008"></span>
   </div>
   <div class="event-card" id="event-card" aria-live="polite"></div>
   <div class="lane-table" id="lanes" role="group" aria-label="@T["i2008.lanes.label"]"></div>
-  <div class="more-row">
-    <details>
-      <summary>@T["i2008.events"]</summary>
-      <ol class="events" id="events"></ol>
-    </details>
-    <details>
-      <summary>@T["i2008.first"]</summary>
-      <div class="scroll-x" id="peers-2008"></div>
-    </details>
-    <details class="raw">
-      <summary>@T["raw"]</summary>
-      <p class="caption" id="msg-2008">@T["loading"]</p>
-      <pre id="raw-2008"></pre>
-      <div class="drawer-actions"><button id="btn-reload" class="btn outline small">@T["i2008.reload"]</button><span class="msg">@T["i2008.reload.note"]</span></div>
-    </details>
+  <div class="more-row" data-disclosures>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-events-2008">@T["i2008.events"]</button>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-first-2008">@T["i2008.first"]</button>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-raw-2008">@T["raw"]</button>
+  </div>
+  <div class="disclosed" id="more-events-2008" hidden><ol class="events" id="events"></ol></div>
+  <div class="disclosed" id="more-first-2008" hidden><div class="scroll-x" id="peers-2008"></div></div>
+  <div class="disclosed raw" id="more-raw-2008" hidden>
+    <p class="caption" id="msg-2008">@T["loading"]</p>
+    <pre id="raw-2008"></pre>
+    <div class="drawer-actions"><button id="btn-reload" class="btn outline small">@T["i2008.reload"]</button><span class="msg">@T["i2008.reload.note"]</span></div>
   </div>
 </div>

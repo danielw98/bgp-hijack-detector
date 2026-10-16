@@ -4,21 +4,6 @@
     <button data-sim="send" class="btn"><span class="step">2</span>@T["sim.send"]</button>
     <button data-sim="ask" class="btn outline"><span class="step">3</span>@T["sim.ask"]</button>
     <button data-sim="reset" class="btn outline"><span class="step">4</span>@T["sim.reset"]</button>
-    <div class="options">
-      <button data-sim="options" class="btn outline blue" aria-expanded="false">@T["sim.options"]</button>
-      <div class="options-panel" data-sim="options-panel" hidden>
-        <h4>@T["sim.options"]</h4>
-        <label>@T["sim.options.scenario"]
-          <select data-sim="scenario">
-            <option value="both">@T["sim.scenario.both"]</option>
-            <option value="exact">@T["sim.scenario.exact"]</option>
-            <option value="subprefix">@T["sim.scenario.subprefix"]</option>
-          </select>
-        </label>
-        <label>@T["sim.options.from"] <select data-sim="from"></select></label>
-        <label>@T["sim.options.to"] <select data-sim="to"></select></label>
-      </div>
-    </div>
   </div>
 
   <div class="sim-stage">
@@ -43,6 +28,22 @@
   </div>
 
   <aside class="sim-inspector">
+    <div class="sim-choices">
+      <div class="choice">
+        <label for="sim-scenario">@T["sim.options.scenario"]</label>
+        <select id="sim-scenario" data-sim="scenario">
+          <option value="both">@T["sim.scenario.both"]</option>
+          <option value="exact">@T["sim.scenario.exact"]</option>
+          <option value="subprefix">@T["sim.scenario.subprefix"]</option>
+        </select>
+      </div>
+      <div class="choice">
+        <label for="sim-from">@T["sim.options.from"]</label>
+        <select id="sim-from" data-sim="from"></select>
+        <label for="sim-to">@T["sim.options.to"]</label>
+        <select id="sim-to" data-sim="to"></select>
+      </div>
+    </div>
     <div class="tabs" role="tablist">
       <button class="tab current" role="tab" aria-selected="true" data-tab="tables">@T["sim.tab.tables"]</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="events">@T["sim.tab.events"] <span class="count" data-sim="count"></span></button>
