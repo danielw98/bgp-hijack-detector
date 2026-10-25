@@ -60,8 +60,6 @@ small, .small { font-size: 16px; }
 .status .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: var(--muted); margin-right: 5px; vertical-align: -1px; }
 .status .dot.up { background: var(--green); }
 .status .dot.down { background: var(--red); }
-.status .updated { display: inline-block; }
-.status .updated::first-letter { text-transform: uppercase; }
 .lang { display: inline-flex; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; }
 .lang a { padding: 4px 10px; font-size: 17px; font-weight: 700; color: var(--ink); text-decoration: none; }
 .lang a.current { background: var(--ink); color: var(--surface); }

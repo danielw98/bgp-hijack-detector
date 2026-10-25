@@ -158,7 +158,7 @@
  "js.status.lab.down": "Routers down",
  "js.status.data.up": "Feed active",
  "js.status.data.down": "Feed stopped",
- "js.status.updated": "updated {time}",
+ "js.status.data.since": "Feed stopped since {time}",
  "js.clear.confirm": "Delete the simulator's alerts and route history? The 2008 incident and the routers stay unchanged.",
  "js.clear.busy": "clearing...",
  "js.clear.done": "Deleted: {alerts} alerts, {routes} routes. The routers are sending their tables again.",

@@ -1,8 +1,10 @@
-// The status items: lab reachable, route feed answering, last update. The word carries the state.
+// The status items: lab reachable, route feed answering. The word carries the state; a stopped
+// feed names the time of its last answer.
 
 import { LOCALE, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
+let lastAnswer = null;
 
 export function setLab(up) {
   $("dot-lab").className = "dot " + (up ? "up" : "down");
@@ -11,8 +13,13 @@ export function setLab(up) {
 
 export function setData(up) {
   $("dot-data").className = "dot " + (up ? "up" : "down");
-  $("data-state").textContent = up ? t("status.data.up") : t("status.data.down");
-  if (up) $("updated").textContent = t("status.updated", { time: new Date().toLocaleTimeString(LOCALE) });
+  if (up) lastAnswer = new Date();
+  $("data-state").textContent = up ? t("status.data.up") : stoppedText();
+}
+
+function stoppedText() {
+  if (!lastAnswer) return t("status.data.down");
+  return t("status.data.since", { time: lastAnswer.toLocaleTimeString(LOCALE) });
 }
 
 // The status line of a page without the simulator: the lab and the route feed, polled.

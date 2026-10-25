@@ -158,7 +158,7 @@
  "js.status.lab.down": "Rutere oprite",
  "js.status.data.up": "Flux activ",
  "js.status.data.down": "Flux oprit",
- "js.status.updated": "actualizat {time}",
+ "js.status.data.since": "Flux oprit de la {time}",
  "js.clear.confirm": "Se șterg alertele și istoricul de rute ale simulatorului? Incidentul din 2008 și ruterele rămân neschimbate.",
  "js.clear.busy": "se golește...",
  "js.clear.done": "Șterse: {alerts} alerte, {routes} rute. Ruterele își retrimit tabelele.",
