@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 MEDIA = {"en": ROOT / "media", "ro": ROOT / "media" / "ro"}
 VIEWPORT = {"width": 1600, "height": 900}
-VIEWS = ("simulator", "2008", "prefixes", "lookup")
+VIEWS = {"step-3": "story", "2008": "2008", "prefixes": "prefixes", "lookup": "lookup"}  # hash -> file name
 SETTLE_MS = 1500
 LOOKUP_MS = 30000
 
@@ -24,16 +24,15 @@ LOOKUP_MS = 30000
 def shoot_app(browser, base: str, lang: str) -> None:
     page = browser.new_page(viewport=VIEWPORT)
     page.goto(f"{base}?lang={lang}", wait_until="load")
-    page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=20000)
-    page.wait_for_selector("svg.map", state="attached", timeout=20000)
-    for view in VIEWS:
+    page.wait_for_selector("svg.story-map", state="attached", timeout=20000)
+    for view, name in VIEWS.items():
         page.evaluate("(hash) => { location.hash = hash; }", view)
         page.wait_for_timeout(SETTLE_MS)
         if view == "lookup":
             page.click("#btn-lookup")
             page.wait_for_selector("#lookup-result:not([hidden])", timeout=LOOKUP_MS)
             page.wait_for_timeout(SETTLE_MS)
-        page.screenshot(path=str(MEDIA[lang] / f"app-{view}.png"))
+        page.screenshot(path=str(MEDIA[lang] / f"app-{name}.png"))
     page.close()
 
 

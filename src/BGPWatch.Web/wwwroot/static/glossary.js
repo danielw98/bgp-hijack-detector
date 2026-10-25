@@ -6,11 +6,7 @@ import { t } from "./i18n.js";
 
 const TERM_KEYS = ["as", "prefix", "bgp", "update", "as_path", "origin", "announcement", "subprefix", "hijack", "rpki", "vantage", "collector", "mrt", "ris", "next_hop", "blackhole"];
 
-export const TERMS = Object.fromEntries(TERM_KEYS.map((key) => [key, [t(`term.${key}.title`), t(`term.${key}.body`)]]));
-
-export function termMarkup(key, text) {
-  return `<dfn class="term" data-term="${esc(key)}" tabindex="0" role="button" aria-haspopup="true">${esc(text)}</dfn>`;
-}
+const TERMS = Object.fromEntries(TERM_KEYS.map((key) => [key, [t(`term.${key}.title`), t(`term.${key}.body`)]]));
 
 export function renderGlossary(container) {
   container.innerHTML = Object.entries(TERMS)

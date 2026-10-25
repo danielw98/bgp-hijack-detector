@@ -2,10 +2,9 @@
 language (English and Romanian, chosen with ?lang=) at phone, laptop and desktop sizes
 in Chromium and fails on: horizontal page overflow or an element wider than the
 viewport outside an inner scroller; vertical page scroll of the application at laptop
-and desktop sizes (the simulator fills the window); any text of the simulator's map
-rendered under MIN_FONT px; a part of the simulator's stage drawn past the stage onto
-the caption or the transport; any map text crossed by a line, a path or the edge of a box
-(a label on a white halo may cover a line). On the references page, with every block
+and desktop sizes (the story fills the window); on each of the story's steps, any text
+of its map rendered under MIN_FONT px, the map drawn past its stage, and any map text
+crossed by a line, a path or the edge of a box. On the references page, with every block
 closed and with every block open: no horizontal overflow, also inside its scroller, and
 every in-page link has its target. On the guide, no element inside the chapters or
 the footer wider than the prose column (the content box of a chapter) by more than
@@ -34,9 +33,10 @@ SHOTS = ROOT / ".playwright-mcp"
 VIEWPORTS = ((390, 844), (1140, 610), (1366, 768), (1920, 1080))
 WORKSPACE_FROM = 1160
 ONE_SCREEN_VIEWS = ("2008", "prefixes", "lookup")  # views that fit one screen from WORKSPACE_FROM up
-VIEWS = ("simulator", "2008", "prefixes", "lookup")
+STEPS = tuple(f"step-{n}" for n in range(1, 6))
+VIEWS = (*STEPS, "2008", "prefixes", "lookup")
 LANGUAGES = ("en", "ro")
-SCROLLERS = ".scroll-x, .rib, .frame-body.tight, .graphbox, .sim-inspector .panel, .evlist, .view-body, .sim-canvas"
+SCROLLERS = ".scroll-x, .frame-body.tight, .graphbox, .view-body, .story-panel"
 MIN_CONTRAST = 4.5
 MIN_FONT = 15.0
 TEXT_SUFFIXES = {
@@ -70,11 +70,11 @@ OVERFLOW_JS = """
 """
 
 # Every text of the map: its rendered size, and whether a line, a path or a box edge
-# crosses it. A text on a halo (the rect before it, data-halo) must sit inside the halo.
+# crosses it. A text on a pill (the rect before it) must sit inside the pill.
 MAP_TEXT_JS = """
 (minFont) => {
   const out = [];
-  const seen = (el) => el.closest('.token, .badge, defs');
+  const seen = (el) => el.closest('defs');
   const shrink = (r, by) => ({ left: r.left + by, top: r.top + by, right: r.right - by, bottom: r.bottom - by });
   const inside = (p, r) => p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
   const contains = (outer, inner) => inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1;
@@ -83,7 +83,7 @@ MAP_TEXT_JS = """
     return false;
   };
   const toClient = (svg, x, y) => { const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(svg.getScreenCTM()); };
-  document.querySelectorAll('svg.map').forEach((svg) => {
+  document.querySelectorAll('svg.story-map').forEach((svg) => {
     const vb = svg.viewBox.baseVal;
     const box = svg.getBoundingClientRect();
     const scale = Math.min(box.width / vb.width, box.height / vb.height);
@@ -94,14 +94,13 @@ MAP_TEXT_JS = """
     });
     const labels = [...svg.querySelectorAll('text')].filter((t) => !seen(t) && t.textContent.trim());
     const lines = [...svg.querySelectorAll('line')].filter((l) => !seen(l));
-    const paths = [...svg.querySelectorAll('path')].filter((p) => !seen(p) && !p.closest('.glyph, .tracks'));
+    const paths = [...svg.querySelectorAll('path')].filter((p) => !seen(p));
     const rects = [...svg.querySelectorAll('rect')].filter((r) => !seen(r));
-    const circles = [...svg.querySelectorAll('circle.body')];
     labels.forEach((t) => {
       const r = shrink(t.getBoundingClientRect(), 1);
-      const halo = t.previousElementSibling && t.previousElementSibling.hasAttribute('data-halo') ? t.previousElementSibling : null;
+      const pill = t.previousElementSibling && t.previousElementSibling.classList.contains('pill') ? t.previousElementSibling : null;
       const name = `text "${t.textContent.trim()}"`;
-      if (halo) { if (!contains(halo.getBoundingClientRect(), r)) out.push(`${name} spills out of its halo`); return; }
+      if (pill) { if (!contains(pill.getBoundingClientRect(), r)) out.push(`${name} spills out of its pill`); return; }
       lines.forEach((l) => {
         const a = toClient(svg, l.x1.baseVal.value, l.y1.baseVal.value), b = toClient(svg, l.x2.baseVal.value, l.y2.baseVal.value);
         if (segmentHits(a, b, r)) out.push(`${name} is crossed by a line`);
@@ -115,23 +114,19 @@ MAP_TEXT_JS = """
         const c = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].map(([px, py]) => toClient(svg, px, py));
         for (let i = 0; i < 4; i++) if (segmentHits(c[i], c[(i + 1) % 4], r)) { out.push(`${name} is crossed by the edge of rect ${b.getAttribute('class') || ''}`); break; }
       });
-      circles.forEach((c) => {
-        const cx = c.cx.baseVal.value, cy = c.cy.baseVal.value, rad = c.r.baseVal.value;
-        for (let i = 0; i < 64; i++) { const a = (i / 64) * Math.PI * 2; if (inside(toClient(svg, cx + rad * Math.cos(a), cy + rad * Math.sin(a)), r)) { out.push(`${name} is crossed by a router circle`); break; } }
-      });
     });
   });
   return [...new Set(out)];
 }
 """
 
-# The parts of every simulator stage that reach past the stage's own box.
+# The story's map where it reaches past its stage.
 STAGE_JS = """
-() => [...document.querySelectorAll('.sim-stage')].flatMap((stage) => {
+() => [...document.querySelectorAll('.story-stage')].flatMap((stage) => {
   const box = stage.getBoundingClientRect();
   return [...stage.children]
-    .filter((c) => c.getBoundingClientRect().bottom > box.bottom + 1)
-    .map((c) => `.${c.className.split(' ')[0]} reaches past the stage`);
+    .filter((c) => { const r = c.getBoundingClientRect(); return r.bottom > box.bottom + 1 || r.right > box.right + 1; })
+    .map(() => 'the map reaches past its stage');
 })
 """
 
@@ -253,8 +248,7 @@ def check_layout(url: str, name: str) -> list[str]:
             if name.startswith("guide"):
                 page.wait_for_selector("#glossary dt", state="attached", timeout=15000)
             else:
-                page.wait_for_selector('[data-sim="tables"] table', state="attached", timeout=15000)
-                page.wait_for_selector("svg.map", state="attached", timeout=15000)
+                page.wait_for_selector("svg.story-map", state="attached", timeout=15000)
             page.wait_for_timeout(800)
             for view in (VIEWS if name.startswith("app") else ("",)):
                 if view:
@@ -268,7 +262,7 @@ def check_layout(url: str, name: str) -> list[str]:
                 result = page.evaluate(OVERFLOW_JS, SCROLLERS)
                 if result["scrollWidth"] > result["innerWidth"]:
                     out.append(f"{label}: page scrolls horizontally ({result['scrollWidth']} > {result['innerWidth']})")
-                if view == "simulator" and width >= WORKSPACE_FROM and result["scrollHeight"] > result["innerHeight"] + 1:
+                if view in STEPS and width >= WORKSPACE_FROM and result["scrollHeight"] > result["innerHeight"] + 1:
                     out.append(f"{label}: page scrolls vertically ({result['scrollHeight']} > {result['innerHeight']})")
                 if view in ONE_SCREEN_VIEWS and width >= WORKSPACE_FROM:
                     body = page.evaluate("(v) => { const b = document.querySelector('#view-' + v + ' .view-body'); return [b.scrollHeight, b.clientHeight]; }", view)
@@ -280,7 +274,7 @@ def check_layout(url: str, name: str) -> list[str]:
                     guide = page.evaluate(GUIDE_COLUMN_JS)
                     out += [f"{label}: {element} is wider than the {guide['column']:.0f}px column" for element in guide["wide"]]
                     out += [f"{label}: figure {src} did not load" for src in guide["broken"]]
-                if view == "simulator":
+                if view in STEPS:
                     for finding in page.evaluate(MAP_TEXT_JS, MIN_FONT) + page.evaluate(STAGE_JS):
                         out.append(f"{label}: {finding}")
                 page.screenshot(path=str(SHOTS / f"check-{name}{'-' + view if view else ''}-{width}.png"), full_page=True)

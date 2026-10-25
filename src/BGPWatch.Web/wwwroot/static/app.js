@@ -3,7 +3,7 @@
 
 const views = [...document.querySelectorAll(".view")];
 const links = [...document.querySelectorAll("nav.views a[data-view]")];
-const OLD_NAMES = { lab: "simulator", prefixe: "prefixes", verifica: "lookup" };
+const OLD_NAMES = { lab: "story", simulator: "story", prefixe: "prefixes", verifica: "lookup" };
 
 function show(name) {
   views.forEach((view) => { view.hidden = view.id !== `view-${name}`; });
@@ -14,11 +14,11 @@ function show(name) {
   window.scrollTo({ top: 0 });
 }
 
-// "#tour-N" opens the simulator on step N of the tour (tour.js reads the step).
+// "#step-N" opens the story on step N (story.js reads the step).
 function fromHash() {
   const hash = location.hash.replace("#", "");
-  const name = hash.startsWith("tour") ? "simulator" : OLD_NAMES[hash] || hash || "simulator";
-  show(views.some((view) => view.id === `view-${name}`) ? name : "simulator");
+  const name = hash.startsWith("step-") ? "story" : OLD_NAMES[hash] || hash || "story";
+  show(views.some((view) => view.id === `view-${name}`) ? name : "story");
 }
 
 window.addEventListener("hashchange", fromHash);

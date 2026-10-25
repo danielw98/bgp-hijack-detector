@@ -1,11 +1,11 @@
-"""Record one real cycle of the lab for the tour: for every step, the lab snapshot after
+"""Record one real cycle of the lab for the story: for every step, the lab snapshot after
 its action, the rows the routers reported meanwhile (the route log), the alerts the
 detector raised, and the kernel walks that prove the packet's fate. Writes
-src/BGPWatch.Web/wwwroot/static/tour/cycle.json, which the tour replays with the lab down.
+src/BGPWatch.Web/wwwroot/static/story/cycle.json, which the story reads with the lab down.
 
 Runs against a local stack at rest; it resets the lab first and leaves it at rest.
 
-Usage: python scripts/record_tour.py [--url http://localhost:8081/]
+Usage: python scripts/record_story.py [--url http://localhost:8081/]
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static" / "tour" / "cycle.json"
+OUT = ROOT / "src" / "BGPWatch.Web" / "wwwroot" / "static" / "story" / "cycle.json"
 DESTINATIONS = ("203.0.113.1", "203.0.113.129")
 SOURCES = ("attacker", "transit")
 SETTLE_S = 4.0

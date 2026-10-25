@@ -3,9 +3,9 @@
 // router that holds the address or dropped by a router that originates the prefix
 // without holding it (a blackhole). Pure: it reads the lab snapshot only.
 
-export const MAX_HOPS = 6;
+const MAX_HOPS = 6;
 
-export function parseAddress(text) {
+function parseAddress(text) {
   return text.split(".").reduce((n, octet) => n * 256 + Number(octet), 0);
 }
 

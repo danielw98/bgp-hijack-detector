@@ -6,12 +6,12 @@ import { LOCALE, t } from "./i18n.js";
 const $ = (id) => document.getElementById(id);
 let lastAnswer = null;
 
-export function setLab(up) {
+function setLab(up) {
   $("dot-lab").className = "dot " + (up ? "up" : "down");
   $("lab-state").textContent = up ? t("status.lab.up") : t("status.lab.down");
 }
 
-export function setData(up) {
+function setData(up) {
   $("dot-data").className = "dot " + (up ? "up" : "down");
   if (up) lastAnswer = new Date();
   $("data-state").textContent = up ? t("status.data.up") : stoppedText();

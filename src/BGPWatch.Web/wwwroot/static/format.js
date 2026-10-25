@@ -2,9 +2,8 @@
 
 import { LOCALE, t } from "./i18n.js";
 
-export const ROLE_NAME = { victim: t("role.victim"), transit: t("role.transit"), attacker: t("role.attacker"), collector: t("role.collector") };
+const ROLE_NAME = { victim: t("role.victim"), transit: t("role.transit"), attacker: t("role.attacker"), collector: t("role.collector") };
 export const ALERT_NAME = { origin_hijack: t("alert.origin_hijack"), subprefix_hijack: t("alert.subprefix_hijack"), rpki_invalid: t("alert.rpki_invalid") };
-export const REASON = { "Older Path": t("reason.older"), "Weight": t("reason.weight"), "First path received": t("reason.first") };
 
 const labRoles = new Map();     // asn -> role, filled by the lab figure
 const labPeers = new Map();     // link address -> role
@@ -50,7 +49,7 @@ export function peerMarkup(address) {
 }
 
 // A single AS as a chip, with its name when known.
-export function asChip(asn, extra = "") {
+function asChip(asn, extra = "") {
   const role = roleOf(asn);
   const name = nameOf(asn);
   const title = name ? ` title="${esc(name)}"` : "";
@@ -58,7 +57,7 @@ export function asChip(asn, extra = "") {
 }
 
 // The AS path drawn as a chain. The origin is the last AS; a local route has none.
-export function chain(asPath, localAsn) {
+function chain(asPath, localAsn) {
   const path = Array.isArray(asPath) ? asPath : [];
   if (!path.length) {
     return `<span class="chain">${asChip(localAsn, "origin local")}<span class="sep">${esc(t("path.own"))}</span></span>`;
@@ -99,8 +98,4 @@ export function fmtTime(iso, utc = false) {
 export function fmtUtc(iso, withSeconds = true) {
   const t = new Date(iso);
   return isNaN(t) ? esc(iso) : t.toISOString().slice(11, withSeconds ? 19 : 16);
-}
-
-export function pretty(data) {
-  return esc(JSON.stringify(data, null, 2));
 }

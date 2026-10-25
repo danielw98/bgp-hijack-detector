@@ -5,11 +5,11 @@
     var chapters = new[]
     {
         (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "path", Width: 600, Height: 301, Step: 1),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "exact", Width: 600, Height: 195, Step: 6),
-        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "subprefix", Width: 984, Height: 494, Step: 5),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "rest", Width: 984, Height: 494, Step: 7),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "defence", Width: 600, Height: 325, Step: 8),
-        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "packet", Width: 984, Height: 494, Step: 3),
+        (Paragraphs: new[] { "p1", "p2" }, Figure: "exact", Width: 600, Height: 195, Step: 4),
+        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "subprefix", Width: 984, Height: 494, Step: 3),
+        (Paragraphs: new[] { "p1", "p2" }, Figure: "rest", Width: 984, Height: 494, Step: 4),
+        (Paragraphs: new[] { "p1", "p2" }, Figure: "defence", Width: 600, Height: 325, Step: 5),
+        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "packet", Width: 984, Height: 494, Step: 2),
     };
 }
 <header class="col">
@@ -47,7 +47,7 @@
       <a href="@source"><img src="@source" alt="@T[$"guide.fig{n}.alt"]" width="@chapter.Width" height="@chapter.Height"></a>
       <figcaption>@T[$"guide.fig{n}.title"]</figcaption>
     </figure>
-    <p class="live"><a href="@Url.Content($"~/#tour-{chapter.Step}")">@T[$"guide.s{n}.live"]</a></p>
+    <p class="live"><a href="@Url.Content($"~/#step-{chapter.Step}")">@T[$"guide.s{n}.live"]</a></p>
     @if (n == 6)
     {
       <dl class="glossary" id="glossary"></dl>

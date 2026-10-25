@@ -5,7 +5,7 @@
 const node = document.getElementById("strings");
 const STRINGS = node ? JSON.parse(node.textContent) : {};
 
-export const LANG = document.documentElement.lang || "en";
+const LANG = document.documentElement.lang || "en";
 export const LOCALE = LANG === "ro" ? "ro-RO" : "en-GB";
 
 export function t(key, values = {}) {
