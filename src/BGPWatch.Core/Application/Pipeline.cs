@@ -4,14 +4,18 @@ using Microsoft.Extensions.Logging;
 namespace BGPWatch.Core.Application;
 
 /// <summary>
-/// The path every announcement the live station observes takes: into route history,
-/// through the detector, and its alerts into the log, one batch at a time.
+/// The path every announcement a source observes takes: into route history, through the
+/// detector, and its alerts into the log, one batch at a time. The ground truth can be
+/// replaced while it runs; the next batch is judged by the new one.
 /// </summary>
 public sealed class Pipeline(DetectorConfig config, IRouteLog log, ILogger logger, string source)
 {
-    private readonly HijackDetector detector = new(config.Monitored, config.Vrps);
+    private volatile DetectorConfig current = config;
+    private volatile HijackDetector detector = new(config.Monitored, config.Vrps);
 
     public string Source => source;
+
+    public DetectorConfig Config => current;
 
     public long UpdateCount { get; private set; }
 
@@ -19,14 +23,27 @@ public sealed class Pipeline(DetectorConfig config, IRouteLog log, ILogger logge
 
     public async Task StartAsync(CancellationToken cancel)
     {
-        await log.SyncMonitoredAsync(config.Monitored, cancel);
-        logger.LogInformation("ready: {Monitored} monitored prefixes, {Vrps} VRPs", config.Monitored.Count, config.Vrps.Count);
+        await log.SyncMonitoredAsync(current.Monitored, cancel);
+        logger.LogInformation("{Source} ready: {Monitored} monitored prefixes, {Vrps} VRPs", source, current.Monitored.Count, current.Vrps.Count);
     }
 
-    /// <summary>Stores the announcements and every alert they raise, in one transaction.</summary>
-    public async Task ProcessAsync(IReadOnlyList<Announcement> announcements, CancellationToken cancel)
+    public void Reconfigure(DetectorConfig config)
     {
-        var alerts = announcements.SelectMany(detector.Inspect).ToList();
+        detector = new HijackDetector(config.Monitored, config.Vrps);
+        current = config;
+    }
+
+    /// <summary>Whether the announcement would raise an alert under the ground truth in force.</summary>
+    public bool Offends(Announcement announcement)
+    {
+        return detector.Inspect(announcement).Count > 0;
+    }
+
+    /// <summary>Stores the announcements and every alert they raise, in one transaction; returns the alerts.</summary>
+    public async Task<IReadOnlyList<Alert>> ProcessAsync(IReadOnlyList<Announcement> announcements, CancellationToken cancel)
+    {
+        var judge = detector;
+        var alerts = announcements.SelectMany(judge.Inspect).ToList();
         await log.AppendAsync(announcements, alerts, source, cancel);
         UpdateCount += announcements.Count;
         AlertCount += alerts.Count;
@@ -34,5 +51,6 @@ public sealed class Pipeline(DetectorConfig config, IRouteLog log, ILogger logge
         {
             logger.LogWarning("ALERT {Type}: {Detail} (peer {Peer})", alert.Type.Name(), alert.Detail, alert.Peer);
         }
+        return alerts;
     }
 }

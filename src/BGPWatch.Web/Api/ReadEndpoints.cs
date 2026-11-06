@@ -27,8 +27,9 @@ public static class ReadEndpoints
     public static void Map(WebApplication app)
     {
         app.MapGet("/api/stats", (Queries q, CancellationToken c) => q.StatsAsync(c));
-        app.MapGet("/api/alerts", async (Queries q, CancellationToken c, int limit = 100) =>
-            limit > MaxLimit ? TooLarge("limit", MaxLimit) : Results.Ok(await q.AlertsAsync(limit, c)));
+        app.MapGet("/api/alerts", async (Queries q, CancellationToken c, int limit = 100, string? source = null) =>
+            limit > MaxLimit ? TooLarge("limit", MaxLimit)
+                : Results.Ok(source is null ? await q.AlertsAsync(limit, c) : await q.SourceAlertsAsync(source, limit, c)));
         app.MapGet("/api/routes", async (Queries q, CancellationToken c, int limit = 100) =>
             limit > MaxLimit ? TooLarge("limit", MaxLimit) : Results.Ok(await q.RoutesAsync(limit, c)));
         app.MapGet("/api/monitored", (Queries q, CancellationToken c) => q.MonitoredAsync(c));

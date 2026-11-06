@@ -9,3 +9,4 @@ TestResults/
 .pytest_cache/
 detector/mrt/build/
 /InstallationLog.txt
+watch/bgpwatch.toml

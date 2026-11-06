@@ -42,4 +42,13 @@
 </div>
 </div>
 </section>
+
+<section class="view" id="view-monitor" hidden>
+<div class="view-head"><h2>@T["view.monitor.title"]</h2><span class="note">@T["view.monitor.note"]</span><a class="guide-link" href="~/guide#s2">@T["view.guide.s2"]</a></div>
+<div class="view-body">
+<div class="inner">
+  @await Html.PartialAsync("_Monitor")
+</div>
+</div>
+</section>
 </main>

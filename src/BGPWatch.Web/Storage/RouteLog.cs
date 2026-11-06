@@ -42,6 +42,14 @@ public sealed class RouteLog(NpgsqlDataSource database) : IRouteLog
         }
     }
 
+    public async Task<long> PruneAsync(string source, DateTime before, CancellationToken cancel)
+    {
+        await using var command = database.CreateCommand("DELETE FROM route_updates WHERE source = $1 AND seen_at < $2");
+        command.Parameters.Add(new NpgsqlParameter { Value = source });
+        command.Parameters.Add(new NpgsqlParameter { Value = before, NpgsqlDbType = NpgsqlDbType.TimestampTz });
+        return await command.ExecuteNonQueryAsync(cancel);
+    }
+
     public async Task AppendAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
     {
         await using var connection = await database.OpenConnectionAsync(cancel);

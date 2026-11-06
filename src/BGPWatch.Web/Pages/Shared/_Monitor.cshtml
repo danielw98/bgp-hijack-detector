@@ -1,0 +1,30 @@
+<div class="monitor" data-monitor>
+  <div class="verdict" id="monitor-feed" aria-live="polite">@T["loading"]</div>
+  <div class="scroll-x"><table class="data" id="monitor-table" aria-label="@T["monitor.table.label"]"></table></div>
+  <form class="search-row edit" id="monitor-add" hidden>
+    <input type="text" id="monitor-prefix" placeholder="193.0.0.0/21" spellcheck="false" autocomplete="off" aria-label="@T["monitor.add.prefix.label"]">
+    <input type="text" id="monitor-origins" placeholder="AS3333" spellcheck="false" autocomplete="off" aria-label="@T["monitor.add.origins.label"]">
+    <input type="text" id="monitor-description" class="prose" placeholder="@T["monitor.add.description.label"]" autocomplete="off" aria-label="@T["monitor.add.description.label"]">
+    <button type="submit" class="btn" id="btn-monitor-add">@T["monitor.add.button"]</button>
+  </form>
+  <form class="search-row edit" id="monitor-asn-form" hidden>
+    <span class="choice-label">@T["monitor.asn.label"]</span>
+    <input type="text" id="monitor-asn" placeholder="3333" spellcheck="false" autocomplete="off" aria-label="@T["monitor.asn.input.label"]">
+    <button type="submit" class="btn outline" id="btn-monitor-asn">@T["monitor.asn.button"]</button>
+    <button type="button" class="btn outline" id="btn-monitor-test">@T["monitor.test"]</button>
+  </form>
+  <form class="search-row edit" id="monitor-token-form" hidden>
+    <span class="choice-label">@T["monitor.token.label"]</span>
+    <input type="password" id="monitor-token" autocomplete="off" aria-label="@T["monitor.token.label"]">
+    <button type="submit" class="btn outline" id="btn-monitor-token">@T["monitor.token.button"]</button>
+  </form>
+  <p class="msg" id="monitor-msg" aria-live="polite"></p>
+  <div class="more-row" data-disclosures>
+    <button type="button" class="toggle" id="monitor-incidents-summary" aria-expanded="false" aria-controls="more-monitor-incidents">@T["monitor.incidents"]</button>
+    <button type="button" class="toggle" id="monitor-alerts-summary" aria-expanded="false" aria-controls="more-monitor-alerts">@T["monitor.alerts"]</button>
+    <button type="button" class="toggle" aria-expanded="false" aria-controls="more-monitor-raw">@T["raw"]</button>
+  </div>
+  <div class="disclosed" id="more-monitor-incidents" hidden><div class="scroll-x" id="monitor-incidents"></div></div>
+  <div class="disclosed" id="more-monitor-alerts" hidden><div class="scroll-x" id="monitor-alerts"></div></div>
+  <div class="disclosed raw" id="more-monitor-raw" hidden><pre id="raw-monitor"></pre></div>
+</div>

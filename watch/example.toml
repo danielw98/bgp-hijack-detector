@@ -1,0 +1,30 @@
+# The watch file: what the detector watches on the real Internet, and where it tells you.
+# Copy it to watch/bgpwatch.toml (never committed) and edit it, or let the page and the
+# CLI edit it for you (the page rewrites the whole file, without the comments).
+
+# One entry per watched prefix. Its more specifics are watched too. An announcement
+# whose origin is not listed raises an alert; expected_origins = [] means every
+# announcement is one (a block that must never be announced).
+[[monitored]]
+prefix = "193.0.0.0/21"
+expected_origins = [3333]
+description = "RIPE NCC"
+
+# The RIS Live feed: the collectors to listen to (rrc00, rrc21, ...); empty means all.
+[ris]
+hosts = []
+
+# The ROAs of the watched prefixes, read from RIPEstat at start and again every so often;
+# a [[vrp]] entry adds a static ROA (prefix, max_length, origin_as) for a run without it.
+[rpki]
+refresh_minutes = 60
+
+# Where the notifications go: a JSON object posted when an incident opens, when it closes,
+# and on a test. Any number of these.
+[[webhook]]
+name = "ops"
+url = "https://example.org/hooks/bgp"
+
+# The route rows of the feed older than this are deleted daily; the alerts stay.
+[history]
+retention_days = 14

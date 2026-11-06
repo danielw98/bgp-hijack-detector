@@ -43,6 +43,11 @@ public sealed class Queries(NpgsqlDataSource database)
         return ListAsync($"SELECT {AlertColumns} FROM alerts ORDER BY id DESC LIMIT $1", ReadAlert, cancel, limit);
     }
 
+    public Task<List<StoredAlert>> SourceAlertsAsync(string source, int limit, CancellationToken cancel)
+    {
+        return ListAsync($"SELECT {AlertColumns} FROM alerts WHERE source = $1 ORDER BY id DESC LIMIT $2", ReadAlert, cancel, source, limit);
+    }
+
     public Task<List<StoredAlert>> AlertsWithinAsync(string prefix, int limit, CancellationToken cancel)
     {
         return ListAsync($"SELECT {AlertColumns} FROM alerts WHERE prefix <<= $1::cidr ORDER BY id DESC LIMIT $2",

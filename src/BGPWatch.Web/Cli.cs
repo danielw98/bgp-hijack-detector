@@ -4,15 +4,17 @@ using System.Text.Json;
 using BGPWatch.Core.Domain;
 using BGPWatch.Web.Config;
 using BGPWatch.Web.Native;
+using BGPWatch.Web.Watch;
 
 namespace BGPWatch.Web;
 
 /// <summary>
-/// The verbs the author's scripts call, with no database:
+/// The verbs that run instead of the web host, with no database. The author's:
 /// <c>dump &lt;updates.mrt[.gz]&gt;</c> prints every route of the file as one JSON line, and on
 /// stderr how many malformed records it dropped;
 /// <c>measure &lt;config.toml&gt; &lt;updates.mrt[.gz]&gt;</c> prints what the detector raises
 /// on the file, which peers carried the alerted routes, and how long it takes.
+/// The operator's (watch, check, replay, prefixes, notify) are WatchCli's.
 /// </summary>
 public static class Cli
 {
@@ -21,6 +23,18 @@ public static class Cli
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
+
+    /// <summary>The exit code of the verb the arguments name, or null when they name none and the web host runs.</summary>
+    public static async Task<int?> RunAsync(string[] args, TextWriter output, TextWriter errors)
+    {
+        return args switch
+        {
+            ["dump", var path] => Dump(path),
+            ["measure", var config, var path] => Measure(config, path),
+            [var verb, ..] when WatchCli.Verbs.Contains(verb) => await WatchCli.RunAsync(args, output, errors),
+            _ => null,
+        };
+    }
 
     public static int Dump(string path)
     {

@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using BGPWatch.Core.Application;
 using BGPWatch.Core.Domain;
@@ -58,7 +57,7 @@ public static class LabEndpoints
 
     private static async Task<IResult> TriggerAsync(HttpRequest request, Settings settings, DockerEngine docker, LabSnapshots snapshots, ILoggerFactory logs, CancellationToken c)
     {
-        var scenario = (await BodyAsync(request, c))["scenario"]?.ToString() ?? "both";
+        var scenario = (await JsonBody.ReadAsync(request, c))["scenario"]?.ToString() ?? "both";
         if (!Scenarios.TryGetValue(scenario, out var prefixes))
         {
             return Failure(StatusCodes.Status400BadRequest, "unknown scenario");
@@ -105,7 +104,7 @@ public static class LabEndpoints
         {
             return Disabled();
         }
-        if ((await BodyAsync(request, c))["on"] is not JsonValue value || !value.TryGetValue<bool>(out var on))
+        if ((await JsonBody.ReadAsync(request, c))["on"] is not JsonValue value || !value.TryGetValue<bool>(out var on))
         {
             return Failure(StatusCodes.Status400BadRequest, "on must be true or false");
         }
@@ -135,7 +134,7 @@ public static class LabEndpoints
         {
             return Disabled();
         }
-        var body = await BodyAsync(request, c);
+        var body = await JsonBody.ReadAsync(request, c);
         var from = body["from"]?.ToString() ?? "transit";
         if (LabView.Routers.FirstOrDefault(r => r.Role == from) is not { } router)
         {
@@ -326,20 +325,6 @@ public static class LabEndpoints
     private static string ContainerOf(string role)
     {
         return LabView.Routers.Single(r => r.Role == role).Container;
-    }
-
-    private static async Task<JsonObject> BodyAsync(HttpRequest request, CancellationToken c)
-    {
-        using var reader = new StreamReader(request.Body);
-        var text = await reader.ReadToEndAsync(c);
-        try
-        {
-            return text.Trim() == "" ? [] : JsonNode.Parse(text) as JsonObject ?? [];
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
     }
 
     private static IResult Disabled()

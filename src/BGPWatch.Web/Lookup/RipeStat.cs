@@ -28,25 +28,30 @@ public sealed record SelfLookup(string Ip, string Via, string Resource, string? 
 
 /// <summary>
 /// Thin adapter over the RIPEstat Data API: which prefix covers an address, who
-/// originates it, who holds that AS, and what RPKI says about the pair. Answers are
-/// cached for ten minutes, at most MaxCached of them. The fetcher and the clock are
-/// injected so it is tested offline.
+/// originates it, who holds that AS, what RPKI says about the pair, and the routes,
+/// ROAs and prefixes the monitor seeds from. Answers are cached for ten minutes, at
+/// most MaxCached of them, except the looking glass's, large and read once per seed.
+/// A call is cut after the call timeout (the looking glass gets four times as long).
+/// The fetcher and the clock are injected so it is tested offline.
 /// </summary>
-public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fetch, Func<TimeSpan> clock)
+public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fetch, Func<TimeSpan> clock, TimeSpan? callTimeout = null)
 {
     public const string SourceApp = "ptirc-bgpwatch";
     public static readonly TimeSpan Ttl = TimeSpan.FromSeconds(600);
+    public static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(15);
+    public const int LongCallFactor = 4;
     public const int MaxCached = 2048;
 
     private const string Base = "https://stat.ripe.net/data/{0}/data.json";
 
     private readonly ConcurrentDictionary<string, (TimeSpan At, JsonNode Data)> cache = new();
+    private readonly TimeSpan timeout = callTimeout ?? CallTimeout;
 
-    /// <summary>A fetcher over HTTP that names this application.</summary>
+    /// <summary>A fetcher over HTTP that names this application; the calls bound their own time.</summary>
     public static Func<string, CancellationToken, Task<JsonNode?>> Over(HttpClient http)
     {
         http.DefaultRequestHeaders.UserAgent.ParseAdd(SourceApp);
-        http.Timeout = TimeSpan.FromSeconds(15);
+        http.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
         return async (url, cancel) => JsonNode.Parse(await http.GetStringAsync(url, cancel));
     }
 
@@ -95,6 +100,68 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         }
     }
 
+    /// <summary>
+    /// The ROAs RIPEstat weighs when validating a prefix for an origin, as validated
+    /// payloads: every one it lists, whatever verdict it gave them.
+    /// </summary>
+    public async Task<List<Core.Domain.Roa>> RoasAsync(string prefix, long asn, CancellationToken cancel)
+    {
+        var data = await DataAsync("rpki-validation", cancel, ("resource", $"AS{asn}"), ("prefix", prefix));
+        return [.. (data["validating_roas"]?.AsArray() ?? []).Select(roa => new Core.Domain.Roa(
+            Prefixes.ParseLoose(roa!["prefix"]!.GetValue<string>()), (int)roa["max_length"]!.GetValue<long>(), long.Parse(roa["origin"]!.ToString())))];
+    }
+
+    /// <summary>The prefixes announced inside a prefix today, each with its origin, from the routing status.</summary>
+    public async Task<List<(string Prefix, long? Origin)>> MoreSpecificsAsync(string prefix, CancellationToken cancel)
+    {
+        var data = await DataAsync("routing-status", cancel, ("resource", prefix));
+        return [.. (data["more_specifics"]?.AsArray() ?? []).Select(m => (m!["prefix"]!.GetValue<string>(), AsnOf(m["origin"])))];
+    }
+
+    /// <summary>
+    /// The route every RIS peer holds for an exact prefix, from the looking glass, as
+    /// announcements seen at <paramref name="seenAt"/> from the vantage point "rrcNN address".
+    /// </summary>
+    public async Task<List<Announcement>> LookingGlassAsync(string prefix, DateTime seenAt, CancellationToken cancel)
+    {
+        var data = await FetchAsync("looking-glass", UrlOf("looking-glass", ("resource", prefix)), timeout * LongCallFactor, cancel);
+        var routes = new List<Announcement>();
+        foreach (var collector in data["rrcs"]?.AsArray() ?? [])
+        {
+            var host = collector!["rrc"]?.GetValue<string>()?.ToLowerInvariant() ?? "ris";
+            foreach (var peer in collector["peers"]?.AsArray() ?? [])
+            {
+                var path = PathOf(peer!["as_path"]?.GetValue<string>() ?? "");
+                if (path.Length == 0 && AsnOf(peer["asn_origin"] ?? peer["asn_orgin"]) is { } origin)
+                {
+                    path = [origin];
+                }
+                var nextHop = IPAddress.TryParse(peer["next_hop"]?.GetValue<string>(), out var hop) ? hop.ToString() : null;
+                var seen = Prefixes.ParseLoose(peer["prefix"]?.GetValue<string>() ?? prefix);
+                routes.Add(Announcement.Of(seen, path, $"{host} {peer["peer"]?.GetValue<string>()}", nextHop, seenAt));
+            }
+        }
+        return routes;
+    }
+
+    /// <summary>The prefixes an AS announces today, as enough RIS peers see them.</summary>
+    public async Task<List<string>> AnnouncedPrefixesAsync(long asn, CancellationToken cancel)
+    {
+        var data = await DataAsync("announced-prefixes", cancel, ("resource", $"AS{asn}"));
+        return [.. (data["prefixes"]?.AsArray() ?? []).Select(p => Prefixes.ParseLoose(p!["prefix"]!.GetValue<string>()).ToString())];
+    }
+
+    /// <summary>An AS path as the looking glass writes it, AS_SET members flattened in order.</summary>
+    private static long[] PathOf(string text)
+    {
+        return [.. text.Split([' ', '{', '}', ',', '[', ']'], StringSplitOptions.RemoveEmptyEntries).Select(long.Parse)];
+    }
+
+    private static long? AsnOf(JsonNode? node)
+    {
+        return node is not null && long.TryParse(node.ToString().TrimStart('A', 'S'), out var asn) ? asn : null;
+    }
+
     private async Task<Rpki> RpkiAsync(long asn, string prefix, CancellationToken cancel)
     {
         var data = await DataAsync("rpki-validation", cancel, ("resource", $"AS{asn}"), ("prefix", prefix));
@@ -106,22 +173,42 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         return new Rpki(data["status"]?.GetValue<string>() ?? "unknown", [.. roas]);
     }
 
+    /// <summary>A data call's answer, from the cache while it is younger than the TTL.</summary>
     private async Task<JsonNode> DataAsync(string call, CancellationToken cancel, params (string Name, string Value)[] parameters)
     {
-        var query = string.Join("&", parameters.Append((Name: "sourceapp", Value: SourceApp))
-            .Select(p => $"{p.Name}={WebUtility.UrlEncode(p.Value)}"));
-        var url = $"{string.Format(Base, call)}?{query}";
+        var url = UrlOf(call, parameters);
         var now = clock();
         if (cache.TryGetValue(url, out var cached) && now - cached.At < Ttl)
         {
             return cached.Data;
         }
+        var data = await FetchAsync(call, url, timeout, cancel);
+        Store(url, now, data);
+        return data;
+    }
+
+    private static string UrlOf(string call, params (string Name, string Value)[] parameters)
+    {
+        var query = string.Join("&", parameters.Append((Name: "sourceapp", Value: SourceApp))
+            .Select(p => $"{p.Name}={WebUtility.UrlEncode(p.Value)}"));
+        return $"{string.Format(Base, call)}?{query}";
+    }
+
+    /// <summary>A data call's answer, asked now and cut after <paramref name="within"/>.</summary>
+    private async Task<JsonNode> FetchAsync(string call, string url, TimeSpan within, CancellationToken cancel)
+    {
         JsonNode? document;
+        using var bounded = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+        bounded.CancelAfter(within);
         try
         {
-            document = await fetch(url, cancel);
+            document = await fetch(url, bounded.Token);
         }
-        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        catch (OperationCanceledException) when (!cancel.IsCancellationRequested)
+        {
+            throw new RipeStatException($"RIPEstat {call}: no answer within {within.TotalSeconds:0} s");
+        }
+        catch (HttpRequestException e)
         {
             throw new RipeStatException($"RIPEstat {call}: {e.Message}");
         }
@@ -130,7 +217,6 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         {
             throw new RipeStatException($"RIPEstat {call}: {status ?? "no status"}");
         }
-        Store(url, now, data);
         return data;
     }
 

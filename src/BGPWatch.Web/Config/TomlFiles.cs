@@ -16,6 +16,15 @@ public sealed record MonitoredEntry(string Prefix, long[] ExpectedOrigins, strin
     }
 }
 
+/// <summary>A validated ROA payload as a config.toml writes it.</summary>
+public sealed record VrpEntry(string Prefix, int MaxLength, long OriginAs)
+{
+    public Roa ToDomain()
+    {
+        return new Roa(IPNetwork.Parse(Prefix), MaxLength, OriginAs);
+    }
+}
+
 /// <summary>A moment of an incident's documented timeline, labelled in English and in Romanian.</summary>
 public sealed record IncidentEvent(DateTime At, string Label, string LabelRo)
 {
@@ -35,13 +44,13 @@ public sealed record IncidentFile(IReadOnlyList<MonitoredEntry> Monitored, IRead
 /// </summary>
 public static class TomlFiles
 {
-    private static readonly TomlSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+    /// <summary>snake_case keys, as every TOML file of the project writes them.</summary>
+    public static readonly TomlSerializerOptions Options = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
     public static DetectorConfig LoadDetector(string path)
     {
         var file = Read(path);
-        var vrps = file.Vrp.Select(v => new Roa(IPNetwork.Parse(v.Prefix), v.MaxLength, v.OriginAs));
-        return new DetectorConfig([.. file.Monitored.Select(m => m.ToDomain())], [.. vrps]);
+        return new DetectorConfig([.. file.Monitored.Select(m => m.ToDomain())], [.. file.Vrp.Select(v => v.ToDomain())]);
     }
 
     public static IncidentFile LoadIncident(string path)
@@ -65,7 +74,6 @@ public static class TomlFiles
         public List<EventEntry> Events { get; init; } = [];
     }
 
-    private sealed record VrpEntry(string Prefix, int MaxLength, long OriginAs);
 
     private sealed record EventEntry(DateTimeOffset At, string Label, string LabelRo);
 }

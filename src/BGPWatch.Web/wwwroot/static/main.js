@@ -7,6 +7,7 @@ import { mountStory } from "./story.js";
 import { startIncident2008 } from "./timeline.js";
 import { startPrefix } from "./prefix.js";
 import { startLookup } from "./lookup.js";
+import { startMonitor } from "./monitor.js";
 import { wireDisclosures } from "./disclosures.js";
 import { watchStatus } from "./status.js";
 
@@ -25,4 +26,5 @@ document.querySelectorAll("a[data-lang]").forEach((link) => link.addEventListene
 if ($("lanes")) startIncident2008();
 if ($("prefix-choice")) startPrefix();
 if ($("lookup-form")) startLookup();
+if ($("monitor-add")) startMonitor();
 

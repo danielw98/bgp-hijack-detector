@@ -38,6 +38,11 @@ public class IncidentLoaderTests
             return Task.FromResult(stored);
         }
 
+        public Task<long> PruneAsync(string source, DateTime before, CancellationToken cancel)
+        {
+            return Task.FromResult(0L);
+        }
+
         public Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)
         {
             Replaced.Add((updates, alerts, source));
@@ -134,6 +139,11 @@ public class IncidentLoaderTests
         {
             Counts++;
             return Task.FromResult(new SourceCounts(0, 0));
+        }
+
+        public Task<long> PruneAsync(string source, DateTime before, CancellationToken cancel)
+        {
+            return Task.FromResult(0L);
         }
 
         public Task ReplaceAsync(IReadOnlyList<Announcement> updates, IReadOnlyList<Alert> alerts, string source, CancellationToken cancel)

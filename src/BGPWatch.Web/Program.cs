@@ -13,17 +13,14 @@ using BGPWatch.Web.Lookup;
 using BGPWatch.Web.Native;
 using BGPWatch.Web.Reading;
 using BGPWatch.Web.Storage;
+using BGPWatch.Web.Watch;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.WebEncoders;
 using Npgsql;
 
-if (args is ["dump", var dumped])
+if (await Cli.RunAsync(args, Console.Out, Console.Error) is { } code)
 {
-    return Cli.Dump(dumped);
-}
-if (args is ["measure", var config, var measured])
-{
-    return Cli.Measure(config, measured);
+    return code;
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +35,7 @@ builder.Services.AddSingleton<IUpdateArchive, MrtArchive>();
 builder.Services.AddSingleton(sp => new IncidentLoader(
     sp.GetRequiredService<IRouteLog>(), sp.GetRequiredService<IUpdateArchive>(), sp.GetRequiredService<ILogger<IncidentLoader>>()));
 builder.Services.AddSingleton(TomlFiles.LoadDetector(settings.DetectorConfig));
+builder.Services.AddSingleton(sp => new IncidentNotifier(sp.GetRequiredService<ILogger<IncidentNotifier>>()));
 builder.Services.AddSingleton<LabPipeline>();
 builder.Services.AddSingleton<BmpStation>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<BmpStation>());
@@ -46,6 +44,11 @@ builder.Services.AddSingleton(new DockerEngine(DockerEngine.Client()));
 builder.Services.AddSingleton(sp => LabSnapshots.Over(
     sp.GetRequiredService<DockerEngine>(), sp.GetRequiredService<BmpStation>(), () => Stopwatch.GetElapsedTime(started)));
 builder.Services.AddSingleton(new RipeStat(RipeStat.Over(new HttpClient()), () => Stopwatch.GetElapsedTime(started)));
+builder.Services.AddSingleton(new WatchFile(settings.WatchConfig));
+builder.Services.AddSingleton(sp => new WatchService(
+    sp.GetRequiredService<WatchFile>(), sp.GetRequiredService<IRouteLog>(), sp.GetRequiredService<IncidentNotifier>(),
+    sp.GetRequiredService<RipeStat>(), new HttpClient { Timeout = WebhookNotifier.Timeout }, sp.GetRequiredService<ILoggerFactory>()));
+builder.Services.AddHostedService(sp => sp.GetRequiredService<WatchService>());
 builder.Services.AddSingleton<IReadOnlyDictionary<Language, ReadingList>>(new Dictionary<Language, ReadingList>
 {
     [Language.En] = ReadingList.EmbeddedEnglish(),
@@ -106,5 +109,6 @@ app.MapGet("/ghid", (HttpContext http) => Results.Redirect($"{http.Request.PathB
 app.MapGet("/referinte", (HttpContext http) => Results.Redirect($"{http.Request.PathBase}/references{http.Request.QueryString}", permanent: true));
 ReadEndpoints.Map(app);
 LabEndpoints.Map(app);
+WatchEndpoints.Map(app);
 await app.RunAsync();
 return 0;

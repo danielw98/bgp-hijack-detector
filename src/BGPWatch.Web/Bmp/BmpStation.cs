@@ -39,7 +39,7 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
 
     protected override async Task ExecuteAsync(CancellationToken stop)
     {
-        await lab.Pipeline.StartAsync(stop);
+        await lab.StartAsync(stop);
         var listener = new TcpListener(IPAddress.Any, Port);
         listener.Start();
         logger.LogInformation("BMP station listening on port {Port}", Port);
@@ -134,7 +134,7 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
     {
         try
         {
-            await lab.Pipeline.ProcessAsync(routes, stop);
+            await lab.ProcessAsync(routes, stop);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
@@ -143,10 +143,25 @@ public sealed class BmpStation(LabPipeline lab, ILogger<BmpStation> logger) : Ba
     }
 }
 
-/// <summary>The pipeline of the live lab, whose rows carry the source "lab".</summary>
-public sealed class LabPipeline(DetectorConfig config, IRouteLog log, ILogger<LabPipeline> logger)
+/// <summary>
+/// The pipeline of the live lab, whose rows carry the source "lab"; its alerts go to the
+/// incident desk, so a hijack run on the lab notifies like one seen on the Internet.
+/// </summary>
+public sealed class LabPipeline(DetectorConfig config, IRouteLog log, IncidentNotifier desk, ILogger<LabPipeline> logger)
 {
     public const string Source = "lab";
 
     public Pipeline Pipeline { get; } = new(config, log, logger, Source);
+
+    public async Task StartAsync(CancellationToken cancel)
+    {
+        await Pipeline.StartAsync(cancel);
+        await desk.WatchAsync(Source, config.Monitored.Select(m => m.Prefix), Pipeline.Offends, cancel);
+    }
+
+    public async Task ProcessAsync(IReadOnlyList<Announcement> routes, CancellationToken cancel)
+    {
+        var alerts = await Pipeline.ProcessAsync(routes, cancel);
+        await desk.OfferAsync(Source, routes, alerts, cancel);
+    }
 }

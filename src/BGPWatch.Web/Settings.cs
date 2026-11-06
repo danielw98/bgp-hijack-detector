@@ -1,9 +1,11 @@
 namespace BGPWatch.Web;
 
 /// <summary>
-/// Where the app finds its files, whether it may drive the lab, and the URL prefix it is
-/// served under (PATH_BASE, empty at the root). Read from the environment, with the paths
-/// of the container image as defaults.
+/// Where the app finds its files, whether it may drive the lab, the URL prefix it is
+/// served under (PATH_BASE, empty at the root), the watch file of the Internet feed and
+/// the token that lets a page edit it (WATCH_TOKEN; empty means only a client on a
+/// private network may). Read from the environment, with the paths of the container
+/// image as defaults.
 /// </summary>
 public sealed record Settings(
     string ConnectionString,
@@ -12,7 +14,9 @@ public sealed record Settings(
     string IncidentsDir,
     string DetectorConfig,
     string Schema,
-    string PathBase)
+    string PathBase,
+    string WatchConfig,
+    string WatchToken)
 {
     public static Settings From(IConfiguration config)
     {
@@ -23,7 +27,9 @@ public sealed record Settings(
             config["INCIDENTS_DIR"] ?? "/data/incidents",
             config["DETECTOR_CONFIG"] ?? "/data/config.toml",
             config["SCHEMA"] ?? "/data/schema.sql",
-            (config["PATH_BASE"] ?? "").TrimEnd('/'));
+            (config["PATH_BASE"] ?? "").TrimEnd('/'),
+            config["WATCH_CONFIG"] ?? "/data/watch/bgpwatch.toml",
+            config["WATCH_TOKEN"] ?? "");
     }
 
     /// <summary>The folder of a recorded incident, or null when the name names none.</summary>

@@ -15,5 +15,6 @@ services:
     restart: unless-stopped
     environment:
       PATH_BASE: /bgp
+      WATCH_TOKEN: ${WATCH_TOKEN:-}
     networks:
       studlab_net:

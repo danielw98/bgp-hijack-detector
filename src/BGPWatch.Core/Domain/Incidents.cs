@@ -39,7 +39,7 @@ public static class Incidents
         var open = new Dictionary<(string, string, long?), Builder>();
         foreach (var alert in alerts.OrderBy(a => a.RaisedAt).ThenBy(a => a.Id))
         {
-            var key = (alert.Source, MonitoredOf(alert, networks), alert.ObservedOrigin);
+            var key = (alert.Source, MonitoredOf(alert.Prefix, alert.CoveringPrefix, networks), alert.ObservedOrigin);
             if (!open.TryGetValue(key, out var incident) || alert.RaisedAt - incident.LastSeen > gap)
             {
                 incident = new Builder(key, alert.RaisedAt);
@@ -55,13 +55,13 @@ public static class Incidents
     /// The monitored prefix the alert belongs to: its covering prefix when it names one,
     /// else the longest monitored prefix containing it, else its own prefix.
     /// </summary>
-    private static string MonitoredOf(StoredAlert alert, List<IPNetwork> networks)
+    public static string MonitoredOf(string prefix, string? coveringPrefix, IReadOnlyList<IPNetwork> monitored)
     {
-        if (!string.IsNullOrEmpty(alert.CoveringPrefix))
+        if (!string.IsNullOrEmpty(coveringPrefix))
         {
-            return alert.CoveringPrefix;
+            return coveringPrefix;
         }
-        return networks.MostSpecific(IPNetwork.Parse(alert.Prefix))?.ToString() ?? alert.Prefix;
+        return monitored.MostSpecific(IPNetwork.Parse(prefix))?.ToString() ?? prefix;
     }
 
     private sealed class Builder((string Source, string Prefix, long? Origin) key, DateTime firstSeen)

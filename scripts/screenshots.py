@@ -1,8 +1,9 @@
-"""Write the README screenshots: the four views of the application and the references
+"""Write the README screenshots: the five views of the application and the references
 page, at 1600x900 in Chromium, in English into media/ and in Romanian into media/ro/.
 Read-only: no lab action.
 
-Usage: python scripts/screenshots.py [--url https://student-dev.ro/bgp/]
+Usage: python scripts/screenshots.py [--url https://student-dev.ro/bgp/] [--views monitor,lookup]
+(--views takes file names: story, 2008, prefixes, lookup, monitor, references; default all)
 Needs: pip install playwright, then python -m playwright install chromium
 """
 
@@ -16,21 +17,26 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 MEDIA = {"en": ROOT / "media", "ro": ROOT / "media" / "ro"}
 VIEWPORT = {"width": 1600, "height": 900}
-VIEWS = {"step-3": "story", "2008": "2008", "prefixes": "prefixes", "lookup": "lookup"}  # hash -> file name
+VIEWS = {"step-3": "story", "2008": "2008", "prefixes": "prefixes", "lookup": "lookup", "monitor": "monitor"}  # hash -> file name
 SETTLE_MS = 1500
 LOOKUP_MS = 30000
 
 
-def shoot_app(browser, base: str, lang: str) -> None:
+def shoot_app(browser, base: str, lang: str, wanted: set[str]) -> None:
     page = browser.new_page(viewport=VIEWPORT)
     page.goto(f"{base}?lang={lang}", wait_until="load")
     page.wait_for_selector("svg.story-map", state="attached", timeout=20000)
     for view, name in VIEWS.items():
+        if name not in wanted:
+            continue
         page.evaluate("(hash) => { location.hash = hash; }", view)
         page.wait_for_timeout(SETTLE_MS)
         if view == "lookup":
             page.click("#btn-lookup")
             page.wait_for_selector("#lookup-result:not([hidden])", timeout=LOOKUP_MS)
+            page.wait_for_timeout(SETTLE_MS)
+        if view == "monitor":
+            page.wait_for_selector("#monitor-table tbody tr", timeout=LOOKUP_MS)
             page.wait_for_timeout(SETTLE_MS)
         page.screenshot(path=str(MEDIA[lang] / f"app-{name}.png"))
     page.close()
@@ -47,13 +53,17 @@ def shoot_page(browser, url: str, path: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="https://student-dev.ro/bgp/")
-    base = parser.parse_args().url.rstrip("/") + "/"
+    parser.add_argument("--views", default="", help="comma-separated file names to shoot; default all")
+    args = parser.parse_args()
+    base = args.url.rstrip("/") + "/"
+    wanted = set(filter(None, args.views.split(","))) or {*VIEWS.values(), "references"}
     with sync_playwright() as p:
         browser = p.chromium.launch()
         for lang, folder in MEDIA.items():
             folder.mkdir(parents=True, exist_ok=True)
-            shoot_app(browser, base, lang)
-            shoot_page(browser, f"{base}references?lang={lang}", folder / "references.png")
+            shoot_app(browser, base, lang, wanted)
+            if "references" in wanted:
+                shoot_page(browser, f"{base}references?lang={lang}", folder / "references.png")
         browser.close()
     for shot in sorted(ROOT.joinpath("media").rglob("*.png")):
         print(shot.relative_to(ROOT))

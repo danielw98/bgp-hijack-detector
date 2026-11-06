@@ -50,8 +50,10 @@ services:
       ConnectionStrings__BGPWatch: Host=db;Username=bgp;Password=bgp;Database=bgp
       LAB_CONTROL: "1"
       LAB_ATTACKER_CONTAINER: lab-attacker
+      WATCH_CONFIG: /data/watch/bgpwatch.toml
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./watch:/data/watch
     networks:
       labnet:
         ipv4_address: 10.10.0.100

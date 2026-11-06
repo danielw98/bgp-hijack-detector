@@ -1,0 +1,7 @@
+{"type":"ris_message","data":{"timestamp":1762456801.37,"peer":"80.81.195.178","peer_asn":"57976","id":"12-1762456801-1","host":"rrc12.ripe.net","type":"UPDATE","path":[57976,3356,3333],"community":[[3356,2],[3356,22]],"origin":"igp","announcements":[{"next_hop":"80.81.195.178","prefixes":["193.0.0.0/21","193.0.10.0/23"]}],"withdrawals":["2001:67c:2e8::/48"]}}
+{"type":"ris_message","data":{"timestamp":1762456802.5,"peer":"2001:7f8:1::a500:2914:1","peer_asn":"2914","id":"01-1762456802-1","host":"rrc01.ripe.net","type":"UPDATE","path":[2914,1299,[64496,64497]],"origin":"igp","announcements":[{"next_hop":"2001:7f8:1::a500:2914:1","prefixes":["2001:db8::/32"]}]}}
+{"type":"ris_message","data":{"timestamp":1762456803,"peer":"1.2.3.4","peer_asn":"64500","id":"00-1762456803-1","host":"rrc00.ripe.net","type":"UPDATE","withdrawals":["198.51.100.0/24"]}}
+{"type":"ris_message","data":{"timestamp":1762456804,"peer":"1.2.3.4","peer_asn":"64500","id":"00-1762456804-1","host":"rrc00.ripe.net","type":"KEEPALIVE"}}
+{"type":"ris_subscribe_ok","data":{"prefix":"193.0.0.0/21","moreSpecific":true,"type":"UPDATE","socketOptions":{"acknowledge":true}}}
+{"type":"pong","data":null}
+{"type":"ris_error","data":{"message":"Invalid prefix"}}
