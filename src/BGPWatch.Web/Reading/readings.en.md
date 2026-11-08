@@ -1,7 +1,7 @@
 ---
 title: "BGP: a reading list for the PTIRC project"
 subtitle: "An ordered path from the protocol to route-hijack detection"
-date: "Checked on 5 and 11 October 2026"
+date: "Checked on 5 and 11 October and on 8 November 2026"
 lang: en
 ---
 
@@ -49,7 +49,9 @@ These five sources give the most understanding per hour invested. Together they 
 
 # Lineage of the BGP specification
 
-Four protocol versions in six RFCs, from BGP-1 (1989) to RFC 4271 (2006). The relations are those of the RFC Editor (“obsoletes”, “obsoleted by”), and what changed comes from the comparison appendices of each document.
+Four protocol versions in six RFCs, from BGP-1 (1989) to RFC 4271 (2006), which remains the specification in force. The relations are those of the RFC Editor (“obsoletes”, “obsoleted by”), and what changed comes from the comparison appendices of each document.
+
+The revision of RFC 4271, `draft-ietf-idr-bgp4-rfc4271bis`, is a working document of the IETF IDR working group and not yet an RFC (checked on 8 November 2026).
 
 ## RFC 1105, Border Gateway Protocol (BGP)
 
@@ -107,7 +109,7 @@ Four protocol versions in six RFCs, from BGP-1 (1989) to RFC 4271 (2006). The re
 
 # Updates to RFC 4271
 
-Twelve RFCs modify RFC 4271 without obsoleting it (the RFC Editor's “updated by” relation, as of 11 October 2026). Four of them bear directly on security: 7606, 7607, 8212 and 9774.
+Twelve RFCs modify RFC 4271 without obsoleting it (the RFC Editor's “updated by” relation, as of 8 November 2026). Four of them bear directly on security: 7606, 7607, 8212 and 9774.
 
 ## RFC 4724, Graceful Restart Mechanism for BGP
 
@@ -512,7 +514,7 @@ For each incident below, the first paragraph of “Contents” sums up what happ
 
 - Year: 2026
 - Summary: ASPA publishes an AS's providers in RPKI and uses them to check whether an AS_PATH respects the declared relationships; still a draft, not an RFC.
-- Citation: A. Azimov, E. Bogomazov, R. Bush, K. Patel, J. Snijders, K. Sriram, “BGP AS_PATH Verification Based on Autonomous System Provider Authorization (ASPA) Objects”, Internet-Draft draft-ietf-sidrops-aspa-verification-28, IETF, 24 August 2026 (work in progress, not an RFC as of 11 October 2026).
+- Citation: A. Azimov, E. Bogomazov, R. Bush, K. Patel, J. Snijders, K. Sriram, “BGP AS_PATH Verification Based on Autonomous System Provider Authorization (ASPA) Objects”, Internet-Draft draft-ietf-sidrops-aspa-verification-29, IETF, 16 October 2026 (work in progress, submitted to the IESG for publication, not an RFC as of 8 November 2026).
 - Link: [datatracker.ietf.org, the ASPA draft](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/)
 - Contents: each AS publishes the list of its providers in RPKI, and the router that receives an announcement checks whether each hop in the AS_PATH respects the declared relationships.
 - Why: it detects route leaks and AS_PATH manipulation, where RFC 6811 does not help.

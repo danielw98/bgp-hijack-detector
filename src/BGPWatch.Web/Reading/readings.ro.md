@@ -1,7 +1,7 @@
 ---
 title: "BGP: listă de lecturi pentru proiectul PTIRC"
 subtitle: "Parcurs ordonat, de la protocol la detecția deturnărilor de rute"
-date: "Verificată la 5 și 11 octombrie 2026"
+date: "Verificată la 5 și 11 octombrie și la 8 noiembrie 2026"
 lang: ro
 ---
 
@@ -49,7 +49,9 @@ Aceste cinci surse dau cea mai multă înțelegere pe oră investită. Împreun�
 
 # Genealogia specificației BGP
 
-Patru versiuni ale protocolului în șase RFC-uri, de la BGP-1 (1989) la RFC 4271 (2006). Relațiile sunt cele din RFC Editor („obsoletes”, „obsoleted by”), iar ce s-a schimbat vine din anexele de comparație ale fiecărui document.
+Patru versiuni ale protocolului în șase RFC-uri, de la BGP-1 (1989) la RFC 4271 (2006), care rămâne specificația în vigoare. Relațiile sunt cele din RFC Editor („obsoletes”, „obsoleted by”), iar ce s-a schimbat vine din anexele de comparație ale fiecărui document.
+
+Revizia lui RFC 4271, `draft-ietf-idr-bgp4-rfc4271bis`, este document de lucru al grupului IDR din IETF și nu a devenit încă RFC (verificat pe 8 noiembrie 2026).
 
 ## RFC 1105, Border Gateway Protocol (BGP)
 
@@ -107,7 +109,7 @@ Patru versiuni ale protocolului în șase RFC-uri, de la BGP-1 (1989) la RFC 427
 
 # Actualizările RFC 4271
 
-Douăsprezece RFC-uri modifică RFC 4271 fără să-l înlocuiască (relația „updated by” din RFC Editor, la 11 octombrie 2026). Securitatea o privesc direct 7606, 7607, 8212 și 9774.
+Douăsprezece RFC-uri modifică RFC 4271 fără să-l înlocuiască (relația „updated by” din RFC Editor, la 8 noiembrie 2026). Securitatea o privesc direct 7606, 7607, 8212 și 9774.
 
 ## RFC 4724, Graceful Restart Mechanism for BGP
 
@@ -512,7 +514,7 @@ Pentru fiecare incident de mai jos, primul paragraf din „Conținut” rezumă 
 
 - An: 2026
 - Pe scurt: ASPA publică în RPKI furnizorii unui AS și verifică pe baza lor dacă un AS_PATH respectă relațiile declarate; încă draft, nu RFC.
-- Citare: A. Azimov, E. Bogomazov, R. Bush, K. Patel, J. Snijders, K. Sriram, „BGP AS_PATH Verification Based on Autonomous System Provider Authorization (ASPA) Objects”, Internet-Draft draft-ietf-sidrops-aspa-verification-28, IETF, 24 august 2026 (lucrare în curs, nu este RFC la 11 octombrie 2026).
+- Citare: A. Azimov, E. Bogomazov, R. Bush, K. Patel, J. Snijders, K. Sriram, „BGP AS_PATH Verification Based on Autonomous System Provider Authorization (ASPA) Objects”, Internet-Draft draft-ietf-sidrops-aspa-verification-29, IETF, 16 octombrie 2026 (lucrare în curs, trimisă la IESG pentru publicare, nu este RFC la 8 noiembrie 2026).
 - Link: [datatracker.ietf.org, draftul ASPA](https://datatracker.ietf.org/doc/draft-ietf-sidrops-aspa-verification/)
 - Conținut: fiecare AS publică în RPKI lista furnizorilor săi, iar ruterul care primește un anunț verifică dacă fiecare pas din AS_PATH respectă relațiile declarate.
 - De ce: detectează route leak-urile și manipulările de AS_PATH, unde RFC 6811 nu ajută.
