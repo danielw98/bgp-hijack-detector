@@ -2,7 +2,7 @@
 
 [English](README.md) | **Română**
 
-Proiect pentru cursul PTIRC (masterul TCSI, Universitatea Națională de Știință și Tehnologie POLITEHNICA București), tema 9. Un detector defensiv: urmărește anunțurile BGP pentru prefixele monitorizate și ridică o alertă când un alt sistem autonom le anunță. Tehnica este cea folosită de ARTEMIS (FORTH-ICS) și BGPalerter (NTT).
+Proiect pentru cursul PTIRC (masterul TCSI, Universitatea Națională de Știință și Tehnologie POLITEHNICA București). Un detector defensiv: urmărește anunțurile BGP pentru prefixele monitorizate și ridică o alertă când un alt sistem autonom le anunță. Tehnica este cea folosită de ARTEMIS (FORTH-ICS) și BGPalerter (NTT).
 
 Detectează trei situații:
 
@@ -93,7 +93,7 @@ Parola Postgres din `docker-compose.yml` (`bgp`) este valoarea implicită a demo
 
 ## Ce face fiecare parte
 
-Pagina de pornire este aplicația: cinci vederi în bara de sus (Cum funcționează, YouTube 2008, Prefixe, Verificare, Monitor) și butoanele „Ghid” și „Referințe”. Ghidul (`/guide`) are șase capitole scurte de citit de sus în jos, fiecare cu o figură fixă a laboratorului într-un moment ales și o legătură către pasul său din poveste; fiecare vedere a aplicației trimite la capitolul ei din ghid. În ghid, termenii subliniați punctat deschid o definiție. Referințele (`/references`) sunt lecturile pentru a învăța BGP, pe etape, cu genealogia specificației de la RFC 1105 la RFC 4271.
+Pagina de pornire este aplicația: cinci vederi în bara de sus (Cum funcționează, YouTube 2008, Prefixe, Verificare, Monitor) și butoanele „Ghid” și „Referințe”. Ghidul (`/guide`) are șase capitole scurte de citit de sus în jos, primele cinci cu harta poveștii la pasul pe care îl descriu și o legătură către acel pas; fiecare vedere a aplicației trimite la capitolul ei din ghid. În ghid, termenii subliniați punctat deschid o definiție. Referințele (`/references`) sunt lecturile pentru a învăța BGP, pe etape, cu genealogia specificației de la RFC 1105 la RFC 4271.
 
 1. **Cum funcționează.** O deturnare de rută în cinci pași, pentru un cititor care n-a auzit de BGP: în stânga, o hartă fixă a laboratorului; în dreapta, un singur panou de text; „Înapoi” și „Următorul” (sau punctele numerotate) pentru a avansa. Pașii: o rețea își anunță adresele, un pachet merge unde spun rutele, atacatorul pretinde jumătate din bloc și pachetul ajunge la el, detectorul dă alarma (cu întârzierea reală), iar validarea originii la furnizor, față de RPKI, respinge rutele atacatorului. Fiecare fapt vine dintr-un ciclu înregistrat pe routerele reale ale laboratorului (`static/story/cycle.json`, scris de `scripts/record_story.py`), așa că povestea merge și cu laboratorul oprit. La ultimul pas, „Rulează atacul pe routerele reale” anunță sub-prefixul în laborator, spune când a dat detectorul alarma și unde a ajuns pachetul, apoi retrage atacul. `#step-N` deschide pasul N.
 2. **YouTube 2008.** Tot incidentul pe un singur ecran: un rând pentru fiecare dintre cei 11 vecini ai colectorului rrc00, cu banda care arată cui îi trimitea traficul pentru blocul deturnat (roșu către AS17557, verde către YouTube) și, la dreapta, calea AS din momentul ales, cu sistemul autonom care predă ruta originii încadrat. Axa benzilor este împărțită în faze la cele cinci evenimente documentate: fiecare fază are lățimea după rădăcina pătrată a duratei, cu durata reală scrisă deasupra, iar faza comprimată mult (cele 80 de minute ale deturnării) poartă semnul de rupere //. Deasupra stau „Redă” (cursorul merge cu viteză constantă pe bandă, iar eticheta arată ritmul fazei curente), ora și câți vecini trimit spre fiecare origine, apoi evenimentul documentat de RIPE NCC din momentul ales, cu butoane spre cel anterior și cel următor. Tragerea pe benzi sau pe bara de sub ele derulează incidentul. Evenimentele, prima observare la fiecare vecin și datele brute stau închise sub tabel. Actualizările BGP reale (18:45-21:05 UTC, 136.344 de actualizări) se încarcă o singură dată la pornire; detectorul ridică 31 de alerte de sub-prefix, prima la 18:47:57 UTC. „Reîncarcă incidentul din fișiere”, în datele brute, le rescrie fără dubluri.
@@ -129,15 +129,17 @@ Alertele unui prefix și ale unei origini străine formează un incident. Un web
 
 Pagina editează prefixele fișierului; webhook-urile se editează doar în fișier. Pe instanța publică, editările cer tokenul din `WATCH_TOKEN`; fără token, doar un client dintr-o rețea privată (mașina care rulează stack-ul) poate edita. Pagina adaugă prefixe de cel puțin /8 (IPv4) sau /16 (IPv6), cel mult 50 de la un AS și 100 în total; linia de comandă nu are aceste limite. Detectorul în funcțiune aplică fișierul în cel mult cinci secunde de la orice schimbare.
 
-Linia de comandă rulează același cod fără pagină. Cu stack-ul pornit, `bgpwatch.bat` (Windows) sau `./bgpwatch.sh` o rulează în container; fără Docker, `dotnet run --project src/BGPWatch.Web -- <verb>` după `sh detector/mrt/build.sh`:
+Linia de comandă, `bgp-watch`, rulează același cod fără pagină. `bgp-watch.bat` (Windows) sau `./bgp-watch.sh` o rulează în container cât timp stack-ul e pornit, altfel build-ul local (`dotnet build BGPWatch.slnx` după `sh detector/mrt/build.sh`). `bgp-watch help` afișează manualul în forma unei pagini man, iar `bgp-watch help <comanda>` secțiunea unei singure comenzi:
 
-| Verb | Ce face |
+| Comanda | Ce face |
 |---|---|
+| `help [COMANDA]` | manualul, sau secțiunea unei comenzi |
 | `prefixes list` / `prefixes add PREFIX ASN... [--description TEXT]` / `prefixes remove PREFIX` | citește și editează fișierul de urmărire |
 | `check PREFIX` | ce vede RIPEstat astăzi pentru prefix, față de fișier; cod de ieșire 2 la o origine neașteptată |
 | `watch [--json]` | un monitor fără pagină: alertele și incidentele pe stdout (ore UTC), webhook-urile active, fără bază de date |
 | `replay FILE... [--json]` | detectorul peste fișiere MRT (înregistrarea din 2008, de pildă); cod de ieșire 2 când a ridicat ceva |
 | `notify test` | câte o notificare de test pentru fiecare webhook |
+| `serve` | aplicația web însăși, ceea ce rulează containerul |
 | `dump FILE`, `measure CONFIG FILE` | verbele autorului: fiecare rută dintr-un fișier MRT și o măsurătoare a detectorului pe el |
 
 `--config FILE` numește alt fișier de urmărire (implicit: `WATCH_CONFIG`, apoi `watch/bgpwatch.toml`); `--json` scrie câte un obiect JSON pe linie, în cuvintele încărcăturii webhook.
@@ -157,7 +159,7 @@ Limite de știut: RIS Live transmite actualizări, nu tabele, așa că rutele ci
 - `tests/BGPWatch.Tests/`: testele unitare.
 - `detector/mrt/`: parserul BGP și MRT în C, cu harness-ul de fuzzing sub sanitizers.
 - `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: datele incidentului din 2008, configurația laboratorului și schema bazei de date.
-- `watch/`: fișierul de urmărire al monitorului de Internet real (`example.toml` comentat; `bgpwatch.toml` este al tău, nepublicat niciodată); `bgpwatch.bat` și `bgpwatch.sh` rulează linia de comandă în stack.
+- `watch/`: fișierul de urmărire al monitorului de Internet real (`example.toml` comentat; `bgpwatch.toml` este al tău, nepublicat niciodată); `bgp-watch.bat` și `bgp-watch.sh` rulează linia de comandă.
 - `scripts/`: instalatoarele, verificarea paginii, măsurătorile laboratorului, fuzzing-ul parserului, capturile din `media/`.
 - `docker-compose.yml` este forma de producție; `docker-compose.override.yml` (încărcat implicit) adaugă portul local și fișierele montate din arborele de lucru; `docker-compose.server.yml` și `deploy/nginx-bgp.conf` sunt stratul pentru server.
 

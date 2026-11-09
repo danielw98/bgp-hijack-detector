@@ -26,4 +26,5 @@ COPY --from=mrt /mrt/build/libmrt.so .
 COPY detector/schema.sql detector/config.toml /data/
 COPY detector/incidents /data/incidents
 EXPOSE 8080 5000
-ENTRYPOINT ["dotnet", "BGPWatch.dll"]
+ENTRYPOINT ["dotnet", "bgp-watch.dll"]
+CMD ["serve"]

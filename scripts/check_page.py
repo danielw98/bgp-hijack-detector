@@ -8,7 +8,7 @@ crossed by a line, a path or the edge of a box. On the references page, with eve
 closed and with every block open: no horizontal overflow, also inside its scroller, and
 every in-page link has its target. On the guide, no element inside the chapters or
 the footer wider than the prose column (the content box of a chapter) by more than
-1 px, and every still figure loaded. Fails on a script error, a console error, or an
+1 px, and every still figure drawn. Fails on a script error, a console error, or an
 error message a module shows after catching a failure. Also checks the colour tokens of page.css
 for 4.5:1 contrast, refuses emoji in every tracked text file and non-ASCII in code
 comments, and writes one full-page screenshot per size into .playwright-mcp/ (the
@@ -140,7 +140,7 @@ GUIDE_COLUMN_JS = """
   const wide = [...document.querySelectorAll('main .col *, footer *')]
     .filter((el) => el.getBoundingClientRect().width > column + 1)
     .map((el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' ' + Math.round(el.getBoundingClientRect().width) + 'px');
-  const broken = [...document.querySelectorAll('.still img')].filter((img) => !img.complete || !img.naturalWidth).map((img) => img.getAttribute('src'));
+  const broken = [...document.querySelectorAll('.still')].filter((f) => !f.querySelector('svg') || f.querySelector('svg').getBoundingClientRect().width === 0).map((f) => (f.querySelector('figcaption') || {}).textContent || '?');
   return { column, wide: wide.slice(0, 10), broken };
 }
 """

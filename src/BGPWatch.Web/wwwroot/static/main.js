@@ -9,7 +9,6 @@ import { startPrefix } from "./prefix.js";
 import { startLookup } from "./lookup.js";
 import { startMonitor } from "./monitor.js";
 import { wireDisclosures } from "./disclosures.js";
-import { watchStatus } from "./status.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,7 +16,6 @@ if ($("glossary")) renderGlossary($("glossary"));
 wirePopovers();
 document.querySelectorAll("[data-disclosures]").forEach(wireDisclosures);
 document.querySelectorAll("[data-story-view]").forEach(mountStory);
-if ($("dot-lab")) watchStatus(get);
 
 // The language toggle keeps the view or the section the reader is on.
 document.querySelectorAll("a[data-lang]").forEach((link) => link.addEventListener("click", () => {

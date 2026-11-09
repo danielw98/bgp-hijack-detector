@@ -20,9 +20,6 @@
   --on-ink-text: #ffffff;
   --on-ink-muted: #e3e6e1;
   --on-ink-hover: #333333;
-  --on-ink-up: #4cc46d;
-  --on-ink-down: #ff6b7a;
-  --on-ink-unknown: #8a8f99;
   --on-ink-focus: #e8eef8;
   --prose: "Atkinson Hyperlegible Next", system-ui, "Segoe UI", sans-serif;
   --mono: "Atkinson Hyperlegible Mono", Consolas, monospace;
@@ -56,14 +53,10 @@ h2 { font-size: 28px; line-height: 1.25; margin: 64px 0 14px; }
 h3 { font-size: 22px; line-height: 1.3; margin: 0; }
 p { margin: 0 0 16px; }
 small, .small { font-size: 16px; }
-.status { color: var(--muted); font-size: 16px; margin: 0 0 8px; }
-.status .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: var(--muted); margin-right: 5px; vertical-align: -1px; }
-.status .dot.up { background: var(--green); }
-.status .dot.down { background: var(--red); }
+.lede { color: var(--muted); font-size: 16px; margin: 0 0 8px; }
 .lang { display: inline-flex; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; }
 .lang a { padding: 4px 10px; font-size: 17px; font-weight: 700; color: var(--ink); text-decoration: none; }
 .lang a.current { background: var(--ink); color: var(--surface); }
-.lang-row { margin: 0 0 12px; display: flex; justify-content: flex-end; }
 
 a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible {
@@ -102,8 +95,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visib
 .figure { max-width: var(--figure); margin: 26px auto 30px; padding: 0 16px; }
 .figure.wide { max-width: min(1520px, 100vw); }
 .frame { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
-.frame-head { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
-.frame-head .note { color: var(--muted); font-size: 16px; }
 .frame-body { padding: 18px; }
 .frame-body.tight { padding: 0; overflow-x: auto; }
 .controls { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); }
@@ -150,8 +141,8 @@ select, input[type="text"] {
   min-width: 0;
 }
 input[type="text"] { font-family: var(--mono); width: 240px; }
-.controls label, .frame-head label { max-width: 100%; min-width: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 17px; }
-.controls label select, .frame-head label select { flex: 1 1 auto; min-width: 0; }
+.controls label { max-width: 100%; min-width: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 17px; }
+.controls label select { flex: 1 1 auto; min-width: 0; }
 
 /* Data tables. */
 table.data { width: 100%; border-collapse: collapse; font-size: 16.5px; }
@@ -160,7 +151,6 @@ table.data th { font-size: 15px; color: var(--muted); font-weight: 700; }
 table.data tr:last-child td { border-bottom: none; }
 table.data td.time { white-space: nowrap; font-family: var(--mono); font-size: 15.5px; }
 table.data td.mono { font-family: var(--mono); }
-table.data tr.hilite td { background: var(--blue-tint); }
 table.data tr.bad td { background: var(--red-tint); }
 table.data tr.good td { background: var(--green-tint); }
 .scroll-x { overflow-x: auto; }
@@ -168,7 +158,6 @@ table.data tr.good td { background: var(--green-tint); }
 .scroll-x .chain { flex-wrap: nowrap; }
 .state { display: inline-block; padding: 2px 9px; border-radius: 3px; font-size: 14.5px; font-weight: 700; white-space: nowrap; }
 .state.best { background: var(--green); color: #fff; }
-.state.spare { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
 .why { font-size: 14.5px; color: var(--muted); margin-top: 3px; }
 
 /* Incidents. */
@@ -178,9 +167,6 @@ table.data tr.good td { background: var(--green-tint); }
 .incident .head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
 .incident .what { font-size: 18px; }
 .incident .meta { color: var(--muted); font-size: 15.5px; }
-.incident .explain { margin-top: 10px; font-size: 17px; }
-.incident .explain p { margin: 0 0 8px; }
-.tag { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); border-radius: 3px; font-size: 14px; color: var(--muted); background: var(--surface); }
 
 /* Lookup: search, examples, an answer led by its RPKI verdict. */
 .lookup { max-width: 880px; display: flex; flex-direction: column; gap: 10px; }
@@ -366,10 +352,11 @@ footer.col { padding: 40px 16px 64px; color: var(--muted); font-size: 16px; }
   * { transition: none !important; animation: none !important; }
 }
 
-/* The guide: six chapters, prose and still figures on one column of 760 px. */
+/* The guide: six chapters, prose and the story's maps as still figures on one column of 760 px. */
 body.guide { --column: 792px; }
+.guide header.col { padding-top: 40px; }
 .guide .still { margin: 24px 0 12px; }
-.guide .still img { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+.guide .still svg { display: block; width: 100%; height: auto; padding: 8px; box-sizing: border-box; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
 .guide .still figcaption { margin-top: 10px; font-size: 17px; font-weight: 700; }
 .guide .live { margin: 0; font-size: 17px; font-weight: 700; }
 .guide dl.glossary { margin-top: 32px; }
@@ -380,7 +367,6 @@ body.guide { --column: 792px; }
 .popover .title { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; }
 .popover .kind { font-size: 18px; }
 .popover .route { font-weight: 700; }
-.popover .pos { font-family: var(--mono); font-size: 15px; color: var(--muted); padding-top: 3px; }
 .popover .close { border: 0; background: none; font: 700 24px/1 var(--prose); color: var(--ink); cursor: pointer; padding: 0 2px; }
 .popover .field { margin-top: 10px; }
 .popover .label { font-size: 15px; color: var(--muted); margin-bottom: 3px; }
@@ -388,8 +374,6 @@ body.guide { --column: 792px; }
 .popover .value b.mono { font-size: 18px; }
 .popover .bad { color: var(--red); }
 .popover .chain .as.added { outline: 2px solid var(--ink); outline-offset: 1px; }
-.popover table.mini { border-collapse: collapse; font-size: 15px; }
-.popover table.mini td { padding: 3px 8px 3px 0; vertical-align: middle; }
 .popover .foot { display: flex; gap: 8px; margin-top: 14px; }
 .popover.update .kind, .popover.kernel .kind { color: var(--ink); }
 .popover.withdraw .kind, .popover.attacker .kind { color: var(--red); }

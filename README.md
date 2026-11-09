@@ -2,7 +2,7 @@
 
 **English** | [Română](README.ro.md)
 
-A course project for PTIRC (TCSI master's programme, National University of Science and Technology POLITEHNICA Bucharest), theme 9. A defensive detector: it watches the BGP announcements for the monitored prefixes and raises an alert when another autonomous system announces them. The technique is the one used by ARTEMIS (FORTH-ICS) and BGPalerter (NTT).
+A course project for PTIRC (TCSI master's programme, National University of Science and Technology POLITEHNICA Bucharest). A defensive detector: it watches the BGP announcements for the monitored prefixes and raises an alert when another autonomous system announces them. The technique is the one used by ARTEMIS (FORTH-ICS) and BGPalerter (NTT).
 
 It detects three situations:
 
@@ -93,7 +93,7 @@ The Postgres password in `docker-compose.yml` (`bgp`) is the default of the loca
 
 ## What each part does
 
-The home page is the application: five views in the top bar (How it works, YouTube 2008, Prefixes, Lookup, Monitor) and the "Guide" and "References" buttons. The guide (`/guide`) is six short chapters to read from top to bottom, each with one still figure of the lab at a chosen moment and a link to its step of the story; every view of the application links to its chapter of the guide. In the guide, the dotted-underlined terms open a definition. The references (`/references`) are the readings for learning BGP, in stages, with the lineage of the specification from RFC 1105 to RFC 4271.
+The home page is the application: five views in the top bar (How it works, YouTube 2008, Prefixes, Lookup, Monitor) and the "Guide" and "References" buttons. The guide (`/guide`) is six short chapters to read from top to bottom, the first five with the story's map at the step they describe and a link to that step; every view of the application links to its chapter of the guide. In the guide, the dotted-underlined terms open a definition. The references (`/references`) are the readings for learning BGP, in stages, with the lineage of the specification from RFC 1105 to RFC 4271.
 
 1. **How it works.** A route hijack in five steps, for a reader who has never heard of BGP: a still map of the lab on the left, one panel of text on the right, "Back" and "Next" (or the numbered dots) to move. The steps: a network announces its addresses, a packet goes where the routes say, the attacker claims half of the block and the packet reaches it, the detector raises an alert (with the real delay), and the provider's origin validation against the RPKI refuses the attacker's routes. Every fact comes from one cycle recorded on the lab's real routers (`static/story/cycle.json`, written by `scripts/record_story.py`), so the story works with the lab down. On the last step, "Run the attack on the real routers" announces the sub-prefix on the lab, reports when the detector raised its alert and where the packet went, and withdraws the attack. `#step-N` opens step N.
 2. **YouTube 2008.** The whole incident on one screen: one row for each of the 11 neighbours of the rrc00 collector, with a lane showing where it sent the traffic for the hijacked block (red to AS17557, green to YouTube) and, on the right, the AS path at the chosen moment, with the autonomous system that hands the route to the origin framed. The lane axis is cut into phases at the five documented events: each phase is as wide as the square root of its duration, with the real duration written above it, and the much compressed phase (the 80 minutes of the hijack) carries the // break mark. Above sit "Play" (the cursor moves at one speed along the lane, and the label shows the current phase's pace), the time and how many neighbours send to each origin, then the RIPE NCC's documented event at the chosen moment, with buttons to the previous and the next. Dragging on the lanes or on the bar under them scrubs. The events, the first sighting at each neighbour and the raw data sit closed under the table. The real BGP updates (18:45-21:05 UTC, 136,344 updates) load once at start; the detector raises 31 sub-prefix alerts, the first at 18:47:57 UTC. "Reload the incident from its files", in the raw data, rewrites them without duplicates.
@@ -129,15 +129,17 @@ The alerts of one prefix and one offending origin form an incident. A webhook re
 
 The page edits the prefixes of the file; the webhooks are edited in the file only. On the public instance the edits need the token set in `WATCH_TOKEN`; without a token, only a client on a private network (the machine that runs the stack) may edit. The page adds prefixes of at least /8 (IPv4) or /16 (IPv6), at most 50 from one AS and 100 in all; the command line has no such limit. The running detector applies the file within five seconds of any change.
 
-The command line runs the same code without the page. With the stack running, `bgpwatch.bat` (Windows) or `./bgpwatch.sh` runs it inside the container; without Docker, `dotnet run --project src/BGPWatch.Web -- <verb>` after `sh detector/mrt/build.sh`:
+The command line, `bgp-watch`, runs the same code without the page. `bgp-watch.bat` (Windows) or `./bgp-watch.sh` runs it inside the container while the stack is up, and the local build otherwise (`dotnet build BGPWatch.slnx` after `sh detector/mrt/build.sh`). `bgp-watch help` prints the manual in the shape of a man page, `bgp-watch help <command>` the section of one command:
 
-| Verb | What it does |
+| Command | What it does |
 |---|---|
+| `help [COMMAND]` | the manual, or the section of one command |
 | `prefixes list` / `prefixes add PREFIX ASN... [--description TEXT]` / `prefixes remove PREFIX` | reads and edits the watch file |
 | `check PREFIX` | what RIPEstat sees for the prefix today, against the file; exit code 2 on an unexpected origin |
 | `watch [--json]` | a headless monitor: the alerts and the incidents on stdout (times in UTC), the webhooks on, no database |
 | `replay FILE... [--json]` | the detector over MRT files (the 2008 recording, for one); exit code 2 when it raised anything |
 | `notify test` | one test notification per webhook |
+| `serve` | the web application itself, what the container runs |
 | `dump FILE`, `measure CONFIG FILE` | the author's verbs: every route of an MRT file, and a measurement of the detector on it |
 
 `--config FILE` names another watch file (default: `WATCH_CONFIG`, then `watch/bgpwatch.toml`); `--json` prints one JSON object per line in the words of the webhook payload.
@@ -157,7 +159,7 @@ Limits worth knowing: RIS Live streams updates, not tables, so the seed from RIP
 - `tests/BGPWatch.Tests/`: the unit tests.
 - `detector/mrt/`: the BGP and MRT parser in C, with its sanitizer fuzz harness.
 - `detector/incidents/`, `detector/config.toml`, `detector/schema.sql`: the 2008 incident's data, the lab configuration and the database schema.
-- `watch/`: the watch file of the real-Internet monitor (`example.toml` commented; `bgpwatch.toml` is yours, never committed); `bgpwatch.bat` and `bgpwatch.sh` run the command line inside the stack.
+- `watch/`: the watch file of the real-Internet monitor (`example.toml` commented; `bgpwatch.toml` is yours, never committed); `bgp-watch.bat` and `bgp-watch.sh` run the command line.
 - `scripts/`: the installers, the page check, the lab measurements, the parser fuzzing, the screenshots in `media/`.
 - `docker-compose.yml` is the production shape; `docker-compose.override.yml` (loaded by default) adds the local port and the files mounted from the working tree; `docker-compose.server.yml` and `deploy/nginx-bgp.conf` are the server layer.
 

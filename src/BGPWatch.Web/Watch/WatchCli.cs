@@ -48,30 +48,14 @@ public sealed record CliArgs(string Verb, string[] Words, IReadOnlyDictionary<st
 /// add and remove prefixes, send a test notification. Alerts and incidents go to the
 /// output as lines of text or, with --json, one JSON object each; the logs go to stderr.
 /// Exit codes: 0, 1 for a usage error or a failure, 2 when check or replay found something.
+/// The manual of every verb is <see cref="Manual"/>.
 /// </summary>
 public static class WatchCli
 {
     public const int Failure = 1;
     public const int Found = 2;
     public const string ReplaySource = "replay";
-    public static readonly string[] Verbs = ["watch", "check", "replay", "prefixes", "notify", "help", "--help", "-h"];
-
-    public const string Help = """
-        usage: bgpwatch <verb> [options]
-
-          watch     [--config FILE] [--json]            watch the file's prefixes on RIS Live; alerts and
-                                                        incidents to stdout (UTC), webhooks on; Ctrl+C stops
-          check     PREFIX [--config FILE]              what RIPEstat sees for the prefix today, against the
-                                                        file; exit 2 on an unexpected origin
-          replay    FILE... [--config FILE] [--json]    the detector over MRT files (.gz, .bz2 or plain);
-                                                        exit 2 when it raised anything
-          prefixes  list | add PREFIX ASN... [--description TEXT] | remove PREFIX   [--config FILE]
-          notify    test [--config FILE]                one test notification per webhook; exit 1 on a failure
-          dump      FILE                                every route of an MRT file, one JSON line each
-          measure   CONFIG FILE                         what the detector raises on an MRT file, and how long it takes
-
-        FILE defaults to WATCH_CONFIG, then watch/bgpwatch.toml.
-        """;
+    public static readonly string[] Verbs = ["watch", "check", "replay", "prefixes", "notify"];
 
     public static async Task<int> RunAsync(string[] args, TextWriter output, TextWriter errors)
     {
@@ -96,7 +80,7 @@ public static class WatchCli
                 { Verb: "replay", Words.Length: > 0 } => await ReplayAsync(file, parsed.Words, parsed.Json, output, errors),
                 { Verb: "prefixes" } => await PrefixesAsync(file, parsed, output, errors),
                 { Verb: "notify", Words: ["test"] } => await NotifyTestAsync(file, output, errors),
-                _ => Usage(errors),
+                _ => Usage(parsed.Verb, errors),
             };
         }
         catch (Exception e) when (e is FormatException or ArgumentException or IOException or Tomlyn.TomlException or RipeStatException)
@@ -213,7 +197,7 @@ public static class WatchCli
                 PrintPrefixes(file, after, output);
                 return 0;
             default:
-                return Usage(errors);
+                return Usage("prefixes", errors);
         }
     }
 
@@ -287,15 +271,15 @@ public static class WatchCli
         });
     }
 
-    private static int Usage(TextWriter errors)
+    private static int Usage(string verb, TextWriter errors)
     {
-        errors.WriteLine(Help);
+        errors.Write(Manual.Usage(verb));
         return Failure;
     }
 
     private static int Fail(TextWriter errors, string message)
     {
-        errors.WriteLine($"bgpwatch: {message}");
+        errors.WriteLine($"{Manual.Name}: {message}");
         return Failure;
     }
 

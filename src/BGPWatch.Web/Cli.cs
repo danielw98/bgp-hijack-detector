@@ -9,12 +9,9 @@ using BGPWatch.Web.Watch;
 namespace BGPWatch.Web;
 
 /// <summary>
-/// The verbs that run instead of the web host, with no database. The author's:
-/// <c>dump &lt;updates.mrt[.gz]&gt;</c> prints every route of the file as one JSON line, and on
-/// stderr how many malformed records it dropped;
-/// <c>measure &lt;config.toml&gt; &lt;updates.mrt[.gz]&gt;</c> prints what the detector raises
-/// on the file, which peers carried the alerted routes, and how long it takes.
-/// The operator's (watch, check, replay, prefixes, notify) are WatchCli's.
+/// The command line: <c>serve</c> leaves the web host to run; every other command runs
+/// here, with no database, and exits. The manual (<see cref="Manual"/>) lists them: the
+/// operator's are WatchCli's, the author's are <c>dump</c> and <c>measure</c>.
 /// </summary>
 public static class Cli
 {
@@ -24,16 +21,47 @@ public static class Cli
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    /// <summary>The exit code of the verb the arguments name, or null when they name none and the web host runs.</summary>
+    /// <summary>The exit code of the command the arguments name, or null for <c>serve</c>, when the web host runs.</summary>
     public static async Task<int?> RunAsync(string[] args, TextWriter output, TextWriter errors)
     {
-        return args switch
+        switch (args)
         {
-            ["dump", var path] => Dump(path),
-            ["measure", var config, var path] => Measure(config, path),
-            [var verb, ..] when WatchCli.Verbs.Contains(verb) => await WatchCli.RunAsync(args, output, errors),
-            _ => null,
-        };
+            case ["serve"]:
+                return null;
+            case []:
+                errors.Write(Manual.Usage(""));
+                return WatchCli.Failure;
+            case ["help" or "--help" or "-h"]:
+                output.Write(Manual.Page());
+                return 0;
+            case ["help", var name]:
+                if (Manual.Section(name) is { } section)
+                {
+                    output.Write(section);
+                    return 0;
+                }
+                return Unknown(name, errors);
+            case ["--version"]:
+                output.WriteLine($"{Manual.Name} {Manual.Version}");
+                return 0;
+            case ["dump", var path]:
+                return Dump(path);
+            case ["measure", var config, var path]:
+                return Measure(config, path);
+            case [var verb, ..] when WatchCli.Verbs.Contains(verb):
+                return await WatchCli.RunAsync(args, output, errors);
+            case [var verb, ..] when Manual.Commands.Any(c => c.Name == verb):
+                errors.Write(Manual.Usage(verb));
+                return WatchCli.Failure;
+            default:
+                return Unknown(args[0], errors);
+        }
+    }
+
+    private static int Unknown(string name, TextWriter errors)
+    {
+        errors.WriteLine($"{Manual.Name}: unknown command '{name}'. Try '{Manual.Name} help'.");
+        return WatchCli.Failure;
     }
 
     public static int Dump(string path)

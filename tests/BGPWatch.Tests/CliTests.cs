@@ -6,7 +6,7 @@ using BGPWatch.Web.Watch;
 
 namespace BGPWatch.Tests;
 
-/// <summary>The command line: its arguments, the verbs that need no network, and what each leaves on the output and in the exit code.</summary>
+/// <summary>The command line: its arguments, the manual, the verbs that need no network, and what each leaves on the output and in the exit code.</summary>
 public sealed class CliTests : IDisposable
 {
     private readonly string folder = Path.Combine(Path.GetTempPath(), "bgpwatch-tests", Guid.NewGuid().ToString("n"));
@@ -51,18 +51,77 @@ public sealed class CliTests : IDisposable
     }
 
     [Fact]
-    public async Task AnUnknownVerbLeavesTheHostToRun()
+    public async Task OnlyServeLeavesTheHostToRun()
     {
         Assert.Null((await RunAsync("serve")).Code);
-        Assert.Null((await RunAsync()).Code);
+        var (code, _, errors) = await RunAsync();
+        Assert.Equal(WatchCli.Failure, code);
+        Assert.StartsWith("usage: bgp-watch <command>", errors);
     }
 
     [Fact]
-    public async Task HelpPrintsTheUsageAndFails()
+    public async Task AnUnknownCommandIsRefusedWithTheWayToTheManual()
     {
-        var (code, _, errors) = await RunAsync("help");
+        var (code, output, errors) = await RunAsync("wtach");
         Assert.Equal(WatchCli.Failure, code);
-        Assert.StartsWith("usage: bgpwatch", errors);
+        Assert.Equal("", output);
+        Assert.Equal("bgp-watch: unknown command 'wtach'. Try 'bgp-watch help'.\n", errors.ReplaceLineEndings("\n"));
+    }
+
+    [Theory]
+    [InlineData("help")]
+    [InlineData("--help")]
+    [InlineData("-h")]
+    public async Task HelpPrintsTheWholeManualAndSucceeds(string flag)
+    {
+        var (code, output, errors) = await RunAsync(flag);
+        Assert.Equal(0, code);
+        Assert.Equal("", errors);
+        foreach (var heading in new[] { "NAME", "SYNOPSIS", "DESCRIPTION", "COMMANDS", "OPTIONS", "FILES", "ENVIRONMENT", "EXIT STATUS", "EXAMPLES" })
+        {
+            Assert.Contains($"\n{heading}\n", "\n" + output.ReplaceLineEndings("\n"), StringComparison.Ordinal);
+        }
+        foreach (var command in Manual.Commands)
+        {
+            Assert.Contains($"\n    {command.Synopsis[0]}\n", output.ReplaceLineEndings("\n"), StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task HelpOfOneCommandPrintsItsSectionAlone()
+    {
+        var (code, output, _) = await RunAsync("help", "replay");
+        Assert.Equal(0, code);
+        Assert.StartsWith("SYNOPSIS\n    bgp-watch replay FILE... [--json]\n\nDESCRIPTION\n", output.ReplaceLineEndings("\n"));
+        Assert.Contains("\nEXAMPLES\n    bgp-watch replay ", output.ReplaceLineEndings("\n"), StringComparison.Ordinal);
+        Assert.DoesNotContain("prefixes add", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HelpOfAnUnknownCommandFails()
+    {
+        var (code, _, errors) = await RunAsync("help", "nothing");
+        Assert.Equal(WatchCli.Failure, code);
+        Assert.Contains("unknown command 'nothing'", errors, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AWrongShapeOfAKnownCommandPrintsItsUsage()
+    {
+        var (code, _, errors) = await RunAsync("check");
+        Assert.Equal(WatchCli.Failure, code);
+        Assert.Equal("usage: bgp-watch check PREFIX\nTry 'bgp-watch help check'.\n", errors.ReplaceLineEndings("\n"));
+        var (noWords, _, usage) = await RunAsync("prefixes", "add", "193.0.0.0/21");
+        Assert.Equal(WatchCli.Failure, noWords);
+        Assert.StartsWith("usage: bgp-watch prefixes [list]\nusage: bgp-watch prefixes add", usage.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public async Task VersionPrintsTheNameAndTheVersion()
+    {
+        var (code, output, _) = await RunAsync("--version");
+        Assert.Equal(0, code);
+        Assert.Matches(@"^bgp-watch \d+\.\d+", output);
     }
 
     [Fact]

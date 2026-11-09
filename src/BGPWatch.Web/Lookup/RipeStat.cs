@@ -220,7 +220,7 @@ public sealed class RipeStat(Func<string, CancellationToken, Task<JsonNode?>> fe
         return data;
     }
 
-    public int CachedCount => cache.Count;
+    internal int CachedCount => cache.Count;
 
     /// <summary>Caches one answer, first dropping the expired ones and, while still full, the oldest.</summary>
     private void Store(string url, TimeSpan now, JsonNode data)

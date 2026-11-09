@@ -23,7 +23,7 @@ if (await Cli.RunAsync(args, Console.Out, Console.Error) is { } code)
     return code;
 }
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args[1..]);
 var settings = Settings.From(builder.Configuration);
 var started = Stopwatch.GetTimestamp();
 

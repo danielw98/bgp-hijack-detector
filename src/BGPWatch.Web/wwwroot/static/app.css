@@ -34,11 +34,6 @@ body.app { background: var(--paper); height: 100vh; display: flex; flex-directio
 .topbar .views a:hover { background: var(--on-ink-hover); }
 .topbar .views a.current { background: var(--on-ink-text); color: var(--ink); }
 .topbar .views a.current .num { color: var(--muted); }
-.topbar .status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 0 auto; color: var(--on-ink-muted); font-size: 16px; white-space: nowrap; }
-.topbar .status-item { display: inline-flex; align-items: center; gap: 8px; }
-.topbar .status .dot { width: 12px; height: 12px; margin: 0; vertical-align: 0; background: var(--on-ink-unknown); }
-.topbar .status .dot.up { background: var(--on-ink-up); }
-.topbar .status .dot.down { background: var(--on-ink-down); }
 .topbar .guide {
   padding: 4px 12px;
   border: 2px solid var(--on-ink-text);
@@ -86,7 +81,6 @@ body.app { background: var(--paper); height: 100vh; display: flex; flex-directio
 .panel .controls:first-of-type { border-top: none; }
 .app details.raw { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; margin-top: 12px; }
 .app .events { padding: 0 16px; }
-.appfoot { color: var(--muted); font-size: 16px; padding: 8px 0 0; }
 
 /* The Monitor: the feed strip, one row per watched prefix, the edit rows under the table. */
 .monitor { display: flex; flex-direction: column; gap: 12px; }
@@ -173,8 +167,7 @@ svg.story-map .arrow.packet.ok text { fill: var(--green); }
 @media (max-width: 1599px) {
   .topbar { column-gap: 16px; padding: 12px 16px; }
   .topbar .views a { gap: 6px; padding: 6px 9px; }
-  .topbar .status { column-gap: 14px; }
-  .topbar .pages { gap: 6px; }
+    .topbar .pages { gap: 6px; }
   .topbar .guide { padding: 4px 9px; }
 }
 @media (max-width: 1159px) {
@@ -191,14 +184,13 @@ svg.story-map .arrow.packet.ok text { fill: var(--green); }
   .topbar {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-areas: "brand" "guide" "status" "views";
+    grid-template-areas: "brand" "guide" "views";
     gap: 10px 0;
     padding: 10px 12px;
   }
   .topbar .brand { grid-area: brand; }
   .topbar .pages { grid-area: guide; }
-  .topbar .status { grid-area: status; margin: 0; gap: 16px; }
-  .topbar .pages { gap: 6px; }
+    .topbar .pages { gap: 6px; }
   .topbar .guide { padding: 4px 8px; }
   .topbar .lang a { padding: 4px 7px; }
   .topbar .views { grid-area: views; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }

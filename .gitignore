@@ -10,3 +10,5 @@ TestResults/
 detector/mrt/build/
 /InstallationLog.txt
 watch/bgpwatch.toml
+.vs/
+src/BGPWatch.Web/Properties/launchSettings.json

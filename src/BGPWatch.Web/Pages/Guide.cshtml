@@ -1,23 +1,37 @@
 @page
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 @{
     ViewData["Title"] = T["guide.title"];
     ViewData["BodyClass"] = "guide";
+    ViewData["Page"] = "guide";
+    // Each chapter: its paragraphs and the story step whose map it shows (0 for none).
     var chapters = new[]
     {
-        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "path", Width: 600, Height: 301, Step: 1),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "exact", Width: 600, Height: 195, Step: 4),
-        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "subprefix", Width: 984, Height: 494, Step: 3),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "rest", Width: 984, Height: 494, Step: 4),
-        (Paragraphs: new[] { "p1", "p2" }, Figure: "defence", Width: 600, Height: 325, Step: 5),
-        (Paragraphs: new[] { "p1", "p2", "p3" }, Figure: "packet", Width: 984, Height: 494, Step: 2),
+        (Paragraphs: new[] { "p1", "p2", "p3" }, Step: 1),
+        (Paragraphs: new[] { "p1", "p2" }, Step: 4),
+        (Paragraphs: new[] { "p1", "p2", "p3" }, Step: 3),
+        (Paragraphs: new[] { "p1", "p2" }, Step: 2),
+        (Paragraphs: new[] { "p1", "p2" }, Step: 5),
+        (Paragraphs: new[] { "p1", "p2" }, Step: 0),
     };
+
+    // The story's map at a step, as the application drew it (scripts/export_figures.py), described for readers of the alt text.
+    string Figure(int step, string alt)
+    {
+        var file = Env.WebRootFileProvider.GetFileInfo($"static/figures/step-{step}.{T.Code}.svg");
+        using var reader = new StreamReader(file.CreateReadStream());
+        return reader.ReadToEnd().Replace("<svg ", $"<svg role=\"img\" aria-label=\"{Html.Encode(alt)}\" ", StringComparison.Ordinal);
+    }
 }
+@section Styles {
+<link rel="stylesheet" href="~/static/app.css">
+}
+@await Html.PartialAsync("_TopBar")
+
 <header class="col">
-  <p class="lang-row">@await Html.PartialAsync("_Language")</p>
-  <h1>@T["brand"]</h1>
+  <h1>@T["guide.title"]</h1>
   <p class="subtitle">@T["guide.subtitle"]</p>
-  <p class="status"><span id="dot-lab" class="dot"></span><span id="lab-state">@T["status.lab.checking"]</span>. <span id="dot-data" class="dot"></span><span id="data-state">@T["status.data.checking"]</span>.</p>
-  <p class="status">@T.Html("guide.intro.map")</p>
+  <p class="lede">@T.Html("guide.intro.map")</p>
 </header>
 
 <main>
@@ -42,12 +56,14 @@
     {
       <p>@T.Html($"guide.s{n}.{p}")</p>
     }
-    <figure class="still">
-      @{ var source = Url.Content($"~/static/figures/{chapter.Figure}.{T.Code}.svg"); }
-      <a href="@source"><img src="@source" alt="@T[$"guide.fig{n}.alt"]" width="@chapter.Width" height="@chapter.Height"></a>
-      <figcaption>@T[$"guide.fig{n}.title"]</figcaption>
-    </figure>
-    <p class="live"><a href="@Url.Content($"~/#step-{chapter.Step}")">@T[$"guide.s{n}.live"]</a></p>
+    @if (chapter.Step > 0)
+    {
+      <figure class="still">
+        @Html.Raw(Figure(chapter.Step, T[$"guide.fig{n}.alt"]))
+        <figcaption>@T[$"guide.fig{n}.title"]</figcaption>
+      </figure>
+      <p class="live"><a href="@Url.Content($"~/#step-{chapter.Step}")">@T[$"guide.s{n}.live"]</a></p>
+    }
     @if (n == 6)
     {
       <dl class="glossary" id="glossary"></dl>
