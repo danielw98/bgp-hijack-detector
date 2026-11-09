@@ -12,3 +12,4 @@ detector/mrt/build/
 watch/bgpwatch.toml
 .vs/
 src/BGPWatch.Web/Properties/launchSettings.json
+.env

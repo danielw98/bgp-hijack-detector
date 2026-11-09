@@ -64,7 +64,7 @@ Running the application needs only Docker. The other dependencies (the .NET 10 S
 ### Start and stop
 
 - **Windows:** double-click `start.bat`. It starts Docker Desktop if it is stopped, then the lab and the detector, and opens the page. The page keeps the port of a stack already running, or takes the first free local port from 8080 to 8099. The first start builds the images and takes a few minutes. To stop, double-click `stop.bat`; the route history and the alerts stay in the Docker volume.
-- **Linux or macOS**, from the repository root (`BGP_PORT` picks the local port, 8080 when unset):
+- **Linux or macOS**, from the repository root (`BGP_PORT` picks the local port, 8080 when unset; `.env.example` lists the variables a `.env` beside it may set):
 
 ```sh
 # start: the lab, then the detector (BMP station, Postgres, the page)

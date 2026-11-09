@@ -64,7 +64,7 @@ Pentru rularea aplicației este nevoie doar de Docker. Celelalte dependențe (SD
 ### Pornire și oprire
 
 - **Windows:** dublu-clic pe `start.bat`. Pornește Docker Desktop dacă este oprit, apoi laboratorul și detectorul, și deschide pagina. Pagina păstrează portul unui stack deja pornit sau ia primul port local liber între 8080 și 8099. Prima pornire construiește imaginile și durează câteva minute. Oprirea se face cu dublu-clic pe `stop.bat`; istoricul rutelor și alertele rămân în volumul Docker.
-- **Linux sau macOS**, din rădăcina proiectului (`BGP_PORT` alege portul local, 8080 dacă lipsește):
+- **Linux sau macOS**, din rădăcina proiectului (`BGP_PORT` alege portul local, 8080 dacă lipsește; `.env.example` enumeră variabilele pe care le poate seta un `.env` alături):
 
 ```sh
 # pornire: laboratorul, apoi detectorul (stația BMP, Postgres, pagina)
