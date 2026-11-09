@@ -88,8 +88,6 @@
   </nav>
 
   <div class="refs-main">
-    <p class="refs-lede">@T.Format("refs.lede", ("sources", T.Count(Reading.Sources.Count(), "refs.sources")), ("stages", Reading.Stages.Count))</p>
-
     <section class="refs-start" id="start">
       <h3>@T["refs.start"]</h3>
       @foreach (var paragraph in Reading.StartHereIntro)

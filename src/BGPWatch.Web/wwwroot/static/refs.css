@@ -12,7 +12,6 @@
 .refs-index a:hover { background: var(--soft); text-decoration: underline; }
 .refs-index .num { flex: 0 0 2.2em; color: var(--muted); font-family: var(--mono); font-weight: 700; }
 
-.refs-lede { margin: 4px 0 20px; }
 
 .refs-start, .refs-stage { margin: 0 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
 .refs-start { margin-bottom: 24px; padding: 16px 20px 6px; }

@@ -47,7 +47,6 @@
  "refs.index": "Contents",
  "refs.index.label": "contents of the references",
  "refs.start": "Start here",
- "refs.lede": "{sources} in {stages} stages, each built on the one before, and the lineage of the BGP specification. Each stage opens to its sources: the title leads to the text, the year says when it appeared, the line under it says why it is worth reading.",
  "refs.sources.one": "one source",
  "refs.sources.many": "sources",
  "refs.stage": "Stage {n}",

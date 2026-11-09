@@ -47,7 +47,6 @@
  "refs.index": "Cuprins",
  "refs.index.label": "cuprinsul referințelor",
  "refs.start": "Pentru început",
- "refs.lede": "{sources} în {stages} etape, fiecare sprijinită pe cea dinainte, și genealogia specificației BGP. Fiecare etapă se deschide cu sursele ei: titlul duce la text, anul spune când a apărut, rândul de sub el spune de ce merită citit.",
  "refs.sources.one": "o sursă",
  "refs.sources.many": "surse",
  "refs.stage": "Etapa {n}",
